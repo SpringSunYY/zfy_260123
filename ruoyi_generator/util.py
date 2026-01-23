@@ -13,10 +13,10 @@ import re
 def to_underscore(name: str) -> str:
     """
     将驼峰命名转换为下划线命名
-    
+
     Args:
         name (str): 驼峰命名的字符串
-        
+
     Returns:
         str: 下划线命名的字符串
     """
@@ -60,10 +60,10 @@ def to_camel_case(name: str, pascal: bool = True) -> str:
 def capitalize_first(name: str) -> str:
     """
     将字符串首字母大写
-    
+
     Args:
         name (str): 输入字符串
-        
+
     Returns:
         str: 首字母大写的字符串
     """
@@ -75,11 +75,11 @@ def capitalize_first(name: str) -> str:
 def get_tree_column_index(column, all_columns):
     """
     计算树表中列的索引（排除主键列）
-    
+
     Args:
         column: 当前列对象
         all_columns: 所有列的列表
-        
+
     Returns:
         int: 列在树表中的索引
     """
@@ -100,11 +100,11 @@ def get_tree_column_index(column, all_columns):
 def get_filtered_columns(columns, filter_func):
     """
     过滤列并返回过滤后的列表
-    
+
     Args:
         columns: 所有列的列表
         filter_func: 过滤函数，接受一个列对象，返回True表示保留
-        
+
     Returns:
         list: 过滤后的列列表
     """
@@ -116,20 +116,20 @@ class GenUtils:
     def get_file_name(template_file: str, table: GenTable) -> str:
         """
         根据模板文件名和表信息生成文件名
-        
+
         Args:
             template_file (str): 模板文件名
             table (GenTable): 表信息
-            
+
         Returns:
             str: 生成的文件名
         """
         # 标准化路径分隔符
         template_file = template_file.replace('\\', '/')
-        
+
         # 移除.vm后缀
         base_name = template_file[:-3] if template_file.endswith('.vm') else template_file
-        
+
         # 确定模块路径：后端代码使用 pythonModelName，前端代码使用 modelName
         if table.package_name:
             # 使用 package_name 作为路径（如 com.yy.test -> com/yy/test）
@@ -138,7 +138,7 @@ class GenUtils:
             # 如果 package_name 为空，使用 pythonModelName 作为后端模块名
             # 注意：这里只用于后端 Python 代码路径，前端代码路径在下面单独处理
             module_path = GeneratorConfig.python_model_name if hasattr(GeneratorConfig, 'python_model_name') else (table.module_name if table.module_name else 'ruoyi_generator')
-        
+
         # 根据模板类型生成文件名和路径
         if 'py/entity.py' in template_file:
             # Entity文件放在 domain/entity/ 目录下，使用下划线命名法
@@ -187,7 +187,7 @@ class GenUtils:
     def get_table_prefix() -> str:
         """
         获取表前缀
-        
+
         Returns:
             str: 表前缀
         """
@@ -197,10 +197,10 @@ class GenUtils:
     def remove_table_prefix(table_name: str) -> str:
         """
         移除表前缀
-        
+
         Args:
             table_name (str): 表名
-            
+
         Returns:
             str: 移除前缀后的表名
         """
@@ -213,10 +213,10 @@ class GenUtils:
     def table_to_class_name(table_name: str) -> str:
         """
         将表名转换为类名
-        
+
         Args:
             table_name (str): 表名
-            
+
         Returns:
             str: 类名
         """
@@ -229,10 +229,10 @@ class GenUtils:
     def get_business_name(table_name: str) -> str:
         """
         获取业务名
-        
+
         Args:
             table_name (str): 表名
-            
+
         Returns:
             str: 业务名
         """
@@ -245,13 +245,13 @@ class GenUtils:
     def get_import_path(package_name: str, module_name: str, module_type: str, class_name: str = None) -> str:
         """
         生成导入路径
-        
+
         Args:
             package_name (str): 包名，如 "com.yy.project" 或空字符串
             module_name (str): 前端模块名（从数据库读取，用于前端代码），但这里应该传入 pythonModelName
             module_type (str): 模块类型，如 "domain", "service", "mapper", "controller"
             class_name (str): 类名（可选，用于PO导入）
-            
+
         Returns:
             str: 导入路径，Python包名保持点分隔格式
         """
@@ -264,7 +264,7 @@ class GenUtils:
             # Python导入路径使用点分隔，保持原样
             # 例如: "com.yy.project" -> "com.yy.project"
             python_package = package_name
-        
+
         # 生成导入路径
         if module_type == "domain" and class_name:
             # PO 文件在 domain/po/ 目录下
@@ -278,10 +278,10 @@ class GenUtils:
     def to_camel_case(name: str) -> str:
         """
         将下划线命名转换为驼峰命名
-        
+
         Args:
             name (str): 下划线命名
-            
+
         Returns:
             str: 驼峰命名
         """
@@ -297,11 +297,11 @@ class GenUtils:
     def substring_before(string: str, separator: str) -> str:
         """
         获取字符串中分隔符之前的部分
-        
+
         Args:
             string (str): 输入字符串
             separator (str): 分隔符
-            
+
         Returns:
             str: 分隔符之前的部分
         """
@@ -316,11 +316,11 @@ class GenUtils:
     def substring_after(string: str, separator: str) -> str:
         """
         获取字符串中分隔符之后的部分
-        
+
         Args:
             string (str): 输入字符串
             separator (str): 分隔符
-            
+
         Returns:
             str: 分隔符之后的部分
         """
@@ -330,28 +330,28 @@ class GenUtils:
         if separator in string:
             return string.split(separator, 1)[1]
         return ""
-        
+
     @staticmethod
     def generator_code(table: GenTable) -> BytesIO:
         """
         生成代码
-        
+
         Args:
             table (GenTable): 表信息
-            
+
         Returns:
             BytesIO: 生成的代码文件
         """
         # 设置列的 list_index 属性
         GenUtils.set_column_list_index(table)
-        
+
         # 设置主键列
         pk_columns = [column for column in table.columns if column.is_pk == '1']
         if pk_columns:
             table.pk_column = pk_columns[0]
         else:
             table.pk_column = None
-        
+
         # 从 options 中解析 parentMenuId
         if table.options:
             import json
@@ -365,30 +365,30 @@ class GenUtils:
                     table.parent_menu_id = options_dict.get('parentMenuId')
             except Exception as e:
                 print(f"解析 options 字段出错: {e}")
-        
+
         # 强制使用前端模块名（modelName），而不是 Python 模块名
-        # module_name 必须使用 modelName（test），不能使用 pythonModelName（ruoyi_test）
+        # module_name 必须使用 modelName（test），不能使用 pythonModelName（ruoyi_car）
         # 如果 module_name 是空的、等于 python_model_name 或包含 python_model_name，强制替换为 model_name
         original_module_name = table.module_name
         if not table.module_name or table.module_name == GeneratorConfig.python_model_name or (table.module_name and GeneratorConfig.python_model_name in table.module_name):
             table.module_name = GeneratorConfig.model_name
             if original_module_name != table.module_name:
                 print(f"警告：table.module_name 从 '{original_module_name}' 强制替换为 '{table.module_name}'（前端模块名）")
-        
+
         # 获取模板目录
         template_dir = os.path.join(os.path.dirname(__file__), 'vm')
-        
+
         # 定义核心模板文件
         core_templates = [
             'py/entity.py.vm',
-            'py/po.py.vm', 
+            'py/po.py.vm',
             'py/controller.py.vm',
             'py/service.py.vm',
             'py/mapper.py.vm',
             'js/api.js.vm',
             'sql/menu.sql.vm'
         ]
-        
+
         # 根据表类型添加相应的Vue模板
         if table.tpl_category == 'tree':
             core_templates.append('vue/index-tree.vue.vm')
@@ -396,10 +396,10 @@ class GenUtils:
             core_templates.append('vue/index-sub.vue.vm')
         else:
             core_templates.append('vue/index.vue.vm')
-        
+
         # 创建内存中的ZIP文件
         zip_buffer = BytesIO()
-        
+
         # 确定模块路径，用于生成 __init__.py
         # 后端 Python 代码使用 pythonModelName，而不是前端模块名
         if table.package_name:
@@ -407,23 +407,23 @@ class GenUtils:
         else:
             # 使用 pythonModelName 作为后端模块路径
             module_path = GeneratorConfig.python_model_name if hasattr(GeneratorConfig, 'python_model_name') else (table.module_name if table.module_name else 'ruoyi_generator')
-        
+
         # 收集需要生成 __init__.py 的目录和文件信息
         init_dirs = set()
         # 收集每个目录下的文件，用于生成导入语句
         dir_files = {}  # {dir_path: [file_info]}
-        
+
         with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
             # 跟踪已添加的文件名以避免重复
             added_files = set()
-            
+
             # 首先生成模块根目录的 __init__.py
             init_template_path = os.path.join(template_dir, 'py/__init__.py.vm')
             if os.path.exists(init_template_path):
                 try:
                     with open(init_template_path, 'r', encoding='utf-8') as f:
                         template_content = f.read()
-                    
+
                     # 准备模板上下文（单个表时，tables 为 None）
                     context = {
                         'table': table,
@@ -433,21 +433,21 @@ class GenUtils:
                         'get_import_path': GenUtils.get_import_path,
                         'get_tree_column_index': get_tree_column_index
                     }
-                    
+
                     # 使用Jinja2渲染模板
                     template = Template(template_content)
                     rendered_content = template.render(**context)
-                    
+
                     # 生成文件名
                     init_file_path = f"{module_path}/__init__.py"
-                    
+
                     # 将渲染后的内容写入ZIP文件
                     if rendered_content.strip():
                         zip_file.writestr(init_file_path, rendered_content)
                         added_files.add(init_file_path)
                 except Exception as e:
                     print(f"处理模块 __init__.py 模板时出错: {e}")
-            
+
             # 处理每个核心模板文件
             for relative_path in core_templates:
                 template_path = os.path.join(template_dir, relative_path)
@@ -456,7 +456,7 @@ class GenUtils:
                     try:
                         with open(template_path, 'r', encoding='utf-8') as f:
                             template_content = f.read()
-                            
+
                         # 准备模板上下文
                         # table.module_name 是从数据库读取的前端模块名（真正的模块名，用于权限、前端、SQL）
                         # GeneratorConfig.python_model_name 是 Python 模块名（只用于 Python 后端代码路径）
@@ -470,10 +470,10 @@ class GenUtils:
                             list_cols = None
                             query_cols = None
                             required_cols = None
-                        
+
                         # 预计算双驼峰命名的类名，避免模板中重复调用
                         class_name_pascal = to_camel_case(table.class_name)
-                        
+
                         context = {
                             'table': table,
                             'datetime': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
@@ -487,7 +487,7 @@ class GenUtils:
                             'required_cols': required_cols,  # 树表的必填列
                             'class_name_pascal': class_name_pascal  # 预计算的双驼峰类名
                         }
-                        
+
                         # 使用Jinja2渲染模板
                         template = Template(template_content)
                         # 如果是树表模板，打印列信息用于调试
@@ -505,14 +505,14 @@ class GenUtils:
                             print(f"[ERROR] 错误信息: {str(e)}")
                             print(f"[ERROR] 详细堆栈:\n{error_detail}")
                             raise
-                        
+
                         # 如果是 SQL 模板，恢复原始 module_name（虽然已经强制设置了，但为了安全）
                         if 'sql/menu.sql' in relative_path:
                             pass  # 已经强制设置为 model_name，不需要恢复
-                        
+
                         # 生成文件名
                         output_file_name = GenUtils.get_file_name(relative_path, table)
-                        
+
                         # 收集目录路径和文件信息，用于生成 __init__.py
                         # 跳过 sql 和 vue 目录，这些目录不需要 __init__.py
                         dir_path = os.path.dirname(output_file_name)
@@ -524,14 +524,14 @@ class GenUtils:
                                 parent_dir = '/'.join(parts[:i])
                                 if parent_dir and 'sql' not in parent_dir and 'vue' not in parent_dir:
                                     init_dirs.add(parent_dir)
-                            
+
                             # 收集文件信息用于生成导入语句
                             file_name = os.path.basename(output_file_name)
                             file_base = os.path.splitext(file_name)[0]
-                            
+
                             if dir_path not in dir_files:
                                 dir_files[dir_path] = []
-                            
+
                             # 根据文件类型确定导入的类名
                             if '/entity/' in output_file_name and '.py' in output_file_name:
                                 # Entity 文件在 domain/entity/ 目录下
@@ -547,7 +547,7 @@ class GenUtils:
                                 dir_files[dir_path].append(('mapper', (f"{to_underscore(table.class_name)}_mapper", f"{table.class_name}Mapper"), table))
                             elif '_controller.py' in output_file_name:
                                 dir_files[dir_path].append(('controller', 'gen', table))
-                        
+
                         # 检查渲染后的内容是否为空
                         if rendered_content.strip():
                             # 将渲染后的内容写入ZIP文件
@@ -556,24 +556,24 @@ class GenUtils:
                             print(f"警告: 模板 {relative_path} 渲染后内容为空")
                     except Exception as e:
                         print(f"处理模板 {relative_path} 时出错: {e}")
-            
+
             # 为每个目录生成 __init__.py 文件，使其成为完整的 Python 模块
             for dir_path in sorted(init_dirs):
                 # 跳过模块根目录，因为已经在开始时生成
                 if dir_path == module_path:
                     continue
-                
+
                 # 跳过 sql 和 vue 目录，这些目录不需要 __init__.py
                 if 'sql' in dir_path or 'vue' in dir_path or dir_path.startswith('sql/') or dir_path.startswith('vue/'):
                     continue
-                
+
                 init_file_path = os.path.join(dir_path, '__init__.py').replace('\\', '/')
-                
+
                 # 生成 __init__.py 内容
                 init_lines = ["# -*- coding: utf-8 -*-"]
                 init_lines.append(f"# @Module: {dir_path}")
                 init_lines.append("")
-                
+
                 # 特殊处理 controller 目录：参考 ruoyi_generator/controller/__init__.py 的格式
                 if 'controller' in dir_path and dir_path.endswith('/controller'):
                     # 在 controller/__init__.py 中为每个 controller 创建蓝图
@@ -581,14 +581,14 @@ class GenUtils:
                         # 先导入 Blueprint
                         init_lines.append("from flask import Blueprint")
                         init_lines.append("")
-                        
+
                         # 为每个 controller 创建蓝图
                         for file_type, class_name, table_info in dir_files[dir_path]:
                             if file_type == 'controller':
                                 blueprint_name = to_underscore(table_info.class_name)
                                 url_prefix = f"/{table_info.module_name}/{table_info.business_name}"
                                 init_lines.append(f"{blueprint_name} = Blueprint('{blueprint_name}', __name__, url_prefix='{url_prefix}')")
-                        
+
                         # 导入各个 controller 模块
                         init_lines.append("")
                         init_lines.append("")
@@ -617,24 +617,24 @@ class GenUtils:
                                 # Mapper 文件，文件名和类名分开处理
                                 file_name, class_name = class_name_info
                                 imports.append(f"from .{file_name} import {class_name}")
-                        
+
                         if imports:
                             init_lines.extend(sorted(set(imports)))
-                
+
                 init_content = "\n".join(init_lines) + "\n"
                 zip_file.writestr(init_file_path, init_content)
-        
+
         zip_buffer.seek(0)
         return zip_buffer
-        
+
     @staticmethod
     def batch_generator_code(tables: List[GenTable]) -> BytesIO:
         """
         批量生成代码
-        
+
         Args:
             tables (List[GenTable]): 表列表
-            
+
         Returns:
             BytesIO: 生成的代码文件
         """
@@ -647,7 +647,7 @@ class GenUtils:
                 table.pk_column = pk_columns[0]
             else:
                 table.pk_column = None
-            
+
             # 从 options 中解析 parentMenuId
             if table.options:
                 import json
@@ -661,32 +661,32 @@ class GenUtils:
                         table.parent_menu_id = options_dict.get('parentMenuId')
                 except Exception as e:
                     print(f"解析 options 字段出错: {e}")
-            
+
             # 强制使用前端模块名（modelName），而不是 Python 模块名
-            # module_name 必须使用 modelName（test），不能使用 pythonModelName（ruoyi_test）
+            # module_name 必须使用 modelName（test），不能使用 pythonModelName（ruoyi_car）
             if not table.module_name or table.module_name == GeneratorConfig.python_model_name or table.module_name.strip() == GeneratorConfig.python_model_name:
                 table.module_name = GeneratorConfig.model_name
             # 额外检查：如果 module_name 等于 python_model_name，强制替换
             if table.module_name == GeneratorConfig.python_model_name:
                 table.module_name = GeneratorConfig.model_name
-        
+
         # 定义核心模板文件（每个表都会生成，但 __init__.py 只生成一次）
         core_templates = [
             'py/entity.py.vm',
-            'py/po.py.vm', 
+            'py/po.py.vm',
             'py/controller.py.vm',
             'py/service.py.vm',
             'py/mapper.py.vm',
             'js/api.js.vm',
             'sql/menu.sql.vm'
         ]
-        
+
         # 创建内存中的ZIP文件
         zip_buffer = BytesIO()
-        
+
         # 获取模板目录
         template_dir = os.path.join(os.path.dirname(__file__), 'vm')
-        
+
         # 确定模块路径（使用第一个表的模块路径）
         if tables and len(tables) > 0:
             first_table = tables[0]
@@ -697,16 +697,16 @@ class GenUtils:
                 module_path = GeneratorConfig.python_model_name if hasattr(GeneratorConfig, 'python_model_name') else (first_table.module_name if first_table.module_name else 'ruoyi_generator')
         else:
             module_path = GeneratorConfig.python_model_name if hasattr(GeneratorConfig, 'python_model_name') else 'ruoyi_generator'
-        
+
         # 收集需要生成 __init__.py 的目录和文件信息
         init_dirs = set()
         # 收集每个目录下的文件，用于生成导入语句 {dir_path: [(file_type, class_name, table)]}
         dir_files = {}
-        
+
         with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
             # 跟踪已添加的文件名以避免重复
             added_files = set()
-            
+
             # 首先为模块根目录生成 __init__.py（只生成一次，使用第一个表的信息）
             if tables and len(tables) > 0:
                 init_template_path = os.path.join(template_dir, 'py/__init__.py.vm')
@@ -714,7 +714,7 @@ class GenUtils:
                     try:
                         with open(init_template_path, 'r', encoding='utf-8') as f:
                             template_content = f.read()
-                        
+
                         # 准备模板上下文（批量生成时，传入所有表）
                         # table.module_name 是从数据库读取的前端模块名（真正的模块名，用于权限、前端、SQL）
                         # GeneratorConfig.python_model_name 是 Python 模块名（只用于 Python 后端代码路径）
@@ -726,21 +726,21 @@ class GenUtils:
                             'get_import_path': GenUtils.get_import_path,
                             'get_tree_column_index': get_tree_column_index
                         }
-                        
+
                         # 使用Jinja2渲染模板
                         template = Template(template_content)
                         rendered_content = template.render(**context)
-                        
+
                         # 生成文件名
                         init_file_path = f"{module_path}/__init__.py"
-                        
+
                         # 将渲染后的内容写入ZIP文件（只写入一次）
                         if rendered_content.strip() and init_file_path not in added_files:
                             zip_file.writestr(init_file_path, rendered_content)
                             added_files.add(init_file_path)
                     except Exception as e:
                         print(f"处理模块 __init__.py 模板时出错: {e}")
-            
+
             # 处理每个表
             for table in tables:
                 # 根据表类型添加相应的Vue模板
@@ -750,20 +750,20 @@ class GenUtils:
                     current_templates = core_templates + ['vue/index-sub.vue.vm']
                 else:
                     current_templates = core_templates + ['vue/index.vue.vm']
-                
+
                 # 处理每个核心模板文件
                 for relative_path in current_templates:
                     # 跳过模块根目录的 __init__.py，因为已经在开始时生成
                     if relative_path == 'py/__init__.py.vm':
                         continue
-                    
+
                     template_path = os.path.join(template_dir, relative_path)
                     if os.path.exists(template_path):
                         # 读取模板内容
                         try:
                             with open(template_path, 'r', encoding='utf-8') as f:
                                 template_content = f.read()
-                                
+
                             # 准备模板上下文
                             # table.module_name 是从数据库读取的前端模块名（真正的模块名，用于权限、前端、SQL）
                             # GeneratorConfig.python_model_name 是 Python 模块名（只用于 Python 后端代码路径）
@@ -776,10 +776,10 @@ class GenUtils:
                                 list_cols = None
                                 query_cols = None
                                 required_cols = None
-                            
+
                             # 预计算双驼峰命名的类名，避免模板中重复调用
                             class_name_pascal = to_camel_case(table.class_name)
-                            
+
                             context = {
                                 'table': table,
                                 'datetime': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
@@ -792,7 +792,7 @@ class GenUtils:
                                 'required_cols': required_cols,  # 树表的必填列
                                 'class_name_pascal': class_name_pascal  # 预计算的双驼峰类名
                             }
-                            
+
                             # 使用Jinja2渲染模板
                             template = Template(template_content)
                             # 如果是树表模板，打印列信息用于调试
@@ -810,10 +810,10 @@ class GenUtils:
                                 print(f"[ERROR] 错误信息: {str(e)}")
                                 print(f"[ERROR] 详细堆栈:\n{error_detail}")
                                 raise
-                            
+
                             # 生成文件名
                             output_file_name = GenUtils.get_file_name(relative_path, table)
-                            
+
                             # 收集目录路径和文件信息，用于生成 __init__.py
                             # 跳过 sql 和 vue 目录，这些目录不需要 __init__.py
                             dir_path = os.path.dirname(output_file_name)
@@ -825,11 +825,11 @@ class GenUtils:
                                     parent_dir = '/'.join(parts[:i])
                                     if parent_dir and 'sql' not in parent_dir and 'vue' not in parent_dir:
                                         init_dirs.add(parent_dir)
-                                
+
                                 # 收集文件信息用于生成导入语句
                                 if dir_path not in dir_files:
                                     dir_files[dir_path] = []
-                                
+
                                 # 根据文件类型确定导入的类名
                                 if '/entity/' in output_file_name and '.py' in output_file_name:
                                     # Entity 文件在 domain/entity/ 目录下
@@ -845,7 +845,7 @@ class GenUtils:
                                     dir_files[dir_path].append(('mapper', (f"{to_underscore(table.class_name)}_mapper", f"{to_camel_case(table.class_name)}Mapper"), table))
                                 elif '_controller.py' in output_file_name:
                                     dir_files[dir_path].append(('controller', 'gen', table))
-                            
+
                             # 检查是否已添加同名文件
                             if output_file_name in added_files:
                                 # 为重复文件添加序号
@@ -856,7 +856,7 @@ class GenUtils:
                                     counter += 1
                                     new_name = f"{name}_{counter}{ext}"
                                 output_file_name = new_name
-                            
+
                             # 检查渲染后的内容是否为空
                             if rendered_content.strip():
                                 # 将渲染后的内容写入ZIP文件
@@ -866,24 +866,24 @@ class GenUtils:
                                 print(f"警告: 模板 {relative_path} 渲染后内容为空")
                         except Exception as e:
                             print(f"处理表 {table.table_name} 的模板 {relative_path} 时出错: {e}")
-            
+
             # 为每个目录生成 __init__.py 文件，使其成为完整的 Python 模块
             for dir_path in sorted(init_dirs):
                 # 跳过模块根目录，因为已经在开始时生成
                 if dir_path == module_path:
                     continue
-                
+
                 # 跳过 sql 和 vue 目录，这些目录不需要 __init__.py
                 if 'sql' in dir_path or 'vue' in dir_path or dir_path.startswith('sql/') or dir_path.startswith('vue/'):
                     continue
-                
+
                 init_file_path = os.path.join(dir_path, '__init__.py').replace('\\', '/')
-                
+
                 # 生成 __init__.py 内容
                 init_lines = ["# -*- coding: utf-8 -*-"]
                 init_lines.append(f"# @Module: {dir_path}")
                 init_lines.append("")
-                
+
                 # 特殊处理 controller 目录：参考 ruoyi_generator/controller/__init__.py 的格式
                 if 'controller' in dir_path and dir_path.endswith('/controller'):
                     # 在 controller/__init__.py 中为每个 controller 创建蓝图
@@ -891,14 +891,14 @@ class GenUtils:
                         # 先导入 Blueprint
                         init_lines.append("from flask import Blueprint")
                         init_lines.append("")
-                        
+
                         # 为每个 controller 创建蓝图
                         for file_type, class_name, table_info in dir_files[dir_path]:
                             if file_type == 'controller':
                                 blueprint_name = to_underscore(table_info.class_name)
                                 url_prefix = f"/{table_info.module_name}/{table_info.business_name}"
                                 init_lines.append(f"{blueprint_name} = Blueprint('{blueprint_name}', __name__, url_prefix='{url_prefix}')")
-                        
+
                         # 导入各个 controller 模块
                         init_lines.append("")
                         init_lines.append("")
@@ -927,31 +927,31 @@ class GenUtils:
                                 # Mapper 文件，文件名和类名分开处理
                                 file_name, class_name = class_name_info
                                 imports.append(f"from .{file_name} import {class_name}")
-                        
+
                         if imports:
                             init_lines.extend(sorted(set(imports)))
-                
+
                 init_content = "\n".join(init_lines) + "\n"
                 zip_file.writestr(init_file_path, init_content)
-        
+
         zip_buffer.seek(0)
         return zip_buffer
-        
+
     @staticmethod
     def set_column_list_index(table: GenTable):
         """
         为表的列设置 list_index 属性，用于 Vue 模板中的 columns 数组索引
-        
+
         Args:
             table (GenTable): 表信息
         """
         if not table.columns:
             return
-        
+
         # 如果是树表，需要排除主键列
         is_tree = table.tpl_category == 'tree'
         print(f"[DEBUG] set_column_list_index: 表类型={table.tpl_category}, 是树表={is_tree}, 列数={len(table.columns)}")
-        
+
         list_index = 0
         for column in table.columns:
             # 对于树表，只处理 is_list='1' 且不是主键的列
@@ -976,23 +976,23 @@ class GenUtils:
     def preview_code(table: GenTable) -> dict:
         """
         预览代码
-        
+
         Args:
             table (GenTable): 表信息
-            
+
         Returns:
             dict: 预览代码
         """
         # 设置列的 list_index 属性
         GenUtils.set_column_list_index(table)
-        
+
         # 设置主键列
         pk_columns = [column for column in table.columns if column.is_pk == '1']
         if pk_columns:
             table.pk_column = pk_columns[0]
         else:
             table.pk_column = None
-        
+
         # 从 options 中解析 parentMenuId
         if table.options:
             import json
@@ -1006,39 +1006,39 @@ class GenUtils:
                     table.parent_menu_id = options_dict.get('parentMenuId')
             except Exception as e:
                 print(f"解析 options 字段出错: {e}")
-        
+
         # 强制使用前端模块名（modelName），而不是 Python 模块名
-        # module_name 必须使用 modelName（test），不能使用 pythonModelName（ruoyi_test）
+        # module_name 必须使用 modelName（test），不能使用 pythonModelName（ruoyi_car）
         # 如果 module_name 是空的、等于 python_model_name 或包含 python_model_name，强制替换为 model_name
         original_module_name = table.module_name
         if not table.module_name or table.module_name == GeneratorConfig.python_model_name or (table.module_name and GeneratorConfig.python_model_name in table.module_name):
             table.module_name = GeneratorConfig.model_name
             if original_module_name != table.module_name:
                 print(f"警告：table.module_name 从 '{original_module_name}' 强制替换为 '{table.module_name}'（前端模块名）")
-        
+
         # 获取模板目录
         template_dir = os.path.join(os.path.dirname(__file__), 'vm')
-        
+
         # 存储预览代码的字典
         preview_data = {}
-        
+
         # 定义需要预览的核心模板文件
         core_templates = [
             'py/entity.py.vm',
-            'py/po.py.vm', 
+            'py/po.py.vm',
             'py/controller.py.vm',
             'py/service.py.vm',
             'py/mapper.py.vm',
             'js/api.js.vm',
             'sql/menu.sql.vm'
         ]
-        
+
         # 根据表类型添加相应的Vue模板，但预览时都使用index.vue.vm作为文件名
         if table.tpl_category == 'tree':
             core_templates.append('vue/index-tree.vue.vm')
         else:
             core_templates.append('vue/index.vue.vm')
-        
+
         # 处理每个核心模板文件
         for relative_path in core_templates:
             template_path = os.path.join(template_dir, relative_path)
@@ -1047,7 +1047,7 @@ class GenUtils:
                 try:
                     with open(template_path, 'r', encoding='utf-8') as f:
                         template_content = f.read()
-                        
+
                     # 准备模板上下文
                     # table.module_name 是从数据库读取的前端模块名（真正的模块名，用于权限、前端、SQL）
                     # GeneratorConfig.python_model_name 是 Python 模块名（只用于 Python 后端代码路径）
@@ -1060,10 +1060,10 @@ class GenUtils:
                         list_cols = None
                         query_cols = None
                         required_cols = None
-                    
+
                         # 预计算双驼峰命名的类名，避免模板中重复调用
                         class_name_pascal = to_camel_case(table.class_name)
-                        
+
                         context = {
                             'table': table,
                             'datetime': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
@@ -1076,7 +1076,7 @@ class GenUtils:
                             'required_cols': required_cols,  # 树表的必填列
                             'class_name_pascal': class_name_pascal  # 预计算的双驼峰类名
                         }
-                    
+
                     # 使用Jinja2渲染模板
                     template = Template(template_content)
                     # 如果是树表模板，打印列信息用于调试
@@ -1086,7 +1086,7 @@ class GenUtils:
                             list_idx = getattr(col, 'list_index', 'NOT_SET')
                             print(f"  - {col.column_name}: is_list={col.is_list}, is_pk={col.is_pk}, list_index={list_idx} (type={type(list_idx)})")
                     rendered_content = template.render(**context)
-                    
+
                     # 存储渲染后的内容
                     preview_data[relative_path] = rendered_content
                 except Exception as e:
@@ -1099,5 +1099,5 @@ class GenUtils:
                     preview_data[relative_path] = f"模板渲染失败: {str(e)}\n详细错误:\n{error_detail}"
             else:
                 preview_data[relative_path] = "模板文件不存在"
-        
+
         return preview_data

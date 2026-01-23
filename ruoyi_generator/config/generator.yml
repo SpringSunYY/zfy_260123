@@ -2,9 +2,9 @@ gen:
 #  作者
   author: YY
 #  模块,你需要生成python的模块
-  pythonModelName: ruoyi_test
+  pythonModelName: ruoyi_car
   #模块,真正的模块名字
   modelName: test
-  packageName: 
+  packageName:
   autoRemovePre: true
   tablePrefix: tb_
