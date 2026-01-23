@@ -1,0 +1,86 @@
+# -*- coding: utf-8 -*-
+# @Author  : {{ table.function_author }}
+# @FileName: {{ table.class_name }}.py
+# @Time    : {{ datetime }}
+
+{%- set flags = namespace(has_datetime=False, needs_str_to_int=False, has_query=False) %}
+{%- for column in table.columns %}
+{%- set col_type = (column.java_type or 'String')|lower %}
+{%- if col_type in ['date', 'datetime', 'timestamp'] %}
+{%- set flags.has_datetime = True %}
+{%- endif %}
+{%- if col_type in ['integer', 'int', 'long', 'short'] %}
+{%- set flags.needs_str_to_int = True %}
+{%- endif %}
+{%- if column.is_query == '1' %}
+{%- set flags.has_query = True %}
+{%- endif %}
+{%- endfor %}
+
+from typing import Optional, Annotated
+{%- if flags.has_datetime %}
+from datetime import datetime
+{%- endif %}
+from pydantic import Field{% if flags.has_datetime or flags.needs_str_to_int %}, BeforeValidator{% endif %}
+from ruoyi_common.base.model import BaseEntity
+{%- if flags.has_datetime and flags.needs_str_to_int %}
+from ruoyi_common.base.transformer import to_datetime, str_to_int
+{%- elif flags.has_datetime %}
+from ruoyi_common.base.transformer import to_datetime
+{%- elif flags.needs_str_to_int %}
+from ruoyi_common.base.transformer import str_to_int
+{%- endif %}
+from ruoyi_common.base.schema_excel import ExcelField
+{%- if flags.has_query %}
+from ruoyi_common.base.schema_vo import VoField
+{%- endif %}
+
+
+class {{ class_name_pascal }}(BaseEntity):
+    """
+    {{ table.table_comment }}对象
+    """
+{%- for column in table.columns %}
+{%- set raw_comment = column.column_comment or column.java_field %}
+{%- set display_comment = raw_comment or column.java_field %}
+{%- set comment = (display_comment)|replace('"','\\"') %}
+{%- set excel_name = (raw_comment or column.java_field)|replace('"','\\"') %}
+{%- set attr_name = underscore(column.java_field) %}
+{%- set col_type = (column.java_type or 'String') %}
+{%- set col_type_lower = col_type|lower %}
+{%- set py_type = 'Optional[str]' %}
+{%- if col_type_lower in ['integer', 'int', 'long', 'short'] %}
+{%- set py_type = 'Optional[int]' %}
+{%- elif col_type_lower in ['float', 'double', 'bigdecimal', 'decimal'] %}
+{%- set py_type = 'Optional[float]' %}
+{%- elif col_type_lower in ['boolean', 'bool'] %}
+{%- set py_type = 'Optional[bool]' %}
+{%- elif col_type_lower in ['date', 'datetime', 'timestamp'] %}
+{%- set py_type = 'Optional[datetime]' %}
+{%- endif %}
+{%- set metadata = [] %}
+{%- if col_type_lower in ['integer', 'int', 'long', 'short'] %}
+{%- set _ = metadata.append('BeforeValidator(str_to_int)') %}
+{%- elif col_type_lower in ['date', 'datetime', 'timestamp'] %}
+{%- set _ = metadata.append('BeforeValidator(to_datetime())') %}
+{%- endif %}
+{%- set _ = metadata.append('Field(default=None, description="' ~ comment ~ '")') %}
+{%- if column.is_query == '1' %}
+{%- set _ = metadata.append('VoField(query=True)') %}
+{%- endif %}
+{%- set excel_field_params = ['name="' ~ excel_name ~ '"'] %}
+{%- if column.dict_type and column.dict_type != '' %}
+{%- set _ = excel_field_params.append('dict_type="' ~ column.dict_type ~ '"') %}
+{%- endif %}
+{%- set _ = metadata.append('ExcelField(' ~ excel_field_params | join(', ') ~ ')') %}
+    # {{ display_comment }}
+    {{ attr_name }}: Annotated[
+        {{ py_type }},
+        {{ metadata | join(',\n        ') }}
+    ]
+{%- endfor %}
+
+    # 页码
+    page_num: Optional[int] = Field(default=1, description="页码")
+    # 每页数量
+    page_size: Optional[int] = Field(default=10, description="每页数量")

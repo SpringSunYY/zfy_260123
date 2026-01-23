@@ -1,0 +1,92 @@
+# -*- coding: utf-8 -*-
+# @Author  : {{ table.function_author }}
+# @FileName: {{ underscore(table.class_name) }}_po.py
+# @Time    : {{ datetime }}
+
+from typing import Optional
+from datetime import datetime
+
+from sqlalchemy import BigInteger, Boolean, Date, DateTime, Float, Integer, JSON, LargeBinary, Numeric, String, Text, Time
+from sqlalchemy.orm import Mapped, mapped_column
+
+from ruoyi_admin.ext import db
+
+class {{ class_name_pascal }}Po(db.Model):
+    """
+    {{ table.table_comment }}PO对象
+    """
+    __tablename__ = '{{ table.table_name }}'
+    __table_args__ = {'comment': '{{ table.table_comment }}'}
+
+{%- for column in table.columns %}
+{%- set raw_type = (column.column_type or 'varchar(255)')|lower %}
+{%- if '(' in raw_type %}
+{%- set base_type = raw_type.split('(')[0] %}
+{%- set arg_string = raw_type.split('(')[1].split(')')[0] %}
+{%- else %}
+{%- set base_type = raw_type %}
+{%- set arg_string = '' %}
+{%- endif %}
+{%- set args = arg_string.split(',') if arg_string else [] %}
+{%- set length = args[0].strip() if args and args[0] else '' %}
+{%- set precision = args[0].strip() if args and args[0] else '' %}
+{%- set scale = args[1].strip() if args|length > 1 else '' %}
+{%- set attr_name = underscore(column.java_field) %}
+{%- set nullable_flag = 'False' if column.is_required == '1' else 'True' %}
+{%- set py_type = 'Optional[str]' %}
+{%- if column.java_type in ['Integer', 'int'] %}
+{%- set py_type = 'Optional[int]' %}
+{%- elif column.java_type in ['Long'] %}
+{%- set py_type = 'Optional[int]' %}
+{%- elif column.java_type in ['Float', 'Double'] %}
+{%- set py_type = 'Optional[float]' %}
+{%- elif column.java_type in ['Boolean', 'bool'] %}
+{%- set py_type = 'Optional[bool]' %}
+{%- elif column.java_type in ['Date', 'DateTime'] %}
+{%- set py_type = 'Optional[datetime]' %}
+{%- endif %}
+{%- if column.is_pk == '1' %}
+{%- set py_type = 'int' %}
+{%- set nullable_flag = 'False' %}
+{%- endif %}
+{%- set type_expr = 'String(255)' %}
+{%- if base_type in ['varchar', 'char', 'nvarchar'] %}
+{%- set type_expr = 'String(' ~ (length or '255') ~ ')' %}
+{%- elif base_type in ['text', 'mediumtext', 'longtext'] %}
+{%- set type_expr = 'Text' %}
+{%- elif base_type in ['int', 'integer', 'smallint', 'mediumint'] %}
+{%- set type_expr = 'Integer' %}
+{%- elif base_type in ['tinyint'] %}
+{%- if column.java_type in ['Boolean', 'bool'] %}
+{%- set type_expr = 'Boolean' %}
+{%- else %}
+{%- set type_expr = 'Integer' %}
+{%- endif %}
+{%- elif base_type in ['bigint'] %}
+{%- set type_expr = 'BigInteger' %}
+{%- elif base_type in ['float', 'double'] %}
+{%- set type_expr = 'Float' %}
+{%- elif base_type in ['decimal', 'numeric'] %}
+{%- set type_expr = 'Numeric(' ~ (precision or '10') ~ (', ' ~ scale if scale else ', 0') ~ ')' %}
+{%- elif base_type in ['date'] %}
+{%- set type_expr = 'Date' %}
+{%- elif base_type in ['datetime', 'timestamp'] %}
+{%- set type_expr = 'DateTime' %}
+{%- elif base_type in ['time'] %}
+{%- set type_expr = 'Time' %}
+{%- elif base_type in ['json'] %}
+{%- set type_expr = 'JSON' %}
+{%- elif base_type in ['blob', 'longblob', 'mediumblob'] %}
+{%- set type_expr = 'LargeBinary' %}
+{%- endif %}
+    {{ attr_name }}: Mapped[{{ py_type }}] = mapped_column(
+        '{{ column.column_name }}',
+        {{ type_expr }},
+{%- if column.is_pk == '1' %}
+        primary_key=True,
+        autoincrement={{ 'True' if column.is_increment == '1' else 'False' }},
+{%- endif %}
+        nullable={{ nullable_flag }},
+        comment='{{ column.column_comment | replace("'", "\\'") if column.column_comment else '' }}'
+    )
+{%- endfor %}
