@@ -7,7 +7,7 @@ from typing import Optional, Annotated
 from datetime import datetime
 from pydantic import Field, BeforeValidator
 from ruoyi_common.base.model import BaseEntity
-from ruoyi_common.base.transformer import to_datetime, str_to_int
+from ruoyi_common.base.transformer import to_datetime, str_to_int, str_to_float
 from ruoyi_common.base.schema_excel import ExcelField
 from ruoyi_common.base.schema_vo import VoField
 
@@ -22,34 +22,34 @@ class Sales(BaseEntity):
         BeforeValidator(str_to_int),
         Field(default=None, description="编号"),
         VoField(query=True),
-        ExcelField(name="编号")
+        ExcelField(name="编号", action="export")
     ]
     # 国家
     country: Annotated[
         Optional[str],
         Field(default=None, description="国家"),
         VoField(query=True),
-        ExcelField(name="国家", dict_type="country")
+        ExcelField(name="国家", dict_type="country", action="export")
     ]
     # 品牌名
     brand_name: Annotated[
         Optional[str],
         Field(default=None, description="品牌名"),
         VoField(query=True),
-        ExcelField(name="品牌名")
+        ExcelField(name="品牌名", action="export")
     ]
     # 封面
     image: Annotated[
         Optional[str],
         Field(default=None, description="封面"),
-        ExcelField(name="封面")
+        ExcelField(name="封面", action="export")
     ]
     # 系列名称
     series_name: Annotated[
         Optional[str],
         Field(default=None, description="系列名称"),
         VoField(query=True),
-        ExcelField(name="系列名称")
+        ExcelField(name="系列名称", action="export")
     ]
     # 车系ID
     series_id: Annotated[
@@ -64,26 +64,26 @@ class Sales(BaseEntity):
         Optional[str],
         Field(default=None, description="车型"),
         VoField(query=True),
-        ExcelField(name="车型", dict_type="model_type")
+        ExcelField(name="车型", dict_type="model_type", action="export")
     ]
     # 能源类型
     energy_type: Annotated[
         Optional[str],
         Field(default=None, description="能源类型"),
         VoField(query=True),
-        ExcelField(name="能源类型", dict_type="energy_type")
+        ExcelField(name="能源类型", dict_type="energy_type", action="export")
     ]
     # 最大价格
     max_price: Annotated[
         Optional[float],
         Field(default=None, description="最大价格"),
-        ExcelField(name="最大价格")
+        ExcelField(name="最大价格", action="export")
     ]
     # 最低价格
     min_price: Annotated[
         Optional[float],
         Field(default=None, description="最低价格"),
-        ExcelField(name="最低价格")
+        ExcelField(name="最低价格", action="export")
     ]
     # 排名
     rank: Annotated[
@@ -136,8 +136,7 @@ class Sales(BaseEntity):
     ]
     # 月份
     month: Annotated[
-        Optional[int],
-        BeforeValidator(str_to_int),
+        Optional[str],
         Field(default=None, description="月份"),
         ExcelField(name="月份")
     ]
@@ -145,9 +144,9 @@ class Sales(BaseEntity):
     month_date: Annotated[
         Optional[datetime],
         BeforeValidator(to_datetime()),
-        Field(default=None, description="月份"),
+        Field(default=None, description="月份时间"),
         VoField(query=True),
-        ExcelField(name="月份")
+        ExcelField(name="月份时间")
     ]
     # 城市
     city_name: Annotated[
@@ -169,27 +168,27 @@ class Sales(BaseEntity):
         BeforeValidator(to_datetime()),
         Field(default=None, description="创建时间"),
         VoField(query=True),
-        ExcelField(name="创建时间")
+        ExcelField(name="创建时间", action="export")
     ]
     # 创建人
     create_by: Annotated[
         Optional[str],
         Field(default=None, description="创建人"),
         VoField(query=True),
-        ExcelField(name="创建人")
+        ExcelField(name="创建人", action="export")
     ]
     # 更新时间
     update_time: Annotated[
         Optional[datetime],
         BeforeValidator(to_datetime()),
         Field(default=None, description="更新时间"),
-        ExcelField(name="更新时间")
+        ExcelField(name="更新时间", action="export")
     ]
     # 备注
     remark: Annotated[
         Optional[str],
         Field(default=None, description="备注"),
-        ExcelField(name="备注")
+        ExcelField(name="备注", action="export")
     ]
     params: Optional[dict] = Field(default=None, description="参数")
     # 页码

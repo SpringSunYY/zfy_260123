@@ -76,7 +76,7 @@ class SalesMapper:
 
             if sales.create_by:
                 stmt = stmt.where(SalesPo.create_by.like("%" + str(sales.create_by) + "%"))
-
+            stmt = stmt.order_by(SalesPo.update_time.desc())
             if "criterian_meta" in g and g.criterian_meta.page:
                 g.criterian_meta.page.stmt = stmt
             result = db.session.execute(stmt).scalars().all()
@@ -101,6 +101,31 @@ class SalesMapper:
             return Sales.model_validate(result) if result else None
         except Exception as e:
             print(f"根据ID查询销量信息出错: {e}")
+            return None
+
+    @classmethod
+    def select_sales_by_series_city_month(cls, series_id: int, city_name: str, month: str) -> Optional[Sales]:
+        """
+        根据车系ID、城市名称、月份查询销量信息
+
+        Args:
+            series_id (int): 车系ID
+            city_name (str): 城市名称
+            month (int): 月份
+
+        Returns:
+            sales: 销量信息对象
+        """
+        try:
+            stmt = select(SalesPo).where(
+                SalesPo.series_id == series_id,
+                SalesPo.city_name == city_name,
+                SalesPo.month == month
+            )
+            result = db.session.execute(stmt).scalars().first();
+            return Sales.model_validate(result) if result else None
+        except Exception as e:
+            print(f"根据车系ID、城市名称、月份查询销量信息出错: {e}")
             return None
 
     @classmethod

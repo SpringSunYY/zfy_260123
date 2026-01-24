@@ -772,7 +772,7 @@ class DateUtil:
 
 
 class FileUploadUtil:
-    DEFAULT_MAX_SIZE = 50 * 1024 * 1024
+    DEFAULT_MAX_SIZE = 500 * 1024 * 1024
 
     DEFAULT_FILE_NAME_LENGTH = 100
 
@@ -1063,7 +1063,7 @@ class ExcelUtil:
     allowed_content_types = [
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     ]
-    max_content_length = 6 * 1024 * 1024  # 6M
+    max_content_length = 600 * 1024 * 1024  # 6M
 
     def __init__(self, model: Type[BaseModel]):
         self.model = model

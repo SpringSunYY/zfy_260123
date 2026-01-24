@@ -39,7 +39,7 @@ class SalesPo(db.Model):
     )
     image: Mapped[Optional[str]] = mapped_column(
         'image',
-        String(255),
+        String(1024),
         nullable=True,
         comment='封面'
     )
@@ -121,7 +121,7 @@ class SalesPo(db.Model):
         nullable=True,
         comment='上月城市总销量'
     )
-    month: Mapped[Optional[int]] = mapped_column(
+    month: Mapped[Optional[str]] = mapped_column(
         'month',
         Integer,
         nullable=True,
