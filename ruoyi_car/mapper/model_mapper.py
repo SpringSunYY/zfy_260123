@@ -91,7 +91,7 @@ class ModelMapper:
             print(f"查询车型信息列表出错: {e}")
             return []
 
-    
+
     @classmethod
     def select_model_by_id(cls, id: int) -> Optional[Model]:
         """
@@ -109,7 +109,30 @@ class ModelMapper:
         except Exception as e:
             print(f"根据ID查询车型信息出错: {e}")
             return None
-    
+
+    @classmethod
+    def select_model_by_car_id(cls, car_id: int) -> Optional[Model]:
+        """
+        根据car_id查询车型信息
+
+        Args:
+            car_id (int): car_id
+
+        Returns:
+            model: 车型信息对象
+        """
+        try:
+            stmt = select(ModelPo).where(ModelPo.car_id == car_id)
+            result = db.session.execute(stmt).scalar_one_or_none()
+            return Model.model_validate(result) if result else None
+        except Exception as e:
+            # 如果出现多条记录异常，取第一条
+            if "Multiple rows" in str(e) or "Multiple rows were found" in str(e):
+                stmt = select(ModelPo).where(ModelPo.car_id == car_id)
+                result = db.session.execute(stmt).scalars().first()
+                return Model.model_validate(result) if result else None
+            print(f"根据car_id查询车型信息出错: {e}")
+            return None
 
     @classmethod
     def insert_model(cls, model: Model) -> int:
@@ -135,8 +158,8 @@ class ModelMapper:
             new_po.car_id = model.car_id
             new_po.owner_price_str = model.owner_price_str
             new_po.owner_price = model.owner_price
-            new_po.official_price_str = model.official_price_str
-            new_po.official_price = model.official_price
+            new_po.dealer_price_str = model.dealer_price_str
+            new_po.dealer_price = model.dealer_price
             new_po.engine_motor = model.engine_motor
             new_po.energy_type = model.energy_type
             new_po.acceleration_str = model.acceleration_str
@@ -157,7 +180,7 @@ class ModelMapper:
             print(f"新增车型信息出错: {e}")
             return 0
 
-    
+
     @classmethod
     def update_model(cls, model: Model) -> int:
         """
@@ -170,7 +193,7 @@ class ModelMapper:
             int: 更新的记录数
         """
         try:
-            
+
             existing = db.session.get(ModelPo, model.id)
             if not existing:
                 return 0
@@ -185,8 +208,8 @@ class ModelMapper:
             existing.car_id = model.car_id
             existing.owner_price_str = model.owner_price_str
             existing.owner_price = model.owner_price
-            existing.official_price_str = model.official_price_str
-            existing.official_price = model.official_price
+            existing.dealer_price_str = model.dealer_price_str
+            existing.dealer_price = model.dealer_price
             existing.engine_motor = model.engine_motor
             existing.energy_type = model.energy_type
             existing.acceleration_str = model.acceleration_str
@@ -200,7 +223,7 @@ class ModelMapper:
             existing.remark = model.remark
             db.session.commit()
             return 1
-            
+
         except Exception as e:
             db.session.rollback()
             print(f"修改车型信息出错: {e}")
@@ -226,4 +249,3 @@ class ModelMapper:
             db.session.rollback()
             print(f"批量删除车型信息出错: {e}")
             return 0
-    

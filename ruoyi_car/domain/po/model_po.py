@@ -79,14 +79,14 @@ class ModelPo(db.Model):
         nullable=True,
         comment='车主报价'
     )
-    official_price_str: Mapped[Optional[str]] = mapped_column(
-        'official_price_str',
+    dealer_price_str: Mapped[Optional[str]] = mapped_column(
+        'dealer_price_str',
         String(255),
         nullable=True,
         comment='官方指导价'
     )
-    official_price: Mapped[Optional[str]] = mapped_column(
-        'official_price',
+    dealer_price: Mapped[Optional[str]] = mapped_column(
+        'dealer_price',
         Numeric(10, 0),
         nullable=True,
         comment='官方指导价'

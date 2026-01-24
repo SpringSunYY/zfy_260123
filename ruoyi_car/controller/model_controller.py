@@ -142,12 +142,11 @@ def import_template():
 @Log(title='车型信息管理', business_type=BusinessType.IMPORT)
 @JsonSerializer()
 def import_data(
-    file: List[FileStorage],
-    update_support: Annotated[bool, BeforeValidator(lambda x: x != "0")]
+    file: List[FileStorage]
 ):
     """导入车型信息数据"""
     file = file[0]
     excel_util = ExcelUtil(Model)
     model_list = excel_util.import_file(file, sheetname="车型信息数据")
-    msg = model_service.import_model(model_list, update_support)
+    msg = model_service.import_model(model_list)
     return AjaxResponse.from_success(msg=msg)
