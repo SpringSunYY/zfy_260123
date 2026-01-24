@@ -3,13 +3,15 @@
 # @FileName: series.py
 # @Time    : 2026-01-23 20:21:54
 
-from typing import Optional, Annotated
 from datetime import datetime
+from typing import Optional, Annotated
+
 from pydantic import Field, BeforeValidator
+
 from ruoyi_common.base.model import BaseEntity
-from ruoyi_common.base.transformer import to_datetime, str_to_int
 from ruoyi_common.base.schema_excel import ExcelField
 from ruoyi_common.base.schema_vo import VoField
+from ruoyi_common.base.transformer import to_datetime, str_to_int, str_to_float
 
 
 class Series(BaseEntity):
@@ -22,7 +24,7 @@ class Series(BaseEntity):
         BeforeValidator(str_to_int),
         Field(default=None, description="编号"),
         VoField(query=True),
-        ExcelField(name="编号")
+        ExcelField(name="编号", action="export")
     ]
     # 国家
     country: Annotated[
@@ -75,13 +77,13 @@ class Series(BaseEntity):
     max_price: Annotated[
         Optional[float],
         Field(default=None, description="最大价格"),
-        ExcelField(name="最大价格")
+        ExcelField(name="最大价格",action="export")
     ]
     # 最低价格
     min_price: Annotated[
         Optional[float],
         Field(default=None, description="最低价格"),
-        ExcelField(name="最低价格")
+        ExcelField(name="最低价格", action="export")
     ]
     # 月总销量
     month_total_sales: Annotated[
@@ -122,48 +124,56 @@ class Series(BaseEntity):
     # 综合
     overall_score: Annotated[
         Optional[float],
+        BeforeValidator(str_to_float),
         Field(default=None, description="综合"),
         ExcelField(name="综合")
     ]
     # 外观
     exterior_score: Annotated[
         Optional[float],
+        BeforeValidator(str_to_float),
         Field(default=None, description="外观"),
         ExcelField(name="外观")
     ]
     # 内饰
     interior_score: Annotated[
         Optional[float],
+        BeforeValidator(str_to_float),
         Field(default=None, description="内饰"),
         ExcelField(name="内饰")
     ]
     # 空间
     space_score: Annotated[
         Optional[float],
+        BeforeValidator(str_to_float),
         Field(default=None, description="空间"),
         ExcelField(name="空间")
     ]
     # 操控
     handling_score: Annotated[
         Optional[float],
+        BeforeValidator(str_to_float),
         Field(default=None, description="操控"),
         ExcelField(name="操控")
     ]
     # 舒适性
     comfort_score: Annotated[
         Optional[float],
+        BeforeValidator(str_to_float),
         Field(default=None, description="舒适性"),
         ExcelField(name="舒适性")
     ]
     # 动力
     power_score: Annotated[
         Optional[float],
+        BeforeValidator(str_to_float),
         Field(default=None, description="动力"),
         ExcelField(name="动力")
     ]
     # 配置
     configuration_score: Annotated[
         Optional[float],
+        BeforeValidator(str_to_float),
         Field(default=None, description="配置"),
         ExcelField(name="配置")
     ]
@@ -173,27 +183,27 @@ class Series(BaseEntity):
         BeforeValidator(to_datetime()),
         Field(default=None, description="创建时间"),
         VoField(query=True),
-        ExcelField(name="创建时间")
+        ExcelField(name="创建时间", action="export")
     ]
     # 创建人
     create_by: Annotated[
         Optional[str],
         Field(default=None, description="创建人"),
         VoField(query=True),
-        ExcelField(name="创建人")
+        ExcelField(name="创建人", action="export")
     ]
     # 更新时间
     update_time: Annotated[
         Optional[datetime],
         BeforeValidator(to_datetime()),
         Field(default=None, description="更新时间"),
-        ExcelField(name="更新时间")
+        ExcelField(name="更新时间", action="export")
     ]
     # 备注
     remark: Annotated[
         Optional[str],
         Field(default=None, description="备注"),
-        ExcelField(name="备注")
+        ExcelField(name="备注", action="export")
     ]
 
     # 页码

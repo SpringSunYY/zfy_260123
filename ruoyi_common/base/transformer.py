@@ -59,12 +59,18 @@ def to_datetime(format=None) -> Callable[[str | NoneType, ValidationInfo], datet
         if isinstance(value, datetime):
             return value
         if isinstance(value, str):
+            # 处理无效的日期值，如 '0000-00-00 00:00:00' 或 '0000-00-00'
+            value_str = value.strip()
+            if value_str.startswith('0000-00-00') or value_str == '0000-00-00' or value_str == '':
+                return None
+            
             for fmt in formats:
                 try:
-                    return datetime.strptime(value, fmt)
+                    return datetime.strptime(value_str, fmt)
                 except ValueError:
                     continue
-            raise ValueError(f"time data '{value}' does not match formats: {formats}")
+            # 如果所有格式都失败，返回 None 而不是抛出异常（处理脏数据）
+            return None
         raise ValueError(f"Invalid datetime format: {value}")
 
     return validate_datetime

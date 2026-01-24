@@ -3,15 +3,16 @@
 # @FileName: sales_mapper.py
 # @Time    : 2026-01-23 20:21:54
 
-from typing import List, Optional
 from datetime import datetime
+from typing import List, Optional
 
 from flask import g
-from sqlalchemy import select, update, delete
+from sqlalchemy import select, delete
 
 from ruoyi_admin.ext import db
 from ruoyi_car.domain.entity import Sales
 from ruoyi_car.domain.po import SalesPo
+
 
 class SalesMapper:
     """销量信息Mapper"""
@@ -31,7 +32,6 @@ class SalesMapper:
             # 构建查询条件
             stmt = select(SalesPo)
 
-
             if sales.id is not None:
                 stmt = stmt.where(SalesPo.id == sales.id)
 
@@ -40,7 +40,6 @@ class SalesMapper:
 
             if sales.brand_name:
                 stmt = stmt.where(SalesPo.brand_name.like("%" + str(sales.brand_name) + "%"))
-
 
             if sales.series_name:
                 stmt = stmt.where(SalesPo.series_name.like("%" + str(sales.series_name) + "%"))
@@ -53,17 +52,6 @@ class SalesMapper:
 
             if sales.energy_type is not None:
                 stmt = stmt.where(SalesPo.energy_type == sales.energy_type)
-
-
-
-
-
-
-
-
-
-
-
             _params = getattr(sales, "params", {}) or {}
             begin_val = _params.get("beginMonthDate")
             end_val = _params.get("endMonthDate")
@@ -89,7 +77,6 @@ class SalesMapper:
             if sales.create_by:
                 stmt = stmt.where(SalesPo.create_by.like("%" + str(sales.create_by) + "%"))
 
-
             if "criterian_meta" in g and g.criterian_meta.page:
                 g.criterian_meta.page.stmt = stmt
             result = db.session.execute(stmt).scalars().all()
@@ -98,7 +85,6 @@ class SalesMapper:
             print(f"查询销量信息列表出错: {e}")
             return []
 
-    
     @classmethod
     def select_sales_by_id(cls, id: int) -> Optional[Sales]:
         """
@@ -116,7 +102,6 @@ class SalesMapper:
         except Exception as e:
             print(f"根据ID查询销量信息出错: {e}")
             return None
-    
 
     @classmethod
     def insert_sales(cls, sales: Sales) -> int:
@@ -166,7 +151,6 @@ class SalesMapper:
             print(f"新增销量信息出错: {e}")
             return 0
 
-    
     @classmethod
     def update_sales(cls, sales: Sales) -> int:
         """
@@ -179,7 +163,7 @@ class SalesMapper:
             int: 更新的记录数
         """
         try:
-            
+
             existing = db.session.get(SalesPo, sales.id)
             if not existing:
                 return 0
@@ -211,7 +195,7 @@ class SalesMapper:
             existing.remark = sales.remark
             db.session.commit()
             return 1
-            
+
         except Exception as e:
             db.session.rollback()
             print(f"修改销量信息出错: {e}")
@@ -237,4 +221,3 @@ class SalesMapper:
             db.session.rollback()
             print(f"批量删除销量信息出错: {e}")
             return 0
-    
