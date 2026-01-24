@@ -205,7 +205,7 @@ class Series(BaseEntity):
         Field(default=None, description="备注"),
         ExcelField(name="备注", action="export")
     ]
-
+    params: Optional[dict] = Field(default=None, description="参数")
     # 页码
     page_num: Optional[int] = Field(default=1, description="页码")
     # 每页数量

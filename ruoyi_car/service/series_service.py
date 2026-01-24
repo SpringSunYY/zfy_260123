@@ -52,6 +52,10 @@ class SeriesService:
         Returns:
             int: 插入的记录数
         """
+        # 先判断车系是否存在
+        series_db = SeriesMapper.select_series_by_series_id(series.series_id)
+        if series_db:
+            raise ServiceException(f"车系ID为{series.series_id}的记录已存在")
         return SeriesMapper.insert_series(series)
 
     @classmethod
@@ -65,6 +69,10 @@ class SeriesService:
         Returns:
             int: 更新的记录数
         """
+        # 查询车系，如果存在且id不一样，表示不是同一个，此系列已经存在
+        series_db = SeriesMapper.select_series_by_series_id(series.series_id)
+        if series_db and series_db.id != series.id:
+            raise ServiceException(f"车系ID为{series.series_id}的记录已存在")
         return SeriesMapper.update_series(series)
 
     @classmethod
@@ -115,7 +123,7 @@ class SeriesService:
                 cls._parse_price_from_string(series)
 
                 # 检查是否存在，存在则更新，不存在则新增
-                existing = SeriesMapper.select_car_info_by_series_id(series.series_id)
+                existing = SeriesMapper.select_series_by_series_id(series.series_id)
                 if existing:
                     # 更新时保留原有的创建时间和创建人
                     series.create_time = existing.create_time
@@ -135,7 +143,8 @@ class SeriesService:
                     fail_count += 1
                     error_msg = f"第{fail_count}条数据，{operation}失败：{series.series_name or series.series_id}"
                     fail_msg += f"<br/> {error_msg}"
-                    LogUtil.logger.error(f"导入车系信息{operation}失败，series_id={series.series_id}, series_name={series.series_name}, 返回结果={result}")
+                    LogUtil.logger.error(
+                        f"导入车系信息{operation}失败，series_id={series.series_id}, series_name={series.series_name}, 返回结果={result}")
             except Exception as e:
                 fail_count += 1
                 fail_msg += f"<br/> 第{fail_count}条数据，导入失败，原因：{e.__class__.__name__}"
@@ -154,15 +163,15 @@ class SeriesService:
     def _validate_required_fields(cls, series: Series) -> List[str]:
         """
         验证必填字段，返回缺失的字段列表
-        
+
         Args:
             series: 车系信息对象
-            
+
         Returns:
             List[str]: 缺失的字段名称列表
         """
         missing_fields = []
-        
+
         # 基础信息字段
         if not series.country:
             missing_fields.append("国家")
@@ -174,29 +183,29 @@ class SeriesService:
             missing_fields.append("系列名称")
         if not series.series_id:
             missing_fields.append("车系ID")
-        
+
         # 价格字段
         if not series.dealer_price_str:
             missing_fields.append("经销商报价")
         if not series.official_price_str:
             missing_fields.append("官方指导价")
-        
+
         # 销量字段
         if series.month_total_sales is None:
             missing_fields.append("月总销量")
         if series.city_total_sales is None:
             missing_fields.append("城市总销量")
-        
+
         # 车型和能源类型
         if not series.model_type:
             missing_fields.append("车型")
         if not series.energy_type:
             missing_fields.append("能源类型")
-        
+
         # 上市时间
         if not series.market_time:
             missing_fields.append("上市时间")
-        
+
         # 评分字段
         if series.overall_score is None:
             missing_fields.append("综合")
@@ -214,14 +223,14 @@ class SeriesService:
             missing_fields.append("动力")
         if series.configuration_score is None:
             missing_fields.append("配置")
-        
+
         return missing_fields
 
     @classmethod
     def _clean_dirty_data(cls, series: Series) -> None:
         """
         清理脏数据
-        
+
         Args:
             series: 车系信息对象
         """
@@ -246,18 +255,18 @@ class SeriesService:
     def _parse_price_from_string(cls, series: Series) -> None:
         """
         从官方指导价字符串解析最高最低价格（单位：万元，需要转换为元）
-        
+
         Args:
             series: 车系信息对象
         """
         if not series.official_price_str:
             return
-            
+
         try:
             # 格式：25.35-32.99万 或 25.35-32.99
             price_str = str(series.official_price_str).strip()
             is_wan = False  # 标记单位是否为"万"
-            
+
             # 去掉"万"字
             if price_str.endswith('万'):
                 price_str = price_str[:-1]

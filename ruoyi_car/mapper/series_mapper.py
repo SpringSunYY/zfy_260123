@@ -54,6 +54,7 @@ class SeriesMapper:
                 stmt = stmt.where(SeriesPo.energy_type == series.energy_type)
 
             _params = getattr(series, "params", {}) or {}
+            print("params: ", _params)
             begin_val = _params.get("beginMarketTime")
             end_val = _params.get("endMarketTime")
             if begin_val is not None:
@@ -61,10 +62,10 @@ class SeriesMapper:
             if end_val is not None:
                 stmt = stmt.where(SeriesPo.market_time <= end_val)
 
-            _params = getattr(series, "params", {}) or {}
             begin_val = _params.get("beginCreateTime")
             end_val = _params.get("endCreateTime")
             if begin_val is not None:
+                print("begin_val: ", begin_val)
                 stmt = stmt.where(SeriesPo.create_time >= begin_val)
             if end_val is not None:
                 stmt = stmt.where(SeriesPo.create_time <= end_val)
@@ -99,7 +100,7 @@ class SeriesMapper:
             return None
 
     @staticmethod
-    def select_car_info_by_series_id(series_id: int) -> Optional[SeriesPo]:
+    def select_series_by_series_id(series_id: int) -> Optional[SeriesPo]:
         """
         根据系列ID查询汽车信息
         Args:
