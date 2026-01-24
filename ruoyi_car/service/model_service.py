@@ -15,8 +15,10 @@ from ruoyi_car.mapper.model_mapper import ModelMapper
 from ruoyi_car.mapper.series_mapper import SeriesMapper
 from ruoyi_car.domain.po import SeriesPo
 
+
 class ModelService:
     """车型信息服务类"""
+
     @classmethod
     def select_model_list(cls, model: Model) -> List[Model]:
         """
@@ -29,7 +31,6 @@ class ModelService:
             List[model]: 车型信息列表
         """
         return ModelMapper.select_model_list(model)
-
 
     @classmethod
     def select_model_by_id(cls, id: int) -> Optional[Model]:
@@ -55,8 +56,17 @@ class ModelService:
         Returns:
             int: 插入的记录数
         """
-        return ModelMapper.insert_model(model)
+        model.create_by = get_username()
+        # 首先查询车系是否存在
+        series_po = SeriesMapper.select_series_by_series_id(model.series_id)
+        if series_po is None:
+            raise ServiceException("车系不存在")
+        # 查询是否有这个模型
+        model_po = ModelMapper.select_model_by_car_id(model.car_id)
+        if model_po:
+            raise ServiceException("车型已存在")
 
+        return ModelMapper.insert_model(model)
 
     @classmethod
     def update_model(cls, model: Model) -> int:
@@ -69,9 +79,16 @@ class ModelService:
         Returns:
             int: 更新的记录数
         """
+        # 首先查询车系是否存在
+        series_po = SeriesMapper.select_series_by_series_id(model.series_id)
+        if series_po is None:
+            raise ServiceException("车系不存在")
+        # 查询是否有这个模型
+        model_po = ModelMapper.select_model_by_car_id(model.car_id)
+        # 如果不等于传过来的id
+        if model_po and model_po.id != model.id:
+            raise ServiceException("车型已存在")
         return ModelMapper.update_model(model)
-
-
 
     @classmethod
     def delete_model_by_ids(cls, ids: List[int]) -> int:

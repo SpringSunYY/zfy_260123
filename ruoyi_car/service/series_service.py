@@ -52,6 +52,7 @@ class SeriesService:
         Returns:
             int: 插入的记录数
         """
+        series.create_by = get_username()
         # 先判断车系是否存在
         series_db = SeriesMapper.select_series_by_series_id(series.series_id)
         if series_db:

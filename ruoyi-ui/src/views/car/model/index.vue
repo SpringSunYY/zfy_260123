@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
+    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="100px">
       <el-form-item label="编号" prop="id">
         <el-input
           v-model="queryParams.id"
@@ -59,10 +59,10 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="发动机/电机" prop="engineMotor">
+      <el-form-item label="发动机电机" prop="engineMotor">
         <el-input
           v-model="queryParams.engineMotor"
-          placeholder="请输入发动机/电机"
+          placeholder="请输入发动机电机"
           clearable
           @keyup.enter.native="handleQuery"
         />
@@ -266,7 +266,7 @@
 
     <!-- 添加或修改车型信息对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
-      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+      <el-form ref="form" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="国家" prop="country">
           <el-select v-model="form.country" placeholder="请选择国家">
             <el-option
@@ -299,13 +299,13 @@
           <el-input v-model="form.ownerPriceStr" placeholder="请输入车主报价"/>
         </el-form-item>
         <el-form-item label="车主报价" prop="ownerPrice">
-          <el-input v-model="form.ownerPrice" placeholder="请输入车主报价"/>
+          <el-input-number :min="0" :precision="2" style="width: 100%"  v-model="form.ownerPrice" placeholder="请输入车主报价"/>
         </el-form-item>
         <el-form-item label="经销商报价" prop="dealerPriceStr">
           <el-input v-model="form.dealerPriceStr" placeholder="请输入官方指导价"/>
         </el-form-item>
         <el-form-item label="经销商报价" prop="dealerPrice">
-          <el-input v-model="form.dealerPrice" placeholder="请输入官方指导价"/>
+          <el-input-number :min="0" :precision="2" style="width: 100%"  v-model="form.dealerPrice" placeholder="请输入官方指导价"/>
         </el-form-item>
         <el-form-item label="发动机/电机" prop="engineMotor">
           <el-input v-model="form.engineMotor" placeholder="请输入发动机/电机"/>
@@ -324,7 +324,7 @@
           <el-input v-model="form.accelerationStr" placeholder="请输入百公里加速"/>
         </el-form-item>
         <el-form-item label="百公里加速" prop="acceleration">
-          <el-input v-model="form.acceleration" placeholder="请输入百公里加速"/>
+          <el-input-number :min="0" :precision="2" style="width: 100%"  v-model="form.acceleration" placeholder="请输入百公里加速"/>
         </el-form-item>
         <el-form-item label="驱动方式" prop="driveType">
           <el-select v-model="form.driveType" placeholder="请选择驱动方式">
@@ -340,7 +340,7 @@
           <el-input v-model="form.maxSpeedStr" placeholder="请输入最高时速"/>
         </el-form-item>
         <el-form-item label="最高时速" prop="maxSpeed">
-          <el-input v-model="form.maxSpeed" placeholder="请输入最高时速"/>
+          <el-input-number :min="0" :precision="2" style="width: 100%"  v-model="form.maxSpeed" placeholder="请输入最高时速"/>
         </el-form-item>
         <el-form-item label="备注" prop="remark">
           <el-input v-model="form.remark" placeholder="请输入备注"/>
