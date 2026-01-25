@@ -270,7 +270,7 @@ class ModelService:
                 else:
                     fail_count += 1
                     fail_msg += f"<br/> 第{fail_count}条数据，操作失败：{display_value}"
-                print(f"当前进度：{success_count}/{len(series_list)}，成功：{success_count}条，失败：{fail_count}条")
+                print(f"当前进度：{success_count}/{len(model_list)}，成功：{success_count}条，失败：{fail_count}条")
 
             except Exception as e:
                 fail_count += 1
