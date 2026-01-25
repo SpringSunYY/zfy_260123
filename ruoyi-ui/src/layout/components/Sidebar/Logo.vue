@@ -35,7 +35,7 @@ export default {
   },
   data() {
     return {
-      title: '若依管理系统',
+      title: '基于Python汽车销量数据分析平台',
       logo: logoImg
     }
   }

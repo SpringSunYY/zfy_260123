@@ -76,7 +76,7 @@ class SalesMapper:
 
             if sales.create_by:
                 stmt = stmt.where(SalesPo.create_by.like("%" + str(sales.create_by) + "%"))
-            stmt = stmt.order_by(SalesPo.update_time.desc())
+            stmt = stmt.order_by(SalesPo.month_date.desc())
             if "criterian_meta" in g and g.criterian_meta.page:
                 g.criterian_meta.page.stmt = stmt
             result = db.session.execute(stmt).scalars().all()

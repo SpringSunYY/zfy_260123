@@ -1,7 +1,7 @@
 {
   "name": "ruoyi",
   "version": "3.8.1",
-  "description": "若依管理系统",
+  "description": "基于Python汽车销量数据分析平台",
   "author": "若依",
   "license": "MIT",
   "scripts": {
