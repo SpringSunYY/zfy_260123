@@ -182,7 +182,7 @@ class SeriesService:
                 fail_count += 1
                 fail_msg += f"<br/> 第{fail_count}条数据，导入失败，原因：{e.__class__.__name__}"
                 LogUtil.logger.error(f"导入车系信息失败，原因：{e}")
-
+            print(f"当前进度：{success_count}/{len(series_list)}，成功：{success_count}条，失败：{fail_count}条")
         if fail_count > 0:
             if success_msg:
                 fail_msg = f"导入成功{success_count}条，失败{fail_count}条。{success_msg}<br/>" + fail_msg
@@ -218,16 +218,16 @@ class SeriesService:
             missing_fields.append("车系ID")
 
         # 价格字段
-        if not series.dealer_price_str:
-            missing_fields.append("经销商报价")
-        if not series.official_price_str:
-            missing_fields.append("官方指导价")
+        # if not series.dealer_price_str:
+        #     missing_fields.append("经销商报价")
+        # if not series.official_price_str:
+        #     missing_fields.append("官方指导价")
 
         # 销量字段
-        if series.month_total_sales is None:
-            missing_fields.append("月总销量")
-        if series.city_total_sales is None:
-            missing_fields.append("城市总销量")
+        # if series.month_total_sales is None:
+        #     missing_fields.append("月总销量")
+        # if series.city_total_sales is None:
+        #     missing_fields.append("城市总销量")
 
         # 车型和能源类型
         if not series.model_type:
@@ -236,26 +236,26 @@ class SeriesService:
             missing_fields.append("能源类型")
 
         # 上市时间
-        if not series.market_time:
-            missing_fields.append("上市时间")
+        # if not series.market_time:
+        #     missing_fields.append("上市时间")
 
         # 评分字段
-        if series.overall_score is None:
-            missing_fields.append("综合")
-        if series.exterior_score is None:
-            missing_fields.append("外观")
-        if series.interior_score is None:
-            missing_fields.append("内饰")
-        if series.space_score is None:
-            missing_fields.append("空间")
-        if series.handling_score is None:
-            missing_fields.append("操控")
-        if series.comfort_score is None:
-            missing_fields.append("舒适性")
-        if series.power_score is None:
-            missing_fields.append("动力")
-        if series.configuration_score is None:
-            missing_fields.append("配置")
+        # if series.overall_score is None:
+        #     missing_fields.append("综合")
+        # if series.exterior_score is None:
+        #     missing_fields.append("外观")
+        # if series.interior_score is None:
+        #     missing_fields.append("内饰")
+        # if series.space_score is None:
+        #     missing_fields.append("空间")
+        # if series.handling_score is None:
+        #     missing_fields.append("操控")
+        # if series.comfort_score is None:
+        #     missing_fields.append("舒适性")
+        # if series.power_score is None:
+        #     missing_fields.append("动力")
+        # if series.configuration_score is None:
+        #     missing_fields.append("配置")
 
         return missing_fields
 
