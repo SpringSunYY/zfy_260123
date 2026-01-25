@@ -164,6 +164,17 @@
           </el-table-column>
           <el-table-column label="百公里加速" prop="accelerationStr" align="center"/>
           <el-table-column label="最高时速" prop="maxSpeedStr" align="center"/>
+          <el-table-column label="操作" align="center" width="120" fixed="right">
+            <template slot-scope="scope">
+              <el-button
+                type="primary"
+                size="mini"
+                @click="viewModelDetail(scope.row)"
+              >
+                查看详情
+              </el-button>
+            </template>
+          </el-table-column>
         </el-table>
         </div>
       </el-card>
@@ -277,6 +288,12 @@ export default {
     viewDetail() {
       if (this.series.seriesId) {
         window.open(`https://www.dongchedi.com/auto/series/${this.series.seriesId}`, '_blank');
+      }
+    },
+    /** 查看车型详情 - 跳转到懂车帝 */
+    viewModelDetail(row) {
+      if (this.series.seriesId && row.carId) {
+        window.open(`https://www.dongchedi.com/auto/series/${this.series.seriesId}/model-${row.carId}`, '_blank');
       }
     }
   }
