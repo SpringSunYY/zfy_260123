@@ -13,6 +13,7 @@ from ruoyi_admin.ext import db
 from ruoyi_car.domain.entity import Model
 from ruoyi_car.domain.po import ModelPo
 
+
 class ModelMapper:
     """车型信息Mapper"""
 
@@ -30,8 +31,6 @@ class ModelMapper:
         try:
             # 构建查询条件
             stmt = select(ModelPo)
-
-
             if model.id is not None:
                 stmt = stmt.where(ModelPo.id == model.id)
 
@@ -40,7 +39,6 @@ class ModelMapper:
 
             if model.brand_name:
                 stmt = stmt.where(ModelPo.brand_name.like("%" + str(model.brand_name) + "%"))
-
 
             if model.series_name:
                 stmt = stmt.where(ModelPo.series_name.like("%" + str(model.series_name) + "%"))
@@ -54,22 +52,14 @@ class ModelMapper:
             if model.car_id is not None:
                 stmt = stmt.where(ModelPo.car_id == model.car_id)
 
-
-
-
-
             if model.engine_motor:
                 stmt = stmt.where(ModelPo.engine_motor.like("%" + str(model.engine_motor) + "%"))
 
             if model.energy_type:
                 stmt = stmt.where(ModelPo.energy_type.like("%" + str(model.energy_type) + "%"))
 
-
-
             if model.drive_type is not None:
                 stmt = stmt.where(ModelPo.drive_type == model.drive_type)
-
-
 
             _params = getattr(model, "params", {}) or {}
             begin_val = _params.get("beginCreateTime")
@@ -82,7 +72,6 @@ class ModelMapper:
             if model.create_by:
                 stmt = stmt.where(ModelPo.create_by.like("%" + str(model.create_by) + "%"))
 
-
             if "criterian_meta" in g and g.criterian_meta.page:
                 g.criterian_meta.page.stmt = stmt
             result = db.session.execute(stmt).scalars().all()
@@ -90,7 +79,6 @@ class ModelMapper:
         except Exception as e:
             print(f"查询车型信息列表出错: {e}")
             return []
-
 
     @classmethod
     def select_model_by_id(cls, id: int) -> Optional[Model]:
@@ -180,7 +168,6 @@ class ModelMapper:
             print(f"新增车型信息出错: {e}")
             return 0
 
-
     @classmethod
     def update_model(cls, model: Model) -> int:
         """
@@ -249,3 +236,16 @@ class ModelMapper:
             db.session.rollback()
             print(f"批量删除车型信息出错: {e}")
             return 0
+
+    @classmethod
+    def select_model_by_series_id(cls, series_id: int) -> List[Model]:
+        """
+            根据系列id查询车系
+        """
+        try:
+            stmt = select(ModelPo).where(ModelPo.series_id == series_id)
+            result = db.session.execute(stmt).scalars().all()
+            return [Model.model_validate(model) for model in result]
+        except Exception as e:
+            print(f"根据系列id查询车系出错: {e}")
+            return []

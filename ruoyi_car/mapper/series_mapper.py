@@ -100,7 +100,7 @@ class SeriesMapper:
             return None
 
     @staticmethod
-    def select_series_by_series_id(series_id: int) -> Optional[SeriesPo]:
+    def select_series_by_series_id(series_id: int) -> Optional[Series]:
         """
         根据系列ID查询汽车信息
         Args:
@@ -109,12 +109,12 @@ class SeriesMapper:
         try:
             stmt = select(SeriesPo).where(SeriesPo.series_id == series_id)
             result = db.session.execute(stmt).scalar_one_or_none()
-            return result if result else None
+            return Series.model_validate(result) if result else None
         except Exception as e:
             # 如果出现多条记录异常，取第一条
             if "Multiple rows" in str(e):
                 result = db.session.execute(stmt).scalars().first()
-                return result if result else None
+                return Series.model_validate(result) if result else None
             print(f"根据系列ID查询汽车信息出错: {e}")
             return None
 

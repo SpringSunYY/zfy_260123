@@ -58,8 +58,8 @@ class ModelService:
         """
         model.create_by = get_username()
         # 首先查询车系是否存在
-        series_po = SeriesMapper.select_series_by_series_id(model.series_id)
-        if series_po is None:
+        series_info = SeriesMapper.select_series_by_series_id(model.series_id)
+        if series_info is None:
             raise ServiceException("车系不存在")
         # 查询是否有这个模型
         model_po = ModelMapper.select_model_by_car_id(model.car_id)
@@ -80,13 +80,13 @@ class ModelService:
             int: 更新的记录数
         """
         # 首先查询车系是否存在
-        series_po = SeriesMapper.select_series_by_series_id(model.series_id)
-        if series_po is None:
+        series_info = SeriesMapper.select_series_by_series_id(model.series_id)
+        if series_info is None:
             raise ServiceException("车系不存在")
         # 查询是否有这个模型
-        model_po = ModelMapper.select_model_by_car_id(model.car_id)
+        model_info = ModelMapper.select_model_by_car_id(model.car_id)
         # 如果不等于传过来的id
-        if model_po and model_po.id != model.id:
+        if model_info and model_info.id != model.id:
             raise ServiceException("车型已存在")
         return ModelMapper.update_model(model)
 
@@ -200,27 +200,27 @@ class ModelService:
                     continue
 
                 # 从缓存中获取或查询 series
-                series_po = None
+                series_info = None
                 if model.series_id in series_cache:
-                    series_po = series_cache[model.series_id]
+                    series_info = series_cache[model.series_id]
                 else:
-                    series_po = SeriesMapper.select_series_by_series_id(model.series_id)
-                    series_cache[model.series_id] = series_po
+                    series_info = SeriesMapper.select_series_by_series_id(model.series_id)
+                    series_cache[model.series_id] = series_info
 
                 # 如果 series 不存在，记录为脏数据
-                if series_po is None:
+                if series_info is None:
                     fail_count += 1
                     fail_msg += f"<br/> 第{fail_count}条数据，导入失败：车系不存在（车系ID：{model.series_id}）：{display_value}"
                     continue
 
                 # 2. 从 series 中获取数据并赋值给 model
-                model.country = series_po.country
-                model.brand_name = series_po.brand_name
-                model.series_name = series_po.series_name
+                model.country = series_info.country
+                model.brand_name = series_info.brand_name
+                model.series_name = series_info.series_name
 
                 # 如果 energy_type 为空，从 series 中获取
                 if not model.energy_type:
-                    model.energy_type = series_po.energy_type
+                    model.energy_type = series_info.energy_type
 
                 # 3. 处理价格字符串，提取数字并转换
                 if model.owner_price_str:

@@ -8,7 +8,8 @@
     </div>
 
     <!-- 查询表单 -->
-    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px" class="search-form">
+    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px"
+             class="search-form">
       <el-form-item label="国家" prop="country">
         <el-select v-model="queryParams.country" placeholder="请选择国家" clearable>
           <el-option
@@ -89,8 +90,9 @@
       <el-row :gutter="20">
         <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="6" v-for="item in seriesList" :key="item.id" class="card-col">
           <el-card class="series-card" shadow="hover">
-            <div class="card-image">
-              <img v-if="item.image && !item.imageError" :src="getImageUrl(item.image)" :alt="item.seriesName" @error="handleImageError(item)" />
+            <div class="card-image" @click="handleCardClick(item)">
+              <img v-if="item.image && !item.imageError" :src="getImageUrl(item.image)" :alt="item.seriesName"
+                   @error="handleImageError(item)"/>
               <div v-else class="image-placeholder">
                 <i class="el-icon-picture-outline"></i>
               </div>
@@ -129,7 +131,8 @@
                 <div class="score-section" v-if="item.overallScore">
                   <div class="score-item">
                     <span class="score-label">综合</span>
-                    <el-rate v-model="item.overallScore" disabled show-score text-color="#ff9900" score-template="{value}"></el-rate>
+                    <el-rate v-model="item.overallScore" disabled show-score text-color="#ff9900"
+                             score-template="{value}"></el-rate>
                   </div>
                 </div>
               </div>
@@ -149,8 +152,9 @@
 </template>
 
 <script>
-import { listSeries } from "@/api/car/series";
-import { isExternal } from "@/utils/validate";
+import {listSeries} from "@/api/car/series";
+import {isExternal} from "@/utils/validate";
+import it from "element-ui/src/locale/lang/it";
 
 export default {
   name: "Index",
@@ -200,6 +204,19 @@ export default {
     window.removeEventListener('scroll', this.handleScroll);
   },
   methods: {
+    /**
+     * 查看详情 - 新页面打开
+     */
+    handleCardClick(item) {
+      if (item && item.seriesId) {
+        // 使用 window.open 在新标签页打开
+        const routeData = this.$router.resolve({
+          name: 'SeriesDetail',
+          params: {seriesId: item.seriesId}  // 确保使用正确的属性名
+        });
+        window.open(routeData.href, '_blank');
+      }
+    },
     /** 查询车系信息列表 */
     getList(isLoadMore = false) {
       if (this.isLoading) return;

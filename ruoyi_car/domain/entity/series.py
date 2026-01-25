@@ -4,10 +4,11 @@
 # @Time    : 2026-01-23 20:21:54
 
 from datetime import datetime
-from typing import Optional, Annotated
+from typing import Optional, Annotated, List
 
 from pydantic import Field, BeforeValidator
 
+from ruoyi_car.domain.entity import Model
 from ruoyi_common.base.model import BaseEntity
 from ruoyi_common.base.schema_excel import ExcelField
 from ruoyi_common.base.schema_vo import VoField
@@ -205,6 +206,17 @@ class Series(BaseEntity):
         Field(default=None, description="备注"),
         ExcelField(name="备注", action="export")
     ]
+
+    is_liked : Annotated[
+        Optional[bool],
+        Field(default=None, description="是否点赞")
+    ]
+
+    model_list: Annotated[
+        Optional[List[Model]],
+        Field(default=None, description="车型列表")
+    ]
+
     params: Optional[dict] = Field(default=None, description="参数")
     # 页码
     page_num: Optional[int] = Field(default=1, description="页码")

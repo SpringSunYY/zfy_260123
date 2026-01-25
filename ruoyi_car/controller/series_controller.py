@@ -54,6 +54,14 @@ def get_series(id: int):
     series_entity = series_service.select_series_by_id(id)
     return AjaxResponse.from_success(data=series_entity)
 
+@gen.route('/detail/<int:seriesId>', methods=['GET'])
+@PathValidator()
+@PreAuthorize(HasPerm('car:series:query'))
+@JsonSerializer()
+def get_series_detail(series_id: int):
+    """获取车系信息详细信息"""
+    series_entity = series_service.select_series_detail_by_id(series_id)
+    return AjaxResponse.from_success(data=series_entity)
 
 @gen.route('', methods=['POST'])
 @BodyValidator()

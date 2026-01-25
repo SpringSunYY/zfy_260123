@@ -1,9 +1,5 @@
 import request from '@/utils/request'
 
-
-
-
-
 // 查询车系信息列表
 export function listSeries(query) {
   return request({
@@ -17,6 +13,14 @@ export function listSeries(query) {
 export function getSeries(id) {
   return request({
     url: '/car/series/' +id,
+    method: 'get'
+  })
+}
+
+//查询详情
+export function getSeriesDetail(seriesId) {
+  return request({
+    url: '/car/series/detail/' +seriesId,
     method: 'get'
   })
 }

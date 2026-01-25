@@ -13,6 +13,7 @@ from ruoyi_admin.ext import db
 from ruoyi_car.domain.entity import Like
 from ruoyi_car.domain.po import LikePo
 
+
 class LikeMapper:
     """用户点赞Mapper"""
 
@@ -30,7 +31,6 @@ class LikeMapper:
         try:
             # 构建查询条件
             stmt = select(LikePo)
-
 
             if like.id is not None:
                 stmt = stmt.where(LikePo.id == like.id)
@@ -50,7 +50,6 @@ class LikeMapper:
             if like.brand_name:
                 stmt = stmt.where(LikePo.brand_name.like("%" + str(like.brand_name) + "%"))
 
-
             if like.series_name:
                 stmt = stmt.where(LikePo.series_name.like("%" + str(like.series_name) + "%"))
 
@@ -59,16 +58,6 @@ class LikeMapper:
 
             if like.energy_type is not None:
                 stmt = stmt.where(LikePo.energy_type == like.energy_type)
-
-
-
-
-
-
-
-
-
-
 
             _params = getattr(like, "params", {}) or {}
             begin_val = _params.get("beginCreateTime")
@@ -85,7 +74,6 @@ class LikeMapper:
             print(f"查询用户点赞列表出错: {e}")
             return []
 
-    
     @classmethod
     def select_like_by_id(cls, id: int) -> Optional[Like]:
         """
@@ -103,7 +91,6 @@ class LikeMapper:
         except Exception as e:
             print(f"根据ID查询用户点赞出错: {e}")
             return None
-    
 
     @classmethod
     def insert_like(cls, like: Like) -> int:
@@ -149,7 +136,6 @@ class LikeMapper:
             print(f"新增用户点赞出错: {e}")
             return 0
 
-    
     @classmethod
     def update_like(cls, like: Like) -> int:
         """
@@ -162,7 +148,7 @@ class LikeMapper:
             int: 更新的记录数
         """
         try:
-            
+
             existing = db.session.get(LikePo, like.id)
             if not existing:
                 return 0
@@ -190,7 +176,7 @@ class LikeMapper:
             existing.create_time = like.create_time
             db.session.commit()
             return 1
-            
+
         except Exception as e:
             db.session.rollback()
             print(f"修改用户点赞出错: {e}")
@@ -216,4 +202,25 @@ class LikeMapper:
             db.session.rollback()
             print(f"批量删除用户点赞出错: {e}")
             return 0
-    
+
+    @classmethod
+    def select_series_like_by_series_and_user(cls, seriesId, user_id)-> Optional[Like]:
+        """
+        查询用户点赞的指定车系信息
+
+        Args:
+            seriesId (int): 车系ID
+            user_id (int): 用户ID
+
+        Returns:
+            SeriesPo: 车系信息对象
+        """
+        try:
+            stmt = select(LikePo).where(
+                LikePo.series_id == seriesId,
+                LikePo.user_id == user_id)
+            result = db.session.execute(stmt).scalars().first()
+            return Like.model_validate(result) if result else None
+        except Exception as e:
+            print(f"查询用户点赞的指定车系信息出错: {e}")
+            return None

@@ -5,11 +5,12 @@
 
 from typing import List, Optional
 
+from ruoyi_car.mapper import LikeMapper, ModelMapper
 from ruoyi_common.exception import ServiceException
 from ruoyi_common.utils.base import LogUtil, DateUtil
 from ruoyi_car.domain.entity import Series
 from ruoyi_car.mapper.series_mapper import SeriesMapper
-from ruoyi_common.utils.security_util import get_username
+from ruoyi_common.utils.security_util import get_username, get_user_id
 
 
 class SeriesService:
@@ -40,6 +41,37 @@ class SeriesService:
             series: 车系信息对象
         """
         return SeriesMapper.select_series_by_id(id)
+
+    @classmethod
+    def select_series_detail_by_id(cls, series_id: int) -> Series:
+        """
+        根据ID查询车系详情信息
+
+        Args:
+            series_id (int): 车系ID
+
+        Returns:
+            series: 车系详情信息对象
+        """
+        # 查询车系信息
+        print(series_id)
+        series_info = SeriesMapper.select_series_by_series_id(series_id)
+        if series_info is None:
+            print(f"车系ID为{series_id}的记录不存在")
+            raise (f"车系ID为{series_id}的记录不存在")
+        # 查询是否点赞
+        user_id = get_user_id()
+        series_like_info = LikeMapper.select_series_like_by_series_and_user(series_id, user_id)
+        if series_like_info:
+            series_info.is_liked = True
+        else:
+            series_info.is_liked = False
+
+        # 查询车型
+        model_list = ModelMapper.select_model_by_series_id(series_id)
+        if model_list:
+            series_info.model_list = model_list
+        return series_info
 
     @classmethod
     def insert_series(cls, series: Series) -> int:

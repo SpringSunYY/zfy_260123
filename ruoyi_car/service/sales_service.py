@@ -126,28 +126,28 @@ class SalesService:
                     continue
 
                 # 从缓存中获取或查询 series
-                series_po = None
+                series_info = None
                 if sales.series_id in series_cache:
-                    series_po = series_cache[sales.series_id]
+                    series_info = series_cache[sales.series_id]
                 else:
-                    series_po = SeriesMapper.select_series_by_series_id(sales.series_id)
-                    series_cache[sales.series_id] = series_po
+                    series_info = SeriesMapper.select_series_by_series_id(sales.series_id)
+                    series_cache[sales.series_id] = series_info
 
                 # 如果 series 不存在，记录为脏数据
-                if series_po is None:
+                if series_info is None:
                     fail_count += 1
                     fail_msg += f"<br/> 第{fail_count}条数据，导入失败：车系不存在（车系ID：{sales.series_id}）：{display_value}"
                     continue
 
                 # 2. 从 series 中获取数据并赋值给 sales
-                sales.country = series_po.country
-                sales.brand_name = series_po.brand_name
-                sales.series_name = series_po.series_name
-                sales.model_type = series_po.model_type
-                sales.energy_type = series_po.energy_type
-                sales.max_price = series_po.max_price
-                sales.min_price = series_po.min_price
-                sales.image = series_po.image
+                sales.country = series_info.country
+                sales.brand_name = series_info.brand_name
+                sales.series_name = series_info.series_name
+                sales.model_type = series_info.model_type
+                sales.energy_type = series_info.energy_type
+                sales.max_price = series_info.max_price
+                sales.min_price = series_info.min_price
+                sales.image = series_info.image
 
                 # 3. 验证必填字段：city_name 和 month
                 if not sales.city_name:
