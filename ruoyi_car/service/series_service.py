@@ -2,7 +2,7 @@
 # @Author  : YY
 # @FileName: series_service.py
 # @Time    : 2026-01-23 20:21:54
-
+import time
 from typing import List, Optional
 
 from ruoyi_car.mapper import LikeMapper, ModelMapper
@@ -134,7 +134,7 @@ class SeriesService:
         """
         if not series_list:
             raise ServiceException("导入车系信息数据不能为空")
-
+        start_time = time.time()
         success_count = 0
         fail_count = 0
         success_msg = ""
@@ -178,11 +178,14 @@ class SeriesService:
                     fail_msg += f"<br/> {error_msg}"
                     LogUtil.logger.error(
                         f"导入车系信息{operation}失败，series_id={series.series_id}, series_name={series.series_name}, 返回结果={result}")
+                elapsed_time = time.time() - start_time
+                minutes, seconds = divmod(int(elapsed_time), 60)
+                print("   [运行时间: {:02d}:{:02d}]".format(minutes, seconds))
+                print(f"当前进度：{success_count}/{len(series_list)}，成功：{success_count}条，失败：{fail_count}条")
             except Exception as e:
                 fail_count += 1
                 fail_msg += f"<br/> 第{fail_count}条数据，导入失败，原因：{e.__class__.__name__}"
                 LogUtil.logger.error(f"导入车系信息失败，原因：{e}")
-            print(f"当前进度：{success_count}/{len(series_list)}，成功：{success_count}条，失败：{fail_count}条")
         if fail_count > 0:
             if success_msg:
                 fail_msg = f"导入成功{success_count}条，失败{fail_count}条。{success_msg}<br/>" + fail_msg

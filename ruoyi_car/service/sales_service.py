@@ -2,7 +2,7 @@
 # @Author  : YY
 # @FileName: sales_service.py
 # @Time    : 2026-01-23 20:21:54
-
+import time
 from typing import List, Optional
 from datetime import datetime
 
@@ -103,7 +103,7 @@ class SalesService:
         """
         if not sales_list:
             raise ServiceException("导入销量信息数据不能为空")
-
+        start_time = time.time()
         success_count = 0
         fail_count = 0
         success_msg = ""
@@ -187,6 +187,9 @@ class SalesService:
                 else:
                     fail_count += 1
                     fail_msg += f"<br/> 第{fail_count}条数据，操作失败：{display_value}"
+                elapsed_time = time.time() - start_time
+                minutes, seconds = divmod(int(elapsed_time), 60)
+                print("   [运行时间: {:02d}:{:02d}]".format(minutes, seconds))
                 print(f"当前进度：{success_count}/{len(sales_list)}，成功：{success_count}条，失败：{fail_count}条")
 
             except Exception as e:
