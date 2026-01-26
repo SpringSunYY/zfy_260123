@@ -4,7 +4,7 @@
 # @Time    : 2026-01-23 20:21:53
 
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, date
 
 from flask import g
 from sqlalchemy import select, update, delete
@@ -12,6 +12,7 @@ from sqlalchemy import select, update, delete
 from ruoyi_admin.ext import db
 from ruoyi_car.domain.entity import View
 from ruoyi_car.domain.po import ViewPo
+
 
 class ViewMapper:
     """用户浏览Mapper"""
@@ -31,7 +32,6 @@ class ViewMapper:
             # 构建查询条件
             stmt = select(ViewPo)
 
-
             if view.id is not None:
                 stmt = stmt.where(ViewPo.id == view.id)
 
@@ -41,30 +41,17 @@ class ViewMapper:
             if view.user_name:
                 stmt = stmt.where(ViewPo.user_name.like("%" + str(view.user_name) + "%"))
 
-
             if view.country is not None:
                 stmt = stmt.where(ViewPo.country == view.country)
 
             if view.brand_name:
                 stmt = stmt.where(ViewPo.brand_name.like("%" + str(view.brand_name) + "%"))
 
-
-
             if view.model_type is not None:
                 stmt = stmt.where(ViewPo.model_type == view.model_type)
 
             if view.energy_type is not None:
                 stmt = stmt.where(ViewPo.energy_type == view.energy_type)
-
-
-
-
-
-
-
-
-
-
 
             _params = getattr(view, "params", {}) or {}
             begin_val = _params.get("beginCreateTime")
@@ -81,7 +68,6 @@ class ViewMapper:
             print(f"查询用户浏览列表出错: {e}")
             return []
 
-    
     @classmethod
     def select_view_by_id(cls, id: int) -> Optional[View]:
         """
@@ -99,7 +85,35 @@ class ViewMapper:
         except Exception as e:
             print(f"根据ID查询用户浏览出错: {e}")
             return None
-    
+
+    @classmethod
+    def select_view_by_series_id_and_date(cls, series_id, user_id, target_date) -> List[View]:
+        """
+        根据车系ID和用户ID查询用户浏览
+        """
+        try:
+            # 如果没有提供目标日期，则使用今天
+            if target_date is None:
+                target_date = date.today()
+
+            # 将年月日转换为当天的开始时间(00:00:00)和结束时间(23:59:59)
+            start_of_day = datetime.combine(target_date, datetime.min.time())
+            end_of_day = datetime.combine(target_date, datetime.max.time())
+            print("开始时间:", start_of_day)
+            print("结束时间:", end_of_day)
+            stmt = select(ViewPo).where(
+                ViewPo.series_id == series_id,
+                ViewPo.user_id == user_id,
+                # 按年月日范围查询评论
+                ViewPo.create_time >= start_of_day,
+                ViewPo.create_time <= end_of_day
+            )
+            result = db.session.execute(stmt).scalars().all()
+            return [View.model_validate(item) for item in result] if result else []
+        except Exception as e:
+            print(f"根据电影ID查询影评信息表出错: {e}")
+            return []
+        pass
 
     @classmethod
     def insert_view(cls, view: View) -> int:
@@ -145,7 +159,6 @@ class ViewMapper:
             print(f"新增用户浏览出错: {e}")
             return 0
 
-    
     @classmethod
     def update_view(cls, view: View) -> int:
         """
@@ -158,7 +171,7 @@ class ViewMapper:
             int: 更新的记录数
         """
         try:
-            
+
             existing = db.session.get(ViewPo, view.id)
             if not existing:
                 return 0
@@ -186,7 +199,7 @@ class ViewMapper:
             existing.create_time = view.create_time
             db.session.commit()
             return 1
-            
+
         except Exception as e:
             db.session.rollback()
             print(f"修改用户浏览出错: {e}")
@@ -212,4 +225,3 @@ class ViewMapper:
             db.session.rollback()
             print(f"批量删除用户浏览出错: {e}")
             return 0
-    

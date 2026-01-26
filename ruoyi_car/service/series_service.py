@@ -6,6 +6,7 @@ import time
 from typing import List, Optional
 
 from ruoyi_car.mapper import LikeMapper, ModelMapper
+from ruoyi_car.service.view_service import ViewService
 from ruoyi_common.exception import ServiceException
 from ruoyi_common.utils.base import LogUtil, DateUtil
 from ruoyi_car.domain.entity import Series
@@ -71,6 +72,9 @@ class SeriesService:
         model_list = ModelMapper.select_model_by_series_id(series_id)
         if model_list:
             series_info.model_list = model_list
+
+        #添加浏览记录
+        ViewService.add_view(series_info)
         return series_info
 
     @classmethod
