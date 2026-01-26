@@ -99,14 +99,15 @@
             </div>
             <div class="card-content">
               <div class="card-title">{{ item.seriesName || '未知系列' }}</div>
-              <div class="card-brand">{{ item.brandName || '未知品牌' }}</div>
               <div class="card-info">
                 <div class="info-row">
+                  <span class="info-value">{{ item.brandName || '未知品牌' }}</span>
                   <dict-tag :options="dict.type.country" :value="item.country"/>
-                  <dict-tag :options="dict.type.model_type" :value="item.modelType"/>
                 </div>
                 <div class="info-row">
+                  <dict-tag :options="dict.type.model_type" :value="item.modelType"/>
                   <dict-tag :options="dict.type.energy_type" :value="item.energyType"/>
+
                 </div>
                 <div class="info-row" v-if="item.dealerPriceStr">
                   <span class="info-label">经销商报价</span>
@@ -459,21 +460,13 @@ export default {
 .card-title {
   font-size: 18px;
   font-weight: 600;
-  color: #303133;
+  color: #764ba2;
   margin-bottom: 8px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.card-brand {
-  font-size: 14px;
-  color: #909399;
-  margin-bottom: 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 
 .card-info {
   .info-row {
