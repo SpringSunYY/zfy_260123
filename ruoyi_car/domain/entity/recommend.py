@@ -39,13 +39,13 @@ class Recommend(BaseEntity):
         VoField(query=True),
         ExcelField(name="用户名")
     ]
-    # 推荐模型
+    # 推荐模型 (存储算法参数和权重配置)
     model_info: Annotated[
         Optional[str],
         Field(default=None, description="推荐模型"),
         ExcelField(name="推荐模型")
     ]
-    # 推荐内容
+    # 推荐内容 (存储推荐结果，如series_id列表等)
     content: Annotated[
         Optional[str],
         Field(default=None, description="推荐内容"),

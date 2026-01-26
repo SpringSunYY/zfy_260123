@@ -299,3 +299,38 @@ class SeriesMapper:
             db.session.rollback()
             print(f"修改车系信息出错: {e}")
             return 0
+
+    @classmethod
+    def select_all_series(cls) -> List[Series]:
+        """
+        查询所有车系信息
+
+        Returns:
+            List[Series]: 车系信息列表
+        """
+        try:
+            stmt = select(SeriesPo)
+            result = db.session.execute(stmt).scalars().all()
+            return [Series.model_validate(item) for item in result] if result else []
+        except Exception as e:
+            print(f"查询所有车系信息出错: {e}")
+            return []
+
+    @classmethod
+    def select_series_by_series_ids(cls, series_ids: List[int])-> List[Series]:
+        """
+        根据ID列表查询车系信息
+
+        Args:
+            ids (List[int]): ID列表
+
+        Returns:
+            List[Series]: 车系信息列表
+        """
+        try:
+            stmt = select(SeriesPo).where(SeriesPo.series_id.in_(series_ids))
+            result = db.session.execute(stmt).scalars().all()
+            return [Series.model_validate(item) for item in result] if result else []
+        except Exception as e:
+            print(f"根据ID列表查询车系信息出错: {e}")
+            return []

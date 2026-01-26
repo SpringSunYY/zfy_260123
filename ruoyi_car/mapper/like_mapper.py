@@ -7,7 +7,7 @@ from typing import List, Optional
 from datetime import datetime
 
 from flask import g
-from sqlalchemy import select, update, delete
+from sqlalchemy import select, update, delete, and_
 
 from ruoyi_admin.ext import db
 from ruoyi_car.domain.entity import Like
@@ -249,3 +249,54 @@ class LikeMapper:
         except Exception as e:
             print(f"查询用户点赞的指定车系信息出错: {e}")
             return None
+
+    @staticmethod
+    def select_user_likes_after_time(user_id: int, after_time: datetime) -> List[Like]:
+        """
+        根据用户ID获取某个时间点之后的所有点赞记录
+
+        Args:
+            user_id (int): 用户ID
+            after_time (datetime): 时间点，只查询此时间点之后的数据
+
+        Returns:
+            List[Like]: 用户点赞记录列表
+        """
+        try:
+            stmt = select(LikePo).where(
+                and_(
+                    LikePo.user_id == user_id,
+                    LikePo.create_time > after_time
+                )
+            ).order_by(LikePo.create_time.desc())
+
+            result = db.session.execute(stmt).scalars().all()
+
+            return [Like.model_validate(item) for item in result] if result else []
+        except Exception as e:
+            print(f"获取用户时间点后点赞记录出错: {e}")
+            return []
+
+    @classmethod
+    def select_user_likes_by_user_num_new(cls, user_id, like_num)-> List[Like]:
+        """
+        根据用户ID获取某个时间点之后的所有点赞记录
+
+        Args:
+            user_id (int): 用户ID
+            like_num (int): 最多返回的点赞数
+
+        Returns:
+            List[Like]: 用户点赞记录列表
+        """
+        try:
+            stmt = select(LikePo).where(
+                and_(
+                    LikePo.user_id == user_id,
+                )
+            ).order_by(LikePo.create_time.desc()).limit(like_num)
+            result = db.session.execute(stmt).scalars().all()
+            return [Like.model_validate(item) for item in result] if result else []
+        except Exception as e:
+            print(f"获取用户时间点后点赞记录出错: {e}")
+            return []

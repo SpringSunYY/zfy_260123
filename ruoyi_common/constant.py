@@ -4,116 +4,113 @@
 # 定义常量
 
 class HttpStatus:
-    
     SUCCESS = 200
-    
+
     CREATED = 201
-    
-    ACCEPTED = 202        # 已接受
-    
-    NO_CONTENT = 204      # 无内容
-    
+
+    ACCEPTED = 202  # 已接受
+
+    NO_CONTENT = 204  # 无内容
+
     MOVED_PERM = 301
-    
+
     SEE_OTHER = 303
-    
+
     NOT_MODIFIED = 304
-    
-    BAD_REQUEST = 400     # 错误的请求
-    
-    UNAUTHORIZED = 401    # 未授权
-    
-    FORBIDDEN = 403       # 禁止访问
-    
-    NOT_FOUND = 404       # 未找到
-    
-    BAD_METHOD = 405      # 方法不允许
-    
-    CONFLICT = 409        # 冲突
-    
+
+    BAD_REQUEST = 400  # 错误的请求
+
+    UNAUTHORIZED = 401  # 未授权
+
+    FORBIDDEN = 403  # 禁止访问
+
+    NOT_FOUND = 404  # 未找到
+
+    BAD_METHOD = 405  # 方法不允许
+
+    CONFLICT = 409  # 冲突
+
     UNSUPPORTED_TYPE = 415  # 请求范围不符合要求
-    
+
     ERROR = 500  # 内部错误
-    
+
     NOT_IMPLEMENTED = 501  # 尚未实施
 
 
 class Constants:
-    
-    CAPTCHA_EXPIRATION = 2   # 2 分钟
-    
+    CAPTCHA_EXPIRATION = 2  # 2 分钟
+
     TOKEN = "token"
-    
+
     TOKEN_HEADER = "Authorization"
-    
+
     LOGIN_USER_KEY = "login_user_key"
-    
+
     TOKEN_PREFIX = "Bearer "
-    
+
     UTF8 = "UTF-8"
-    
+
     GBK = "GBK"
-    
+
     HTTP = "http://"
-    
+
     HTTPS = "https://"
-    
+
     WWW = "www."
-    
+
     DOT = "."
-    
+
     SUCCESS = "0"
-    
+
     FAIL = "1"
-    
+
     LOGIN_SUCCESS = "Success"
-    
+
     LOGOUT = "Logout"
-    
+
     REGISTER = "Register"
-    
+
     LOGIN_FAIL = "Error"
-    
+
     CAPTCHA_CODE_KEY = "captcha_codes:"
-    
+
     LOGIN_TOKEN_KEY = "login_tokens:"
-    
+
     REPEAT_SUBMIT_KEY = "repeat_submit:"
-    
+
     RATE_LIMIT_KEY = "rate_limit:"
-    
+
     CAPTCHA_EXPIRATION = 2
-    
+
     JWT_USERID = "userid"
-    
+
     JWT_USERNAME = "sub"
-    
+
     JWT_AVATAR = "avatar"
-    
+
     JWT_CREATED = "created"
-    
+
     JWT_AUTHORITIES = "authorities"
-    
+
     SYS_CONFIG_KEY = "sys_config:"
-    
+
     SYS_DICT_KEY = "sys_dict:"
-    
+
     RESOURCE_PREFIX = "/profile"
-    
+
     LOOKUP_RMI = "rmi:";
-    
+
     LOOKUP_LDAP = "ldap:";
-    
+
     LOOKUP_LDAPS = "ldaps:";
-    
-    JOB_WHITELIST_STR = { "com.ruoyi" };
-    
-    JOB_ERROR_STR = { "java.net.URL", "javax.naming.InitialContext", "org.yaml.snakeyaml",
-            "org.springframework", "org.apache", "com.ruoyi.common.utils.file" }; # todo
-    
-    
+
+    JOB_WHITELIST_STR = {"com.ruoyi"};
+
+    JOB_ERROR_STR = {"java.net.URL", "javax.naming.InitialContext", "org.yaml.snakeyaml",
+                     "org.springframework", "org.apache", "com.ruoyi.common.utils.file"};  # todo
+
+
 class UserConstants:
-    
     # Unique identifier for system users within the platform
     SYS_USER = "SYS_USER"
 
@@ -158,7 +155,7 @@ class UserConstants:
 
     # Layout component identifier
     LAYOUT = "Layout"
-    
+
     # ParentView component identifier
     PARENT_VIEW = "ParentView"
 
@@ -176,3 +173,23 @@ class UserConstants:
     # Password length restrictions
     PASSWORD_MIN_LENGTH = 5
     PASSWORD_MAX_LENGTH = 20
+
+
+class ConfigConstants:
+    ##点赞分数
+    CAR_SCORE_LIKE = "car:score:like"
+    ##浏览分数
+    CAR_SCORE_VIEW = "car:score:view"
+    ##默认车系分数
+    CAR_SCORE_SERIES_DEFAULT = "car:score:series:default"
+    # 浏览记录条数
+    CAR_VIEW_RECORD_NUM = "car:view:number"
+    # 喜欢条数
+    CAR_LIKE_RECORD_NUM = "car:like:number"
+    # 推荐数
+    CAR_RECOMMEND_NUM = "car:recommend:number"
+    #time_decay_factor 时间衰减因子
+    CAR_TIME_DECAY_FACTOR="car:time:decay:factor"
+    #推荐模型权重
+    CAE_MODEL_WEIGHT="car:model:weight"
+    STATISTICS_PRICE_RANGE = "statistics:price:range"

@@ -2,14 +2,14 @@
 # @Author  : YY
 # @FileName: like_service.py
 # @Time    : 2026-01-23 20:21:54
-
+from datetime import datetime
 from typing import List, Optional
 
+from ruoyi_car.domain.entity import Like
 from ruoyi_car.mapper import SeriesMapper
+from ruoyi_car.mapper.like_mapper import LikeMapper
 from ruoyi_common.exception import ServiceException
 from ruoyi_common.utils.base import LogUtil
-from ruoyi_car.domain.entity import Like
-from ruoyi_car.mapper.like_mapper import LikeMapper
 
 
 class LikeService:
@@ -169,3 +169,32 @@ class LikeService:
             raise ServiceException(fail_msg)
         success_msg = f"恭喜您，数据已全部导入成功！共 {success_count} 条，数据如下：" + success_msg
         return success_msg
+
+    @classmethod
+    def select_user_likes_after_time(cls, user_id: int, after_time:datetime)-> List[Like]:
+        """
+        根据用户ID获取某个时间点之后的所有点赞记录
+
+        Args:
+            user_id (int): 用户ID
+            after_time (datetime): 时间点
+
+        Returns:
+            List[Like]: 用户点赞记录列表
+        """
+        # 直接调用LikeMapper的方法
+        return LikeMapper.select_user_likes_after_time(user_id, after_time)
+
+    @classmethod
+    def select_user_likes_by_user_num_new(cls, user_id, like_num)-> List[Like]:
+        """
+        根据用户ID获取最新的点赞记录
+
+        Args:
+            user_id (int): 用户ID
+            like_num (int): 最多返回的点赞记录数量
+
+        Returns:
+            List[Like]: 用户点赞记录列表
+        """
+        return LikeMapper.select_user_likes_by_user_num_new(user_id, like_num)

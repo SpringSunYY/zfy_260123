@@ -1,9 +1,5 @@
 import request from '@/utils/request'
 
-
-
-
-
 // 查询用户推荐列表
 export function listRecommend(query) {
   return request({
@@ -13,6 +9,13 @@ export function listRecommend(query) {
   })
 }
 
+export function getRecommendList(query) {
+  return request({
+    url: '/car/recommend/content',
+    method: 'get',
+    params: query
+  })
+}
 // 查询用户推荐详细
 export function getRecommend(id) {
   return request({

@@ -7,7 +7,7 @@ from typing import List, Optional
 from datetime import datetime, date
 
 from flask import g
-from sqlalchemy import select, update, delete
+from sqlalchemy import select, update, delete, and_
 
 from ruoyi_admin.ext import db
 from ruoyi_car.domain.entity import View
@@ -225,3 +225,54 @@ class ViewMapper:
             db.session.rollback()
             print(f"批量删除用户浏览出错: {e}")
             return 0
+
+    @staticmethod
+    def select_user_views_after_time(user_id: int, after_time: datetime) -> List[View]:
+        """
+        根据用户ID获取某个时间点之后的所有浏览记录
+
+        Args:
+            user_id (int): 用户ID
+            after_time (datetime): 时间点，只查询此时间点之后的数据
+
+        Returns:
+            List[View]: 用户浏览记录列表
+        """
+        try:
+            stmt = select(ViewPo).where(
+                and_(
+                    ViewPo.user_id == user_id,
+                    ViewPo.create_time > after_time
+                )
+            ).order_by(ViewPo.create_time.desc())
+
+            result = db.session.execute(stmt).scalars().all()
+
+            return [View.model_validate(item) for item in result] if result else []
+        except Exception as e:
+            print(f"获取用户时间点后浏览记录出错: {e}")
+            return []
+
+    @classmethod
+    def select_user_views_by_user_num_new(cls, user_id, view_num)-> List[View]:
+        """
+        根据用户ID获取最新的浏览记录
+
+        Args:
+            user_id (int): 用户ID
+            view_num (int): 浏览数量
+
+        Returns:
+            List[View]: 用户浏览记录列表
+        """
+        try:
+            stmt = select(ViewPo).where(
+                ViewPo.user_id == user_id
+            ).order_by(ViewPo.create_time.desc()).limit(view_num)
+
+            result = db.session.execute(stmt).scalars().all()
+
+            return [View.model_validate(item) for item in result] if result else []
+        except Exception as e:
+            print(f"获取用户最新浏览记录出错: {e}")
+            return []

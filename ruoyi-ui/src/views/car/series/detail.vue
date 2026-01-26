@@ -355,7 +355,7 @@ export default {
     pointer-events: none;
 
     .hover-series-name {
-      color: #ffffff;
+      color: #0afd00;
       font-size: 48px;
       font-weight: 700;
     }

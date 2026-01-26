@@ -5,12 +5,12 @@
 import time
 from typing import List, Optional
 
+from ruoyi_car.domain.entity import Series
 from ruoyi_car.mapper import LikeMapper, ModelMapper
+from ruoyi_car.mapper.series_mapper import SeriesMapper
 from ruoyi_car.service.view_service import ViewService
 from ruoyi_common.exception import ServiceException
-from ruoyi_common.utils.base import LogUtil, DateUtil
-from ruoyi_car.domain.entity import Series
-from ruoyi_car.mapper.series_mapper import SeriesMapper
+from ruoyi_common.utils.base import LogUtil
 from ruoyi_common.utils.security_util import get_username, get_user_id
 
 
@@ -76,6 +76,19 @@ class SeriesService:
         #添加浏览记录
         ViewService.add_view(series_info)
         return series_info
+    @classmethod
+    def select_series_by_series_ids(cls, series_id)->List[Series]:
+        """
+        根据车系ID列表查询车系信息
+
+        Args:
+            series_id: 车系ID列表
+
+        Returns:
+            车系信息列表
+        """
+        return SeriesMapper.select_series_by_series_ids(series_id)
+
 
     @classmethod
     def insert_series(cls, series: Series) -> int:
@@ -341,3 +354,4 @@ class SeriesService:
         except (ValueError, AttributeError) as e:
             # 如果解析失败，记录警告但不影响其他数据处理
             LogUtil.logger.warning(f"解析官方指导价失败：{series.official_price_str}，错误：{e}")
+

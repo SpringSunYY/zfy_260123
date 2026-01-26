@@ -5,10 +5,10 @@
 from datetime import datetime
 from typing import List, Optional
 
-from ruoyi_common.exception import ServiceException
-from ruoyi_common.utils.base import LogUtil
 from ruoyi_car.domain.entity import View, Series
 from ruoyi_car.mapper.view_mapper import ViewMapper
+from ruoyi_common.exception import ServiceException
+from ruoyi_common.utils.base import LogUtil
 from ruoyi_common.utils.security_util import get_user_id, get_username
 
 
@@ -172,3 +172,33 @@ class ViewService:
             raise ServiceException(fail_msg)
         success_msg = f"恭喜您，数据已全部导入成功！共 {success_count} 条，数据如下：" + success_msg
         return success_msg
+
+    @classmethod
+    def select_user_views_after_time(cls, user_id: int, after_time:datetime)-> List[View]:
+        """
+        根据用户ID获取某个时间点之后的所有浏览记录
+
+        Args:
+            user_id (int): 用户ID
+            after_time (datetime): 时间点
+
+        Returns:
+            List[View]: 用户浏览记录列表
+        """
+        # 直接调用ViewMapper的方法
+        return ViewMapper.select_user_views_after_time(user_id, after_time)
+
+    @classmethod
+    def select_user_views_by_user_num_new(cls, user_id, view_num)-> List[View]:
+        """
+        根据用户ID获取最新的浏览记录
+
+        Args:
+            user_id (int): 用户ID
+            view_num (int): 浏览数量
+
+        Returns:
+            List[View]: 用户浏览记录列表
+        """
+        return ViewMapper.select_user_views_by_user_num_new(user_id, view_num)
+
