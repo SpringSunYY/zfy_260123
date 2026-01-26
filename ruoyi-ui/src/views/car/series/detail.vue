@@ -37,7 +37,6 @@
             <el-button
               :type="series.isLiked ? 'danger' : 'default'"
               :icon="series.isLiked ? 'el-icon-star-on' : 'el-icon-star-off'"
-              circle
               size="medium"
               @click="toggleLike"
               class="like-button"
