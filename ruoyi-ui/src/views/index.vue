@@ -82,13 +82,13 @@
       ></el-alert>
     </div>
 
-    <!-- 卡片列表 -->
+    <!-- 卡片列表 - 瀑布流布局 -->
     <div class="card-list-wrapper" v-loading="loading">
       <div v-if="seriesList.length === 0 && !loading" class="empty-tip">
         <el-empty description="暂无数据"></el-empty>
       </div>
-      <el-row :gutter="20">
-        <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="6" v-for="item in seriesList" :key="item.id" class="card-col">
+      <div class="masonry-grid">
+        <div class="masonry-item" v-for="item in seriesList" :key="item.id">
           <el-card class="series-card" shadow="hover">
             <div class="card-image" @click="handleCardClick(item)">
               <img v-if="item.image && !item.imageError" :src="getImageUrl(item.image)" :alt="item.seriesName"
@@ -139,8 +139,8 @@
               </div>
             </div>
           </el-card>
-        </el-col>
-      </el-row>
+        </div>
+      </div>
       <div v-if="loadingMore" class="loading-more">
         <i class="el-icon-loading"></i>
         <span>加载中...</span>
@@ -400,12 +400,34 @@ export default {
   padding: 60px 0;
 }
 
-.card-col {
+// 瀑布流网格布局
+.masonry-grid {
+  column-count: 4;
+  column-gap: 20px;
+  
+  @media (max-width: 1400px) {
+    column-count: 3;
+  }
+  
+  @media (max-width: 1200px) {
+    column-count: 3;
+  }
+  
+  @media (max-width: 992px) {
+    column-count: 2;
+  }
+  
+  @media (max-width: 576px) {
+    column-count: 1;
+  }
+}
+
+.masonry-item {
+  break-inside: avoid;
   margin-bottom: 20px;
 }
 
 .series-card {
-  height: 100%;
   transition: all 0.3s;
   border-radius: 8px;
   overflow: hidden;
