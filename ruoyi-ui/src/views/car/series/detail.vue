@@ -56,9 +56,9 @@
           <el-card class="info-card" shadow="never">
             <!-- 基本信息标签 -->
             <div class="tags-row">
-              <dict-tag :options="dict.type.country" :value="series.country" />
-              <dict-tag :options="dict.type.model_type" :value="series.modelType" />
-              <dict-tag :options="dict.type.energy_type" :value="series.energyType" />
+              <dict-tag :options="dict.type.country" :value="series.country"/>
+              <dict-tag :options="dict.type.model_type" :value="series.modelType"/>
+              <dict-tag :options="dict.type.energy_type" :value="series.energyType"/>
             </div>
 
             <!-- 价格信息 -->
@@ -100,35 +100,43 @@
             <div class="scores-grid">
               <div v-if="series.overallScore" class="score-item">
                 <div class="score-label">综合</div>
-                <el-rate v-model="series.overallScore" disabled show-score text-color="#ff9900" score-template="{value}"></el-rate>
+                <el-rate v-model="series.overallScore" disabled show-score text-color="#ff9900"
+                         score-template="{value}"></el-rate>
               </div>
               <div v-if="series.exteriorScore" class="score-item">
                 <div class="score-label">外观</div>
-                <el-rate v-model="series.exteriorScore" disabled show-score text-color="#ff9900" score-template="{value}"></el-rate>
+                <el-rate v-model="series.exteriorScore" disabled show-score text-color="#ff9900"
+                         score-template="{value}"></el-rate>
               </div>
               <div v-if="series.interiorScore" class="score-item">
                 <div class="score-label">内饰</div>
-                <el-rate v-model="series.interiorScore" disabled show-score text-color="#ff9900" score-template="{value}"></el-rate>
+                <el-rate v-model="series.interiorScore" disabled show-score text-color="#ff9900"
+                         score-template="{value}"></el-rate>
               </div>
               <div v-if="series.spaceScore" class="score-item">
                 <div class="score-label">空间</div>
-                <el-rate v-model="series.spaceScore" disabled show-score text-color="#ff9900" score-template="{value}"></el-rate>
+                <el-rate v-model="series.spaceScore" disabled show-score text-color="#ff9900"
+                         score-template="{value}"></el-rate>
               </div>
               <div v-if="series.handlingScore" class="score-item">
                 <div class="score-label">操控</div>
-                <el-rate v-model="series.handlingScore" disabled show-score text-color="#ff9900" score-template="{value}"></el-rate>
+                <el-rate v-model="series.handlingScore" disabled show-score text-color="#ff9900"
+                         score-template="{value}"></el-rate>
               </div>
               <div v-if="series.comfortScore" class="score-item">
                 <div class="score-label">舒适性</div>
-                <el-rate v-model="series.comfortScore" disabled show-score text-color="#ff9900" score-template="{value}"></el-rate>
+                <el-rate v-model="series.comfortScore" disabled show-score text-color="#ff9900"
+                         score-template="{value}"></el-rate>
               </div>
               <div v-if="series.powerScore" class="score-item">
                 <div class="score-label">动力</div>
-                <el-rate v-model="series.powerScore" disabled show-score text-color="#ff9900" score-template="{value}"></el-rate>
+                <el-rate v-model="series.powerScore" disabled show-score text-color="#ff9900"
+                         score-template="{value}"></el-rate>
               </div>
               <div v-if="series.configurationScore" class="score-item">
                 <div class="score-label">配置</div>
-                <el-rate v-model="series.configurationScore" disabled show-score text-color="#ff9900" score-template="{value}"></el-rate>
+                <el-rate v-model="series.configurationScore" disabled show-score text-color="#ff9900"
+                         score-template="{value}"></el-rate>
               </div>
             </div>
           </el-card>
@@ -143,39 +151,39 @@
         </div>
         <div class="table-wrapper">
           <el-table :data="series.modelList" stripe>
-          <el-table-column label="封面" align="center" width="100">
-            <template slot-scope="scope">
-              <image-preview :src="scope.row.image" :width="50" :height="50"/>
-            </template>
-          </el-table-column>
-          <el-table-column label="车型名称" prop="carName" :show-overflow-tooltip="true"/>
-          <el-table-column label="车主报价" prop="ownerPriceStr" align="center"/>
-          <el-table-column label="经销商报价" prop="dealerPriceStr" align="center"/>
-          <el-table-column label="发动机/电机" prop="engineMotor" :show-overflow-tooltip="true"/>
-          <el-table-column label="能源类型" align="center">
-            <template slot-scope="scope">
-              <dict-tag :options="dict.type.energy_type" :value="scope.row.energyType"/>
-            </template>
-          </el-table-column>
-          <el-table-column label="驱动方式" align="center">
-            <template slot-scope="scope">
-              <dict-tag :options="dict.type.drive_type" :value="scope.row.driveType"/>
-            </template>
-          </el-table-column>
-          <el-table-column label="百公里加速" prop="accelerationStr" align="center"/>
-          <el-table-column label="最高时速" prop="maxSpeedStr" align="center"/>
-          <el-table-column label="操作" align="center" width="120" fixed="right">
-            <template slot-scope="scope">
-              <el-button
-                type="primary"
-                size="mini"
-                @click="viewModelDetail(scope.row)"
-              >
-                查看详情
-              </el-button>
-            </template>
-          </el-table-column>
-        </el-table>
+            <el-table-column label="封面" align="center" width="100">
+              <template slot-scope="scope">
+                <image-preview :src="scope.row.image" :width="50" :height="50"/>
+              </template>
+            </el-table-column>
+            <el-table-column label="车型名称" prop="carName" :show-overflow-tooltip="true"/>
+            <el-table-column label="车主报价" prop="ownerPriceStr" align="center"/>
+            <el-table-column label="经销商报价" prop="dealerPriceStr" align="center"/>
+            <el-table-column label="发动机/电机" prop="engineMotor" :show-overflow-tooltip="true"/>
+            <el-table-column label="能源类型" align="center">
+              <template slot-scope="scope">
+                <dict-tag :options="dict.type.energy_type" :value="scope.row.energyType"/>
+              </template>
+            </el-table-column>
+            <el-table-column label="驱动方式" align="center">
+              <template slot-scope="scope">
+                <dict-tag :options="dict.type.drive_type" :value="scope.row.driveType"/>
+              </template>
+            </el-table-column>
+            <el-table-column label="百公里加速" prop="accelerationStr" align="center"/>
+            <el-table-column label="最高时速" prop="maxSpeedStr" align="center"/>
+            <el-table-column label="操作" align="center" width="120" fixed="right">
+              <template slot-scope="scope">
+                <el-button
+                  type="primary"
+                  size="mini"
+                  @click="viewModelDetail(scope.row)"
+                >
+                  查看详情
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
         </div>
       </el-card>
 
@@ -194,8 +202,7 @@
 
 <script>
 import {getSeriesDetail} from "@/api/car/series";
-import {addLike, delLike, listLike} from "@/api/car/like";
-import {isExternal} from "@/utils/validate";
+import {addLike, delLikeBySeriesId, listLike} from "@/api/car/like";
 
 export default {
   name: "SeriesDetail",
@@ -211,8 +218,8 @@ export default {
   computed: {
     hasScores() {
       return this.series.overallScore || this.series.exteriorScore || this.series.interiorScore ||
-             this.series.spaceScore || this.series.handlingScore || this.series.comfortScore ||
-             this.series.powerScore || this.series.configurationScore;
+        this.series.spaceScore || this.series.handlingScore || this.series.comfortScore ||
+        this.series.powerScore || this.series.configurationScore;
     }
   },
   created() {
@@ -240,63 +247,51 @@ export default {
       if (this.series.isLiked) {
         // 取消点赞 - 先查询点赞记录ID
         this.$modal.confirm('确定要取消点赞吗？').then(() => {
-          // 查询点赞记录
-          listLike({
-            seriesId: this.series.seriesId
-          }).then(res => {
-            if (res.rows && res.rows.length > 0) {
-              // 删除第一个点赞记录（通常只有一个）
-              const likeId = res.rows[0].id;
-              delLike(likeId).then(() => {
-                this.series.isLiked = false;
-                this.$modal.msgSuccess("已取消点赞");
-              }).catch(() => {
-                this.$modal.msgError("取消点赞失败");
-              });
-            } else {
-              // 如果没有找到记录，直接更新状态
-              this.series.isLiked = false;
-            }
+          delLikeBySeriesId(this.seriesId).then(() => {
+            this.series.isLiked = false;
+            this.$modal.msgSuccess("已取消点赞");
           }).catch(() => {
-            this.$modal.msgError("查询点赞记录失败");
+            this.$modal.msgError("取消点赞失败");
           });
-        }).catch(() => {});
-      } else {
-        // 添加点赞
-        const likeData = {
-          seriesId: this.series.seriesId,
-          country: this.series.country,
-          brandName: this.series.brandName,
-          image: this.series.image,
-          seriesName: this.series.seriesName,
-          modelType: this.series.modelType,
-          energyType: this.series.energyType
-        };
-        addLike(likeData).then(() => {
-          this.series.isLiked = true;
-          this.$modal.msgSuccess("点赞成功");
         }).catch(() => {
-          this.$modal.msgError("点赞失败");
+          this.$modal.msgError("查询点赞记录失败");
         });
-      }
-    },
-    /** 图片加载错误处理 */
-    handleImageError() {
-      this.imageError = true;
-    },
-    /** 查看详情 - 跳转到懂车帝 */
-    viewDetail() {
-      if (this.series.seriesId) {
-        window.open(`https://www.dongchedi.com/auto/series/${this.series.seriesId}`, '_blank');
-      }
-    },
-    /** 查看车型详情 - 跳转到懂车帝 */
-    viewModelDetail(row) {
-      if (this.series.seriesId && row.carId) {
-        window.open(`https://www.dongchedi.com/auto/series/${this.series.seriesId}/model-${row.carId}`, '_blank');
-      }
+    } else {
+      // 添加点赞
+      const likeData = {
+        seriesId: this.series.seriesId,
+        country: this.series.country,
+        brandName: this.series.brandName,
+        image: this.series.image,
+        seriesName: this.series.seriesName,
+        modelType: this.series.modelType,
+        energyType: this.series.energyType
+      };
+      addLike(likeData).then(() => {
+        this.series.isLiked = true;
+        this.$modal.msgSuccess("点赞成功");
+      }).catch(() => {
+        this.$modal.msgError("点赞失败");
+      });
+    }
+  },
+  /** 图片加载错误处理 */
+  handleImageError() {
+    this.imageError = true;
+  },
+  /** 查看详情 - 跳转到懂车帝 */
+  viewDetail() {
+    if (this.series.seriesId) {
+      window.open(`https://www.dongchedi.com/auto/series/${this.series.seriesId}`, '_blank');
+    }
+  },
+  /** 查看车型详情 - 跳转到懂车帝 */
+  viewModelDetail(row) {
+    if (this.series.seriesId && row.carId) {
+      window.open(`https://www.dongchedi.com/auto/series/${this.series.seriesId}/model-${row.carId}`, '_blank');
     }
   }
+}
 }
 </script>
 
@@ -319,7 +314,7 @@ export default {
 }
 
 .cover-wrapper {
-  margin: 0  auto;
+  margin: 0 auto;
   width: 80%;
   height: 500px;
   overflow: hidden;

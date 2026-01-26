@@ -5,13 +5,16 @@
 
 from typing import List, Optional
 
+from ruoyi_car.mapper import SeriesMapper
 from ruoyi_common.exception import ServiceException
 from ruoyi_common.utils.base import LogUtil
 from ruoyi_car.domain.entity import Like
 from ruoyi_car.mapper.like_mapper import LikeMapper
 
+
 class LikeService:
     """用户点赞服务类"""
+
     @classmethod
     def select_like_list(cls, like: Like) -> List[Like]:
         """
@@ -25,7 +28,6 @@ class LikeService:
         """
         return LikeMapper.select_like_list(like)
 
-    
     @classmethod
     def select_like_by_id(cls, id: int) -> Optional[Like]:
         """
@@ -38,7 +40,7 @@ class LikeService:
             like: 用户点赞对象
         """
         return LikeMapper.select_like_by_id(id)
-    
+
     @classmethod
     def insert_like(cls, like: Like) -> int:
         """
@@ -50,9 +52,33 @@ class LikeService:
         Returns:
             int: 插入的记录数
         """
+        ##首先查询系列是否存在
+        series_info = SeriesMapper.select_series_by_series_id(like.series_id)
+        if series_info is None:
+            raise ServiceException("系列不存在")
+        ##判断用户是否已经点赞
+        like_info = LikeMapper.select_series_like_by_series_and_user(like.series_id, like.user_id)
+        if like_info:
+            raise ServiceException("用户已经点赞")
+        ##赋值
+        like.country = series_info.country or ""
+        like.series_name = series_info.series_name or ""
+        like.image = series_info.image or ""
+        like.brand_name = series_info.brand_name or ""
+        like.model_type = series_info.model_type or ""
+        like.energy_type = series_info.energy_type or ""
+        like.overall_score = series_info.overall_score or 3
+        like.exterior_score = series_info.exterior_score or 3
+        like.interior_score = series_info.interior_score or 3
+        like.space_score = series_info.space_score or 3
+        like.handling_score = series_info.handling_score or 3
+        like.comfort_score = series_info.comfort_score or 3
+        like.power_score = series_info.power_score or 3
+        like.configuration_score = series_info.configuration_score or 3
+        like.price = series_info.min_price or 0
+        like.score = 15
         return LikeMapper.insert_like(like)
 
-    
     @classmethod
     def update_like(cls, like: Like) -> int:
         """
@@ -65,9 +91,7 @@ class LikeService:
             int: 更新的记录数
         """
         return LikeMapper.update_like(like)
-    
 
-    
     @classmethod
     def delete_like_by_ids(cls, ids: List[int]) -> int:
         """
@@ -80,7 +104,14 @@ class LikeService:
             int: 删除的记录数
         """
         return LikeMapper.delete_like_by_ids(ids)
-    
+
+    @classmethod
+    def delete_like_by_series_and_user(cls, series_id, user_id) -> int:
+        """
+        根据用户和series删除点赞
+        """
+        return LikeMapper.delete_like_by_series_and_user(series_id, user_id)
+
     @classmethod
     def import_like(cls, like_list: List[Like], is_update: bool = False) -> str:
         """
@@ -104,7 +135,7 @@ class LikeService:
         for like in like_list:
             try:
                 display_value = like
-                
+
                 display_value = getattr(like, "id", display_value)
                 existing = None
                 if like.id is not None:
@@ -118,7 +149,7 @@ class LikeService:
                         continue
                 else:
                     result = LikeMapper.insert_like(like)
-                
+
                 if result > 0:
                     success_count += 1
                     success_msg += f"<br/> 第{success_count}条数据，操作成功：{display_value}"

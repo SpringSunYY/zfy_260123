@@ -47,3 +47,11 @@ export function delLike(id) {
     method: 'delete'
   })
 }
+
+//删除用户点赞根据seriesId
+export function delLikeBySeriesId(seriesId) {
+  return request({
+    url: '/car/like/seriesId/' +seriesId,
+    method: 'delete'
+  })
+}

@@ -204,6 +204,31 @@ class LikeMapper:
             return 0
 
     @classmethod
+    def delete_like_by_series_and_user(cls, series_id, user_id):
+        """
+        删除用户点赞的指定车系信息
+
+        Args:
+            series_id (int): 车系ID
+            user_id (int): 用户ID
+
+        Returns:
+            int: 删除的记录数
+        """
+        try:
+            stmt = delete(LikePo).where(
+                LikePo.series_id == series_id,
+                LikePo.user_id == user_id)
+            result = db.session.execute(stmt)
+            db.session.commit()
+            return result.rowcount
+        except Exception as e:
+            db.session.rollback()
+            print(f"删除用户点赞的指定车系信息出错: {e}")
+            return 0
+
+
+    @classmethod
     def select_series_like_by_series_and_user(cls, seriesId, user_id)-> Optional[Like]:
         """
         查询用户点赞的指定车系信息

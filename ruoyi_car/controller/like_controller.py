@@ -1,4 +1,3 @@
-
 from typing import List
 
 from flask import g
@@ -10,9 +9,11 @@ from werkzeug.datastructures import FileStorage
 from ruoyi_common.base.model import AjaxResponse, TableResponse
 from ruoyi_common.constant import HttpStatus
 from ruoyi_common.descriptor.serializer import BaseSerializer, JsonSerializer
-from ruoyi_common.descriptor.validator import QueryValidator, BodyValidator, PathValidator, FileDownloadValidator, FileUploadValidator
+from ruoyi_common.descriptor.validator import QueryValidator, BodyValidator, PathValidator, FileDownloadValidator, \
+    FileUploadValidator
 from ruoyi_common.domain.enum import BusinessType
 from ruoyi_common.utils.base import ExcelUtil
+from ruoyi_common.utils.security_util import get_user_id, get_username
 from ruoyi_framework.descriptor.log import Log
 from ruoyi_framework.descriptor.permission import HasPerm, PreAuthorize
 from ruoyi_car.controller import like as like_bp
@@ -28,6 +29,7 @@ like_service = LikeService()
 def _clear_page_context():
     if hasattr(g, "criterian_meta"):
         g.criterian_meta.page = None
+
 
 @gen.route('/list', methods=["GET"])
 @QueryValidator(is_page=True)
@@ -66,6 +68,8 @@ def add_like(dto: Like):
     for attr in dto.model_fields.keys():
         if hasattr(like_entity, attr):
             setattr(like_entity, attr, getattr(dto, attr))
+    like_entity.user_id = get_user_id()
+    like_entity.user_name=get_username()
     result = like_service.insert_like(like_entity)
     if result > 0:
         return AjaxResponse.from_success(msg='新增成功')
@@ -90,7 +94,6 @@ def update_like(dto: Like):
     return AjaxResponse.from_error(msg='修改失败')
 
 
-
 @gen.route('/<ids>', methods=['DELETE'])
 @PathValidator()
 @PreAuthorize(HasPerm('car:like:remove'))
@@ -103,7 +106,23 @@ def delete_like(ids: str):
         result = like_service.delete_like_by_ids(id_list)
         if result > 0:
             return AjaxResponse.from_success(msg='删除成功')
-        return AjaxResponse.from_error(code=HttpStatus.ERROR, msg='删除失败')
+        return AjaxResponse.from_error(msg='删除失败')
+    except Exception as e:
+        return AjaxResponse.from_error(msg=f'删除失败: {str(e)}')
+
+
+# 根据seriesId删除
+@gen.route('/seriesId/<int:series_id>', methods=['DELETE'])
+@PreAuthorize(HasPerm('car:like:remove'))
+@JsonSerializer()
+def delete_like_by_series_id(series_id: int):
+    """根据seriesId删除用户点赞"""
+    try:
+        user_id = get_user_id()
+        result = like_service.delete_like_by_series_and_user(series_id, user_id)
+        if result > 0:
+            return AjaxResponse.from_success(msg='删除成功')
+        return AjaxResponse.from_error(msg='删除失败')
     except Exception as e:
         return AjaxResponse.from_error(msg=f'删除失败: {str(e)}')
 
@@ -128,6 +147,7 @@ def export_like(dto: Like):
     excel_util = ExcelUtil(Like)
     return excel_util.export_response(likes, "用户点赞数据")
 
+
 @gen.route('/importTemplate', methods=['POST'])
 @login_required
 @BaseSerializer()
@@ -136,14 +156,15 @@ def import_template():
     excel_util = ExcelUtil(Like)
     return excel_util.import_template_response(sheetname="用户点赞数据")
 
+
 @gen.route('/importData', methods=['POST'])
 @FileUploadValidator()
 @PreAuthorize(HasPerm('car:like:import'))
 @Log(title='用户点赞管理', business_type=BusinessType.IMPORT)
 @JsonSerializer()
 def import_data(
-    file: List[FileStorage],
-    update_support: Annotated[bool, BeforeValidator(lambda x: x != "0")]
+        file: List[FileStorage],
+        update_support: Annotated[bool, BeforeValidator(lambda x: x != "0")]
 ):
     """导入用户点赞数据"""
     file = file[0]
