@@ -41,6 +41,7 @@ class RecommendMapper:
             if recommend.user_name:
                 stmt = stmt.where(RecommendPo.user_name.like("%" + str(recommend.user_name) + "%"))
 
+            stmt = stmt.order_by(RecommendPo.create_time.desc())
             _params = getattr(recommend, "params", {}) or {}
             begin_val = _params.get("beginCreateTime")
             end_val = _params.get("endCreateTime")

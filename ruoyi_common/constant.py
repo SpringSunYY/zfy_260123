@@ -193,3 +193,5 @@ class ConfigConstants:
     #推荐模型权重
     CAE_MODEL_WEIGHT="car:model:weight"
     STATISTICS_PRICE_RANGE = "statistics:price:range"
+    #综合评分
+    CAR_OVERALL_SCORE_WEIGHT="car:overall:score:weight"

@@ -236,10 +236,10 @@ class RecommendService:
         # 每个维度的重要程度
         weights = {
             "country": 5,  # 国家
-            "brand": 12,  # 品牌名
-            "model_type": 9,  # 车型
+            "brand": 30,  # 品牌名
+            "model_type": 15,  # 车型
             "energy_type": 6,  # 能源类型
-            "price": 15.0,  # 价格
+            "price": 21.0,  # 价格
             "score": 1.0  # 综合分数
         }
 
@@ -258,6 +258,13 @@ class RecommendService:
             "price": defaultdict(float),
             "score": defaultdict(float)
         }
+        overall_score_weight = {
+            "greater_than": 2,
+            "less_than": 0.5
+        },
+        overall_score_weight_str = SysConfigService.select_config_by_key(ConfigConstants.CAR_OVERALL_SCORE_WEIGHT)
+        overall_score_weight = json.loads(
+            overall_score_weight_str) if overall_score_weight_str else overall_score_weight
         now = datetime.now()
         # 推荐数
         recommend_num_str = SysConfigService.select_config_by_key(ConfigConstants.CAR_RECOMMEND_NUM)
@@ -289,8 +296,8 @@ class RecommendService:
         try:
             view_num_str = SysConfigService.select_config_by_key(ConfigConstants.CAR_VIEW_RECORD_NUM)
             like_num_str = SysConfigService.select_config_by_key(ConfigConstants.CAR_LIKE_RECORD_NUM)
-            view_num = int(view_num_str) if view_num_str else 10
-            like_num = int(like_num_str) if like_num_str else 3
+            view_num = int(view_num_str) if view_num_str else 100
+            like_num = int(like_num_str) if like_num_str else 30
             # 查询最新的浏览点赞记录
             views = ViewService.select_user_views_by_user_num_new(user_id, view_num)
             likes = LikeService.select_user_likes_by_user_num_new(user_id, like_num)
@@ -333,7 +340,8 @@ class RecommendService:
                                      like_score: float = 15,
                                      view_score: float = 5,
                                      price_range: List[int] = None,
-                                     now: datetime = None
+                                     now: datetime = None,
+                                     overall_score_weight: Dict[str, float] = None
                                      ) -> Optional[Recommend]:
 
         """
@@ -350,20 +358,26 @@ class RecommendService:
             view_score 浏览分数
             like_score 点赞分数
             series_score 车系默认维度分数
+            overall_score_weight 维度分数与综合分数比较的权重配置
 
 
         Returns:
             Optional[Recommend]: 生成的推荐模型
         """
-        # 1、计算模型分数
+        # 1、计算各个维度的平均分数
+        series_avg_score = cls._calculate_avg_score(series_list, series_score)
+        # 2、计算模型分数
         user_preference = cls._calculate_user_preference(user_views, user_likes, user_preference, time_decay_factor,
-                                                         series_score, like_score, view_score, price_range, now)
-        # 2、计算车系分数
-        all_candidate_series = cls._calculate_series_score(series_list, user_preference, weights, series_score,
+                                                         series_avg_score, like_score, view_score, price_range, now,
+                                                         overall_score_weight)
+        # 3、计算车系分数
+        all_candidate_series = cls._calculate_series_score(series_list, user_preference, weights,
+                                                           series_score,
+                                                           series_avg_score,
                                                            price_range,
                                                            recommend_num)
 
-        # 3、构建结果集，推荐模型
+        # 4、构建结果集，推荐模型
         # 从所有的推荐结果拿到所有的车系series_id
         series_ids = []
         for series_info, score in all_candidate_series:
@@ -374,9 +388,11 @@ class RecommendService:
                 "series_ids": series_ids,
                 "create_time": now.strftime("%Y-%m-%d %H:%M:%S"),
             }, ensure_ascii=False, separators=(',', ':'))
-        # 用户偏好模型
+        # 用户偏好模型 - 只处理正常维度，忽略以 _ 开头的特殊键
         processed_preference = {}
         for dimension, prefs in user_preference.items():
+            if dimension.startswith('_'):  # 跳过特殊键
+                continue
             processed_preference[dimension] = [
                 {'name': key, 'value': round(value, 2)} for key, value in prefs.items()
             ]
@@ -403,8 +419,10 @@ class RecommendService:
         return recommend
 
     @classmethod
-    def _calculate_user_preference(cls, user_views, user_likes, user_preference, time_decay_factor, series_score: float,
-                                   like_score: float, view_score: float, price_range, now: datetime) -> Dict[
+    def _calculate_user_preference(cls, user_views, user_likes, user_preference, time_decay_factor,
+                                   series_avg_score: dict[str, float],
+                                   like_score: float, view_score: float, price_range, now: datetime,
+                                   overall_score_weight: Dict[str, float] = None) -> Dict[
         str, Dict[str, float]]:
         """
         计算用户偏好
@@ -412,6 +430,7 @@ class RecommendService:
             user_views (List[View]): 用户浏览记录
             user_likes (List[Like]): 用户点赞记录
             time_decay_factor (float): 时间衰减因子
+            overall_score_weight: 维度分数与综合分数比较的权重配置
         Returns:
             Dict[Dict[str, float]]: 用户偏好
         """
@@ -423,7 +442,8 @@ class RecommendService:
             score_weight = view.score or view_score
             total_weight = time_weight * score_weight
             # 累加各个维度的偏好
-            cls._accumulate_preference(user_preference, view, total_weight, price_range, series_score)
+            cls._accumulate_preference(user_preference, view, total_weight, price_range, series_avg_score,
+                                       overall_score_weight)
 
         # 处理点赞记录
         for like in user_likes:
@@ -431,7 +451,8 @@ class RecommendService:
             time_weight = cls._calculate_time_weight(like.create_time, now, time_decay_factor)
             score_weight = like.score or like_score
             total_weight = time_weight * score_weight
-            cls._accumulate_preference(user_preference, like, total_weight, price_range, series_score)
+            cls._accumulate_preference(user_preference, like, total_weight, price_range, series_avg_score,
+                                       overall_score_weight)
 
         return dict(user_preference)
 
@@ -457,13 +478,16 @@ class RecommendService:
     def _accumulate_preference(cls, preference: Dict[str, Dict[str, float]],
                                record: View | Like, weight: float,
                                price_range: List[int],
-                               series_score: float):
+                               series_avg_score: dict[str, float],
+                               overall_score_weight: Dict[str, float] = None):
         """
         累加用户偏好
         Args:
             preference (Dict[str, Dict[str, float]]): 用户偏好
             record (View | Like): 浏览记录或点赞记录
             weight (float): 权重
+            series_avg_score: 各维度平均分
+            overall_score_weight: 维度分数与综合分数比较的权重配置
         """
         # 处理国家
         if record.country:
@@ -485,39 +509,35 @@ class RecommendService:
             # 根据价格确定范围标签
             price_label = cls._get_price_range_label(record.price, price_range)
             preference["price"][price_label] += weight
-        # 处理分数，分数有七种维度，每种维度都要处理，且需要设置默认值
-        if record.overall_score:
-            preference["score"]["综合"] = preference["score"].get("综合", 0) + record.overall_score + weight
-        else:
-            preference["score"]["综合"] = preference["score"].get("综合", 0) + series_score + weight
-        if record.exterior_score:
-            preference["score"]["外观"] = preference["score"].get("外观", 0) + record.exterior_score + weight
-        else:
-            preference["score"]["外观"] = preference["score"].get("外观", 0) + series_score + weight
-        if record.interior_score:
-            preference["score"]["内饰"] = preference["score"].get("内饰", 0) + record.interior_score + weight
-        else:
-            preference["score"]["内饰"] = preference["score"].get("内饰", 0) + series_score + weight
-        if record.space_score:
-            preference["score"]["空间"] = preference["score"].get("空间", 0) + record.space_score + weight
-        else:
-            preference["score"]["空间"] = preference["score"].get("空间", 0) + series_score + weight
-        if record.handling_score:
-            preference["score"]["操控"] = preference["score"].get("操控", 0) + record.handling_score + weight
-        else:
-            preference["score"]["操控"] = preference["score"].get("操控", 0) + series_score + weight
-        if record.comfort_score:
-            preference["score"]["舒适性"] = preference["score"].get("舒适性", 0) + record.comfort_score + weight
-        else:
-            preference["score"]["舒适性"] = preference["score"].get("舒适性", 0) + series_score + weight
-        if record.power_score:
-            preference["score"]["动力"] = preference["score"].get("动力", 0) + record.power_score + weight
-        else:
-            preference["score"]["动力"] = preference["score"].get("动力", 0) + series_score + weight
-        if record.configuration_score:
-            preference["score"]["配置"] = preference["score"].get("配置", 0) + record.configuration_score + weight
-        else:
-            preference["score"]["配置"] = preference["score"].get("配置", 0) + series_score + weight
+
+        # 处理分数，将8个分数维度作为score维度下的8个子项
+        # 获取综合分数用于比较
+        overall_score = record.overall_score or series_avg_score.get('overall_score', 0)
+        greater_than_weight = overall_score_weight.get('greater_than', 1.2) if overall_score_weight else 1.2
+        less_than_weight = overall_score_weight.get('less_than', 0.8) if overall_score_weight else 0.8
+
+        score_fields = ['overall_score', 'exterior_score', 'interior_score', 'space_score',
+                        'handling_score', 'comfort_score', 'power_score', 'configuration_score']
+        score_display_names = ['综合', '外观', '内饰', '空间', '操控', '舒适性', '动力', '配置']
+
+        for field_name, display_name in zip(score_fields, score_display_names):
+            value = getattr(record, field_name, None)
+            # 如果记录有分数值，用实际值；否则用默认分数（series_avg_score 中的默认值）
+            if value is not None:
+                score_value = value
+            else:
+                score_value = series_avg_score.get(field_name, 0)
+            # 根据该维度分数与综合分数的比较，确定权重因子
+            if field_name == 'overall_score':
+                weight_factor = 1.0
+            elif value is not None and value > overall_score:
+                weight_factor = greater_than_weight
+            elif value is not None and value < overall_score:
+                weight_factor = less_than_weight
+            else:
+                weight_factor = 1.0
+            # 累加分数值 * 权重因子
+            preference["score"][display_name] = preference["score"].get(display_name, 0) + weight_factor
 
     @classmethod
     def _get_price_range_label(cls, price: float, price_range: List[int]) -> str:
@@ -554,9 +574,11 @@ class RecommendService:
                 return f"{w_value:.1f}W"
 
     @classmethod
-    def _calculate_series_score(cls, series: List[Series] = None, user_preference: Dict[str, Dict[str, float]] = None,
+    def _calculate_series_score(cls, series: List[Series] = None,
+                                user_preference: Dict[str, Dict[str, float]] = None,
                                 weights: Dict[str, float] = None,
-                                series_score: float = 0,
+                                series_score: float = 0.0,
+                                series_avg_score: dict[str, float] = None,
                                 price_range: List[int] = None, recommend_num: int = 3000) -> \
             List[
                 Tuple[Series, float]]:
@@ -571,8 +593,6 @@ class RecommendService:
             List[Tuple[Series, float]]: 车型得分列表
         """
         candidates = []
-        # 计算各个维度的平均分数
-        series_avg_score = cls._calculate_avg_score(series, series_score)
         for series in series:
             # 计算相似度分数
             similarity_score = cls._calculate_similarity_score(series, user_preference, weights,
@@ -698,7 +718,8 @@ class RecommendService:
         pass
 
     @classmethod
-    def _calculate_dimension_scores(cls, series, total_score, series_score, series_avg_score, user_preference,
+    def _calculate_dimension_scores(cls, series, total_score, series_score, series_avg_score: dict[str, float],
+                                    user_preference,
                                     weights: Dict[str, float]):
         """
         计算维度分数
@@ -729,75 +750,121 @@ class RecommendService:
         series.configuration_score = series.configuration_score or series_score
         # 如果超过综合分数就是直接存权重，否则就是综合分数的95%
         weight = 0.9
-
         # 外观
-        exterior_pref = score_preference.get("外观", 0)
-        if series.exterior_score > series_avg_score['exterior_score']:
-            total_score += series.exterior_score + exterior_pref * weights.get('price', 0)
-        else:
-            total_score += (series.exterior_score + exterior_pref + weights.get('price', 0)) * weight
-        LogUtil.logger.debug(
-            f"[维度分数计算] 外观: score={series.exterior_score}, pref={exterior_pref}, 累加后total={total_score}")
+        total_score = cls._calculate_single_dimension_score(series.exterior_score,
+                                                            series.overall_score,
+                                                            series_avg_score['exterior_score'],
+                                                            weight,
+                                                            weights,
+                                                            total_score,
+                                                            score_preference,
+                                                            "外观")
 
         # 内饰
-        interior_pref = score_preference.get("内饰", 0)
-        if series.interior_score > series_avg_score['exterior_score']:
-            total_score += series.interior_score + interior_pref * weights.get('price', 0)
-        else:
-            total_score += (series.interior_score + interior_pref + weights.get('price', 0)) * weight
-        LogUtil.logger.debug(
-            f"[维度分数计算] 内饰: score={series.interior_score}, pref={interior_pref}, 累加后total={total_score}")
+        total_score = cls._calculate_single_dimension_score(series.interior_score,
+                                                            series.overall_score,
+                                                            series_avg_score['interior_score'],
+                                                            weight,
+                                                            weights,
+                                                            total_score,
+                                                            score_preference,
+                                                            "内饰")
 
-        #综合
-        overall_pref = score_preference.get("综合", 0)
-        if series.overall_score > series_avg_score['overall_score']:
-            total_score += series.overall_score + overall_pref * weights.get('price', 0)
-        else:
-            total_score += (series.overall_score + overall_pref + weights.get('price', 0)) * weight
+        # 综合
+        total_score = cls._calculate_single_dimension_score(series.overall_score,
+                                                            series.overall_score,
+                                                            series_avg_score['overall_score'],
+                                                            weight,
+                                                            weights,
+                                                            total_score,
+                                                            score_preference,
+                                                            "综合")
+
         # 空间
-        space_pref = score_preference.get("空间", 0)
-        if series.space_score > series_avg_score['space_score']:
-            total_score += series.space_score + space_pref * weights.get('price', 0)
-        else:
-            total_score += (series.overall_score + space_pref + weights.get('price', 0)) * weight
-        LogUtil.logger.debug(
-            f"[维度分数计算] 空间: score={series.space_score}, pref={space_pref}, 累加后total={total_score}")
+        total_score = cls._calculate_single_dimension_score(series.space_score,
+                                                            series.overall_score,
+                                                            series_avg_score['space_score'],
+                                                            weight,
+                                                            weights,
+                                                            total_score,
+                                                            score_preference,
+                                                            "空间")
 
         # 操控
         handling_pref = score_preference.get("操控", 0)
-        if series.space_score > series_avg_score['space_score']:
-            total_score += series.handling_score + handling_pref * weights.get('price', 0)
-        else:
-            total_score += (series.handling_score + handling_pref + weights.get('price', 0)) * weight
-        LogUtil.logger.debug(
-            f"[维度分数计算] 操控: score={series.handling_score}, pref={handling_pref}, 累加后total={total_score}")
+        total_score = cls._calculate_single_dimension_score(series.handling_score,
+                                                            series.overall_score,
+                                                            series_avg_score['handling_score'],
+                                                            weight,
+                                                            weights,
+                                                            total_score,
+                                                            score_preference,
+                                                            "操控")
 
         # 舒适性
         comfort_pref = score_preference.get("舒适性", 0)
-        if series.comfort_score > series_avg_score['comfort_score']:
-            total_score += series.comfort_score + comfort_pref * weights.get('price', 0)
-        else:
-            total_score += (series.comfort_score + comfort_pref + weights.get('price', 0)) * weight
-        LogUtil.logger.debug(
-            f"[维度分数计算] 舒适性: score={series.comfort_score}, pref={comfort_pref}, 累加后total={total_score}")
+        total_score = cls._calculate_single_dimension_score(series.comfort_score,
+                                                            series.overall_score,
+                                                            series_avg_score['comfort_score'],
+                                                            weight,
+                                                            weights,
+                                                            total_score,
+                                                            score_preference,
+                                                            "舒适性")
 
         # 动力
-        power_pref = score_preference.get("动力", 0)
-        if series.power_score > series_avg_score['power_score']:
-            total_score += series.power_score + power_pref * weights.get('price', 0)
-        else:
-            total_score += (series.power_score + power_pref + weights.get('price', 0)) * weight
-        LogUtil.logger.debug(
-            f"[维度分数计算] 动力: score={series.power_score}, pref={power_pref}, 累加后total={total_score}")
+        total_score = cls._calculate_single_dimension_score(series.power_score,
+                                                            series.overall_score,
+                                                            series_avg_score['power_score'],
+                                                            weight,
+                                                            weights,
+                                                            total_score,
+                                                            score_preference,
+                                                            "动力")
 
         # 配置
-        config_pref = score_preference.get("配置", 0)
-        if series.configuration_score > series_avg_score['configuration_score']:
-            total_score += series.configuration_score + config_pref * weights.get('price', 0)
+        total_score = cls._calculate_single_dimension_score(series.configuration_score,
+                                                            series.overall_score,
+                                                            series_avg_score['configuration_score'],
+                                                            weight,
+                                                            weights,
+                                                            total_score,
+                                                            score_preference,
+                                                            "配置")
+
+    @classmethod
+    def _calculate_single_dimension_score(cls,
+                                          series_score_value,
+                                          overall_score: float,
+                                          avg_value,
+                                          weight_value,
+                                          weights,
+                                          current_total_score,
+                                          score_preference,
+                                          dimension_name):
+        """
+        计算单个维度的分数
+
+        Args:
+            series_score_value: 车系在该维度的分数
+            overall_score: 综合分数
+            avg_value: 该维度的平均分数
+            preference_value: 用户对该维度的偏好值
+            weight_value: 权重值
+            weights: 权重字典
+            current_total_score: 当前总分
+            dimension_name: 维度名称
+
+        Returns:
+            float: 更新后的总分
+        """
+        preference_value = score_preference.get(dimension_name, 0)
+        # 如果大于等于平均分并且大于等于综合分数，表示该维度分数高
+        if series_score_value >= avg_value and series_score_value >= overall_score:
+            current_total_score += series_score_value + preference_value * weights.get('score', 0)
         else:
-            total_score += (series.configuration_score + config_pref + weights.get('price', 0)) * weight
-        LogUtil.logger.debug(
-            f"[维度分数计算] 配置: score={series.configuration_score}, pref={config_pref}, 累加后total={total_score}")
+            current_total_score += (series_score_value + preference_value + weights.get('price', 0)) * weight_value
+        return current_total_score
 
     @classmethod
     def _calculate_avg_score(cls, series_list: List[Series], series_score: float) -> Dict[str, float]:
