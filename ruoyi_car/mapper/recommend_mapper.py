@@ -3,11 +3,11 @@
 # @FileName: recommend_mapper.py
 # @Time    : 2026-01-23 20:21:53
 
-from typing import List, Optional
 from datetime import datetime
+from typing import List, Optional
 
 from flask import g
-from sqlalchemy import select, update, delete
+from sqlalchemy import select, delete
 
 from ruoyi_admin.ext import db
 from ruoyi_car.domain.entity import Recommend
