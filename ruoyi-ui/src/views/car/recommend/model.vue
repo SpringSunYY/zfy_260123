@@ -11,6 +11,11 @@
           <PieGradientCharts @item-click="onChartItemClick"/>
         </div>
       </el-col>
+      <el-col :xs="24" :sm="24" :lg="8">
+        <div class="chart-wrapper">
+          <PiePetalPoseCharts @item-click="onChartItemClick"/>
+        </div>
+      </el-col>
     </el-row>
   </div>
 </template>
@@ -18,10 +23,11 @@
 import {getRecommend} from "@/api/car/recommend";
 import PiePetalTransparentPoseCharts from "@/components/Echarts/PiePetalTransparentPoseCharts.vue";
 import PieGradientCharts from "@/components/Echarts/PieGradientCharts.vue";
+import PiePetalPoseCharts from "@/components/Echarts/PiePetalPoseCharts.vue";
 
 export default {
   name: "index",
-  components: {PieGradientCharts, PiePetalTransparentPoseCharts},
+  components: {PiePetalPoseCharts, PieGradientCharts, PiePetalTransparentPoseCharts},
   data() {
     return {
       id: null,
