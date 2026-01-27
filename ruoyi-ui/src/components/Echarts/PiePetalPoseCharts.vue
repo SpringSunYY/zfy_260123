@@ -41,7 +41,7 @@ export default {
     },
     backgroundColor: {
       type: String,
-      default: '#000'
+      default: 'transparent'
     },
     defaultColor: {
       type: Array,
