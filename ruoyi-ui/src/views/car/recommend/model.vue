@@ -21,6 +21,11 @@
           <PieGradientRoseCharts @item-click="onChartItemClick"/>
         </div>
       </el-col>
+      <el-col :xs="24" :sm="24" :lg="8">
+        <div class="chart-wrapper">
+          <ScatterRandomTooltipCharts @item-click="onChartItemClick"/>
+        </div>
+      </el-col>
     </el-row>
   </div>
 </template>
@@ -30,10 +35,13 @@ import PiePetalTransparentPoseCharts from "@/components/Echarts/PiePetalTranspar
 import PieGradientCharts from "@/components/Echarts/PieGradientCharts.vue";
 import PiePetalPoseCharts from "@/components/Echarts/PiePetalPoseCharts.vue";
 import PieGradientRoseCharts from "@/components/Echarts/PieGradientRoseCharts.vue";
+import ScatterRandomTooltipCharts from "@/components/Echarts/ScatterRandomCharts.vue";
 
 export default {
   name: "index",
-  components: {PieGradientRoseCharts, PiePetalPoseCharts, PieGradientCharts, PiePetalTransparentPoseCharts},
+  components: {
+    ScatterRandomTooltipCharts,
+    PieGradientRoseCharts, PiePetalPoseCharts, PieGradientCharts, PiePetalTransparentPoseCharts},
   data() {
     return {
       id: null,
