@@ -26,6 +26,11 @@
           <ScatterRandomTooltipCharts @item-click="onChartItemClick"/>
         </div>
       </el-col>
+      <el-col :xs="24" :sm="24" :lg="8">
+        <div class="chart-wrapper">
+          <KeywordGravityCharts @item-click="onChartItemClick"/>
+        </div>
+      </el-col>
     </el-row>
   </div>
 </template>
@@ -36,10 +41,12 @@ import PieGradientCharts from "@/components/Echarts/PieGradientCharts.vue";
 import PiePetalPoseCharts from "@/components/Echarts/PiePetalPoseCharts.vue";
 import PieGradientRoseCharts from "@/components/Echarts/PieGradientRoseCharts.vue";
 import ScatterRandomTooltipCharts from "@/components/Echarts/ScatterRandomCharts.vue";
+import KeywordGravityCharts from "@/components/Echarts/KeywordGravityCharts.vue";
 
 export default {
   name: "index",
   components: {
+    KeywordGravityCharts,
     ScatterRandomTooltipCharts,
     PieGradientRoseCharts, PiePetalPoseCharts, PieGradientCharts, PiePetalTransparentPoseCharts},
   data() {
