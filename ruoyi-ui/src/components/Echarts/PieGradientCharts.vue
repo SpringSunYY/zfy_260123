@@ -27,8 +27,18 @@ export default {
     defaultColor: {
       type: Array,
       default: () => [
-        'rgb(0, 161, 163)', 'rgb(66, 190, 236)', 'rgb(142, 194, 31)', 'rgb(240, 147, 43)',
-        'rgb(0, 47, 167)', 'rgb(31, 106, 225)', 'rgb(63, 142, 252)', 'rgb(136, 217, 255)'
+        'rgb(0, 47, 167)', 'rgb(31, 106, 225)', 'rgb(63, 142, 252)', 'rgb(136, 217, 255)',
+        'rgb(11, 60, 93)', 'rgb(28, 93, 153)', 'rgb(58, 124, 165)', 'rgb(127, 183, 217)',
+        'rgb(90, 200, 250)', 'rgb(107, 196, 255)', 'rgb(136, 217, 255)', 'rgb(190, 233, 255)',
+        'rgb(91, 124, 250)', 'rgb(106, 111, 242)', 'rgb(138, 124, 246)', 'rgb(161, 132, 243)',
+        'rgb(95, 75, 139)', 'rgb(122, 108, 157)', 'rgb(156, 137, 184)', 'rgb(193, 178, 214)',
+        'rgb(140, 29, 24)', 'rgb(178, 34, 34)', 'rgb(200, 0, 0)', 'rgb(235, 87, 87)',
+        'rgb(158, 42, 43)', 'rgb(178, 58, 72)', 'rgb(200, 85, 61)', 'rgb(224, 122, 95)',
+        'rgb(212, 160, 23)', 'rgb(235, 156, 16)', 'rgb(242, 201, 76)', 'rgb(255, 224, 138)',
+        'rgb(46, 125, 50)', 'rgb(67, 160, 71)', 'rgb(102, 187, 106)', 'rgb(165, 214, 167)',
+        'rgb(31, 122, 122)', 'rgb(47, 164, 169)', 'rgb(106, 219, 207)', 'rgb(191, 239, 239)',
+        'rgb(78, 214, 230)', 'rgb(111, 231, 240)', 'rgb(159, 243, 245)', 'rgb(214, 251, 251)',
+        'rgb(244, 143, 177)', 'rgb(245, 138, 217)', 'rgb(227, 140, 235)', 'rgb(255, 209, 232)'
       ]
     }
   },
@@ -72,14 +82,13 @@ export default {
 
     setOption(data) {
       if (!data || !data.length) return;
-
       const total = data.reduce((sum, item) => sum + Number(item.value || 0), 0);
       const avg = (total / data.length).toFixed(2);
 
       const seriesData = [];
       data.forEach((item, i) => {
         const baseColor = generateRandomColor(this.defaultColor);
-        const fillColor = baseColor.replace('rgb', 'rgba').replace(')', ', 0.3)');
+        const fillColor = baseColor.replace('rgb', 'rgba').replace(')', ', 0.5)');
 
         seriesData.push(
           {
@@ -95,7 +104,7 @@ export default {
             label: {
               show: true,
               formatter: '{b}: {c}',
-              textStyle: {fontSize: 13, color: '#666'}
+              textStyle: {fontSize: 13, color: '#ffffff'}
             }
           },
           {
@@ -160,7 +169,7 @@ export default {
           bottom: '1%',
           left: 'center',
           itemGap: 10,
-          textStyle: {color: '#999', fontSize: 12},
+          textStyle: {color: '#ffffff', fontSize: 12},
           data: data.map(item => item.name)
         },
         series: [
@@ -169,7 +178,7 @@ export default {
             radius: ['0%', '48%'],
             center: ['50%', '50%'],
             silent: true,
-            itemStyle: {color: '#fff'},
+            itemStyle: {color: 'rgba(255,255,255,0.38)'},
             data: [100]
           },
           {

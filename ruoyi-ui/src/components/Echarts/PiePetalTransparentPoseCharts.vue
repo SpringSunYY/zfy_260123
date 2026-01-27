@@ -100,6 +100,12 @@ export default {
         this.chart.dispose();
       }
       this.chart = echarts.init(this.$refs.chartRef);
+      // 点击事件监听
+      this.chart.on('click', (params) => {
+        if (params.name && params.data ) {
+          this.$emit('item-click', params.data);
+        }
+      });
       this.setOption(this.chartData);
     },
 

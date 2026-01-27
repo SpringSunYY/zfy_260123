@@ -166,10 +166,11 @@ export default {
             return res;
           }
         },
-        // 核心修复：全向缩放 (X轴 + Y轴)
+        // 缩放控制逻辑
         dataZoom: [
-          {type: 'inside', xAxisIndex: 0, filterMode: 'none'},
-          {type: 'inside', yAxisIndex: 0, filterMode: 'none'}
+          // X 轴内置缩放
+          {type: 'inside', xAxisIndex: 0, minSpan: 60},
+          {type: 'inside', yAxisIndex: 0, minSpan: 60},
         ],
         grid: {
           top: 40,

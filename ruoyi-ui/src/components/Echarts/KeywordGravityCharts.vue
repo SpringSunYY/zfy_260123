@@ -46,7 +46,7 @@ export default {
     },
     fontSizeRange: {
       type: Array,
-      default: () => [12, 24]
+      default: () => [24, 48]
     },
     defaultColor: {
       type: Array,
@@ -207,17 +207,17 @@ export default {
           // 添加缩放控制配置
           scaleLimit: {
             min: 0.5,   // 最小缩放比例
-            max: 3      // 最大缩放比例
+            max: 2     // 最大缩放比例
           },
           // 控制缩放灵敏度
-          zoomSensitivity: 0.01,  // 默认为1，降低值可减缓缩放速度
+          zoomSensitivity:2,  // 默认为1，降低值可减缓缩放速度
           type: 'graph',
           layout: 'force',
           roam: 'scale',
           force: {
             repulsion: 100,
             gravity: 0.5,
-            edgeLength: 5,
+            edgeLength: 3,
             friction: 0.5,
             layoutAnimation: true
           },

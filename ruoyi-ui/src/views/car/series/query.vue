@@ -141,9 +141,28 @@ export default {
     }
   },
   created() {
+    const type = this.$route.query && this.$route.query.type;
+    const key = this.$route.query && this.$route.query.key;
+    if (type && key) {
+      this.initQueryParams(type, key);
+    }
     this.getList();
   },
   methods: {
+    initQueryParams(type, key){
+      if (type==='country'){
+        this.queryParams.country = key;
+      }
+      if (type==='brandName'){
+        this.queryParams.brandName = key;
+      }
+      if (type==='modelType'){
+        this.queryParams.modelType = key;
+      }
+      if (type==='energyType'){
+        this.queryParams.energyType = key;
+      }
+    },
     /** 查询车系信息列表 */
     getList(isLoadMore = false) {
       if (this.isLoading) return;
