@@ -113,7 +113,7 @@ export function selectDictLabels(datas, value, separator) {
 // 字符串格式化(%s )
 export function sprintf(str) {
   var args = arguments, flag = true, i = 1
-  str = str.replace(/%s/g, function() {
+  str = str.replace(/%s/g, function () {
     var arg = args[i++]
     if (typeof arg === 'undefined') {
       flag = false
@@ -260,3 +260,17 @@ export function getFilePath(filePath) {
   }
   return baseURL + filePath
 }
+
+
+// 生成随机颜色
+export function generateRandomColor(colorList) {
+  if (colorList && colorList.length > 0) {
+    const randomIndex = Math.floor(Math.random() * colorList.length);
+    return colorList[randomIndex];
+  } else {
+    const r = Math.floor(Math.random() * 155 + 150) // 200-255之间
+    const g = Math.floor(Math.random() * 155 + 150)
+    const b = Math.floor(Math.random() * 155 + 150)
+    return `rgb(${r},${g},${b},0.9)`
+  }
+};

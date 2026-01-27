@@ -1,12 +1,21 @@
 <template>
-  <div>{{ id }}{{ modelInfo}}</div>
+  <div>
+    <el-row :gutter="32">
+      <el-col :xs="24" :sm="24" :lg="8">
+        <div class="chart-wrapper">
+          <PiePetalTransparentPoseCharts/>
+        </div>
+      </el-col>
+    </el-row>
+  </div>
 </template>
 <script>
 import {getRecommend} from "@/api/car/recommend";
+import PiePetalTransparentPoseCharts from "@/components/Echarts/PiePetalTransparentPoseCharts.vue";
 
 export default {
   name: "index",
-  components: {},
+  components: {PiePetalTransparentPoseCharts},
   data() {
     return {
       id: null,
@@ -32,5 +41,7 @@ export default {
 }
 </script>
 <style scoped lang="scss">
-
+.chart-wrapper {
+  height: 35vh;
+}
 </style>
