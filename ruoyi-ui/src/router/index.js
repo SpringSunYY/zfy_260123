@@ -177,6 +177,14 @@ export const dynamicRoutes = [
     component: () => import('@/views/car/recommend/model'),
     name: 'RecommendModelInfo',
     meta: {title: '推荐模型'}
+  },
+  {
+    path: '/carManage/sales/statistics/screen',
+    hidden: true,
+    permissions: ['car:sales:statistics'],
+    component: () => import('@/views/car/statistics/screen'),
+    name: 'SalesStatisticsScreen',
+    meta: {title: '推荐大屏'}
   }
 ]
 
