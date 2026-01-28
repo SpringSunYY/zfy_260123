@@ -69,4 +69,6 @@ class RuoYiConfig:
         """
         return os.path.join(cls.profile, "import")
 
-
+    @classmethod
+    def get_geo_json_path(cls):
+        return os.path.join(cls.profile, "geoJson")

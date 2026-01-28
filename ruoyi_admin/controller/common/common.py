@@ -127,3 +127,15 @@ def common_profile_resource(resource: str):
         )
     except NotFound:
         return AjaxResponse.from_error("文件不存在")
+
+
+@reg.api.route('/common/geo')
+@QueryValidator()
+@JsonSerializer()
+def common_geo(
+        area: str,
+        name: str,
+):
+    ajax_response = AjaxResponse.from_success()
+    ajax_response.geoJson = FileUtil.get_geo(area, name)
+    return ajax_response

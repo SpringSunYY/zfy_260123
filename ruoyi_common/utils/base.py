@@ -1025,6 +1025,31 @@ class FileUtil:
             flag = True
         return flag
 
+    def get_geo(area: str, name: str):
+        # 为避免循环依赖，延迟导入 RuoYiConfig
+        from ruoyi_common.config import RuoYiConfig
+        geo_path = RuoYiConfig.get_geo_json_path()
+        # 获取系统文件分割符
+        separator = os.path.sep
+        geo_file = geo_path + separator + area + separator + name + ".json"
+        return FileUtil.read_file_content(geo_file)
+
+    def read_file_content(geo_file: str) -> str:
+        """
+        根据文件路径读取文件内容
+
+        Args:
+            geo_file (str): 文件路径
+
+        Returns:
+            str: 文件内容
+        """
+        if not isinstance(geo_file, str):
+            raise TypeError("文件路径必须是字符串类型")
+        if not os.path.exists(geo_file):
+            return  ""
+        with open(geo_file, "r", encoding="utf-8") as f:
+            return f.read()
 
 class DescriptUtil:
 
