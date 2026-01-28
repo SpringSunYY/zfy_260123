@@ -27,6 +27,9 @@
         <div class="expert-chart-wrapper">
           <BarLineZoomCharts/>
         </div>
+        <div class="query-chart-wrapper">
+          <LabelValueGrid/>
+        </div>
       </el-col>
       <el-col :xs="24" :sm="24" :lg="6">
         <div class="chart-wrapper">
@@ -61,10 +64,12 @@ import PieGradientRoseCharts from "@/components/Echarts/PieGradientRoseCharts.vu
 import BarRankingZoomCharts from "@/components/Echarts/BarRankingZoomCharts.vue";
 import BarLineZoomCharts from "@/components/Echarts/BarLineZoomCharts.vue";
 import TableRanking from "@/components/Echarts/TableRanking.vue";
+import LabelValueGrid from "@/components/Echarts/LabelValueList.vue";
 
 export default {
   name: "SalesStatisticsScreen",
   components: {
+    LabelValueGrid,
     TableRanking,
     BarLineZoomCharts,
     BarRankingZoomCharts,
@@ -105,6 +110,11 @@ export default {
 
 .expert-chart-wrapper {
   height: 30vh;
+}
+
+.query-chart-wrapper {
+  margin-top: 1vh;
+  height: 6vh;
 }
 
 .chart-wrapper {
