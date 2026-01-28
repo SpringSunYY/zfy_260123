@@ -15,8 +15,9 @@
           <PieGradientRoseCharts/>
         </div>
         <div class="chart-wrapper">
-          <BarRankingZoomCharts
-            @item-click="(item) => handleToQuery(item, 'brandName')"/>
+          <div class="chart-wrapper">
+            <TableRanking/>
+          </div>
         </div>
       </el-col>
       <el-col :xs="24" :sm="24" :lg="12">
@@ -59,10 +60,12 @@ import PiePetalTransparentPoseCharts from "@/components/Echarts/PiePetalTranspar
 import PieGradientRoseCharts from "@/components/Echarts/PieGradientRoseCharts.vue";
 import BarRankingZoomCharts from "@/components/Echarts/BarRankingZoomCharts.vue";
 import BarLineZoomCharts from "@/components/Echarts/BarLineZoomCharts.vue";
+import TableRanking from "@/components/Echarts/TableRanking.vue";
 
 export default {
   name: "SalesStatisticsScreen",
   components: {
+    TableRanking,
     BarLineZoomCharts,
     BarRankingZoomCharts,
     PieGradientRoseCharts,

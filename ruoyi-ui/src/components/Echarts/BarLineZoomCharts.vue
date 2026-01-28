@@ -191,13 +191,14 @@ export default {
         tooltip: {
           trigger: 'axis',
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          borderColor: '#17fff3',
+          borderColor: this.hexToRgba(0.8),
           borderWidth: 1,
           textStyle: {color: '#fff'},
           formatter: (params) => {
             const idx = params[0].dataIndex;
             const item = data[idx];
-            let res = `<div style="font-weight:bold; color:#17fff3; border-bottom:1px solid #555; padding-bottom:5px;">${item.name}</div>`;
+            const color = this.hexToRgba(0.8)
+            let res = `<div style="font-weight:bold; color:${color}; border-bottom:1px solid #555; padding-bottom:5px;">${item.name}</div>`;
 
             if (this.showStatistics) {
               res += `<div style="font-size:12px; color:#aaa; margin: 5px 0;">总计: ${total} | 平均: ${avg}</div>`;
@@ -217,7 +218,7 @@ export default {
             res += `数值: <b style="font-size:16px;">${val}</b> <small>(${percentOfTotal}%)</small>${ratioHtml}<br/>`;
 
             if (item.tooltipText) {
-              res += `<div style="margin-top:8px; padding:8px; background:rgba(23, 255, 243, 0.1); border-left: 3px solid #17fff3; font-size:12px; line-height:1.5;">
+              res += `<div style="margin-top:8px; padding:8px; background:rgba(23, 255, 243, 0.1); border-left: 3px solid ${color}; font-size:12px; line-height:1.5;">
                         ${item.tooltipText.replace(/\n/g, '<br/>')}
                       </div>`;
             }
@@ -241,9 +242,9 @@ export default {
             bottom: '2%',
             height: 20,
             borderColor: 'transparent',
-            fillerColor:  this.hexToRgba( 0.2),
-            handleStyle: { color:  this.hexToRgba( 0.8) },
-            textStyle: { color: 'rgb(0,253,255,0.6)' }
+            fillerColor: this.hexToRgba(0.2),
+            handleStyle: {color: this.hexToRgba(0.8)},
+            textStyle: {color: 'rgb(0,253,255,0.6)'}
           },
           {
             type: 'inside', // 允许鼠标滚轮缩放
@@ -267,11 +268,11 @@ export default {
             type: 'line',
             smooth: true,
             symbolSize: 10, // 增大 symbol 以便点击
-            color:  this.colorMain,
+            color: this.colorMain,
             areaStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                {offset: 0, color:  this.hexToRgba(0.3)},
-                {offset: 0.8, color:  this.hexToRgba( 0)}
+                {offset: 0, color: this.hexToRgba(0.3)},
+                {offset: 0.8, color: this.hexToRgba(0)}
               ])
             },
             data: rawValues
@@ -284,8 +285,8 @@ export default {
               borderRadius: [10, 10, 0, 0],
               barBorderRadius: [10, 10, 0, 0],
               color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                {offset: 0, color:  this.hexToRgba(0.8)},
-                {offset: 1, color:  this.hexToRgba( 0.1)}
+                {offset: 0, color: this.hexToRgba(0.8)},
+                {offset: 1, color: this.hexToRgba(0.1)}
               ])
             },
             data: rawValues
