@@ -23,6 +23,9 @@
         <div class="map-chart-wrapper">
           <MapCharts/>
         </div>
+        <div class="expert-chart-wrapper">
+          <BarLineZoomCharts/>
+        </div>
       </el-col>
       <el-col :xs="24" :sm="24" :lg="6">
         <div class="chart-wrapper">
@@ -55,10 +58,12 @@ import PiePetalPoseCharts from "@/components/Echarts/PiePetalPoseCharts.vue";
 import PiePetalTransparentPoseCharts from "@/components/Echarts/PiePetalTransparentPoseCharts.vue";
 import PieGradientRoseCharts from "@/components/Echarts/PieGradientRoseCharts.vue";
 import BarRankingZoomCharts from "@/components/Echarts/BarRankingZoomCharts.vue";
+import BarLineZoomCharts from "@/components/Echarts/BarLineZoomCharts.vue";
 
 export default {
   name: "SalesStatisticsScreen",
   components: {
+    BarLineZoomCharts,
     BarRankingZoomCharts,
     PieGradientRoseCharts,
     PiePetalTransparentPoseCharts,
@@ -93,6 +98,10 @@ export default {
 
 .map-chart-wrapper {
   height: 60vh;
+}
+
+.expert-chart-wrapper {
+  height: 30vh;
 }
 
 .chart-wrapper {
