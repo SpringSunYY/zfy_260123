@@ -38,8 +38,8 @@ export default {
     return {
       // 默认显示最近三个月
       innerValue: [
-        dayjs().subtract(3, "month").format(this.format),
-        dayjs().format(this.format)
+        dayjs().subtract(3, "month").format('YYYYMM'),
+        dayjs().format('YYYYMM')
       ],
       pickerOptions: {
         shortcuts: [

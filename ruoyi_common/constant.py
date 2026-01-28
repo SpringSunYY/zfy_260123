@@ -195,3 +195,8 @@ class ConfigConstants:
     STATISTICS_PRICE_RANGE = "statistics:price:range"
     #综合评分
     CAR_OVERALL_SCORE_WEIGHT="car:overall:score:weight"
+
+
+class StatisticsConstants:
+    #地图销量统计公共key
+    MAP_SALES_STATISTICS_COMMON_KEY = "car:statistics:map:sales"

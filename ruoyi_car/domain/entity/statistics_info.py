@@ -3,13 +3,15 @@
 # @FileName: statistics_info.py
 # @Time    : 2026-01-23 20:21:54
 
-from typing import Optional, Annotated
 from datetime import datetime
+from typing import Optional, Annotated
+
 from pydantic import Field, BeforeValidator
+
 from ruoyi_common.base.model import BaseEntity
-from ruoyi_common.base.transformer import to_datetime
 from ruoyi_common.base.schema_excel import ExcelField
 from ruoyi_common.base.schema_vo import VoField
+from ruoyi_common.base.transformer import to_datetime, str_to_int
 
 
 class StatisticsInfo(BaseEntity):
@@ -18,7 +20,8 @@ class StatisticsInfo(BaseEntity):
     """
     # 编号
     id: Annotated[
-        Optional[str],
+        Optional[int],
+        BeforeValidator(str_to_int),
         Field(default=None, description="编号"),
         VoField(query=True),
         ExcelField(name="编号")

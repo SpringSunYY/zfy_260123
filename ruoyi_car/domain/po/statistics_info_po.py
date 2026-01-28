@@ -15,13 +15,13 @@ class StatisticsInfoPo(db.Model):
     """
     统计信息PO对象
     """
-    __tablename__ = 'statistics_info'
+    __tablename__ = 'tb_statistics_info'
     __table_args__ = {'comment': '统计信息'}
     id: Mapped[int] = mapped_column(
         'id',
-        String(255),
+        BigInteger,
         primary_key=True,
-        autoincrement=False,
+        autoincrement=True,
         nullable=False,
         comment='编号'
     )

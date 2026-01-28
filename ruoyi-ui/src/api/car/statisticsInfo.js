@@ -1,9 +1,5 @@
 import request from '@/utils/request'
 
-
-
-
-
 // 查询统计信息列表
 export function listStatisticsInfo(query) {
   return request({

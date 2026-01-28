@@ -2,10 +2,11 @@ from typing import List
 
 from flask import g
 from flask_login import login_required
-from pydantic import BeforeValidator
-from typing_extensions import Annotated
 from werkzeug.datastructures import FileStorage
 
+from ruoyi_car.controller import series as series_bp
+from ruoyi_car.domain.entity import Series
+from ruoyi_car.service.series_service import SeriesService
 from ruoyi_common.base.model import AjaxResponse, TableResponse
 from ruoyi_common.constant import HttpStatus
 from ruoyi_common.descriptor.serializer import BaseSerializer, JsonSerializer
@@ -13,12 +14,8 @@ from ruoyi_common.descriptor.validator import QueryValidator, BodyValidator, Pat
     FileUploadValidator
 from ruoyi_common.domain.enum import BusinessType
 from ruoyi_common.utils.base import ExcelUtil
-from ruoyi_common.utils.security_util import get_user_id, get_username
 from ruoyi_framework.descriptor.log import Log
 from ruoyi_framework.descriptor.permission import HasPerm, PreAuthorize
-from ruoyi_car.controller import series as series_bp
-from ruoyi_car.domain.entity import Series
-from ruoyi_car.service.series_service import SeriesService
 
 # 使用 controller/__init__.py 中定义的蓝图
 gen = series_bp

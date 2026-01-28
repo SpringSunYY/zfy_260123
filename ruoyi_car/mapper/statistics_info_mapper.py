@@ -71,7 +71,7 @@ class StatisticsInfoMapper:
             print(f"查询统计信息列表出错: {e}")
             return []
 
-    
+
     @classmethod
     def select_statistics_info_by_id(cls, id: int) -> Optional[StatisticsInfo]:
         """
@@ -89,7 +89,7 @@ class StatisticsInfoMapper:
         except Exception as e:
             print(f"根据ID查询统计信息出错: {e}")
             return None
-    
+
 
     @classmethod
     def insert_statistics_info(cls, statistics_indo: StatisticsInfo) -> int:
@@ -105,7 +105,6 @@ class StatisticsInfoMapper:
         try:
             now = datetime.now()
             new_po = StatisticsInfoPo()
-            new_po.id = statistics_indo.id
             new_po.type = statistics_indo.type
             new_po.statistics_name = statistics_indo.statistics_name
             new_po.common_key = statistics_indo.common_key
@@ -123,7 +122,7 @@ class StatisticsInfoMapper:
             print(f"新增统计信息出错: {e}")
             return 0
 
-    
+
     @classmethod
     def update_statistics_info(cls, statistics_indo: StatisticsInfo) -> int:
         """
@@ -136,7 +135,7 @@ class StatisticsInfoMapper:
             int: 更新的记录数
         """
         try:
-            
+
             existing = db.session.get(StatisticsInfoPo, statistics_indo.id)
             if not existing:
                 return 0
@@ -152,7 +151,7 @@ class StatisticsInfoMapper:
             existing.create_time = statistics_indo.create_time
             db.session.commit()
             return 1
-            
+
         except Exception as e:
             db.session.rollback()
             print(f"修改统计信息出错: {e}")
@@ -178,4 +177,3 @@ class StatisticsInfoMapper:
             db.session.rollback()
             print(f"批量删除统计信息出错: {e}")
             return 0
-    

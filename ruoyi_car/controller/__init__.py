@@ -10,7 +10,7 @@ sales = Blueprint('sales', __name__, url_prefix='/car/sales')
 model = Blueprint('model', __name__, url_prefix='/car/model')
 like = Blueprint('like', __name__, url_prefix='/car/like')
 statistics_info = Blueprint('statistics_info', __name__, url_prefix='/car/statisticsInfo')
-
+statistics=Blueprint('statistics', __name__, url_prefix='/car/statistics')
 
 from . import recommend_controller
 from . import view_controller

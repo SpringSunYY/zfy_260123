@@ -22,7 +22,12 @@
       </el-col>
       <el-col :xs="24" :sm="24" :lg="12">
         <div class="map-chart-wrapper">
-          <MapCharts/>
+          <MapCharts
+            :chart-data="salesMapStatisticsData"
+            :chart-name="salesMapStatisticsName"
+            default-index-name="销量"
+            @getData="getMapData"
+          />
         </div>
         <div class="expert-chart-wrapper">
           <BarLineZoomCharts/>
@@ -51,6 +56,11 @@
         </div>
       </el-col>
     </el-row>
+    <DateRangePicker
+      @change="onDateChange"
+      top="7%"
+      left="25%"
+    />
   </div>
 </template>
 <script>
@@ -65,10 +75,14 @@ import BarRankingZoomCharts from "@/components/Echarts/BarRankingZoomCharts.vue"
 import BarLineZoomCharts from "@/components/Echarts/BarLineZoomCharts.vue";
 import TableRanking from "@/components/Echarts/TableRanking.vue";
 import LabelValueGrid from "@/components/Echarts/LabelValueList.vue";
+import DateRangePicker from "@/components/Echarts/DateRangePicker.vue";
+import {salesMapStatistics} from "@/api/car/statistics";
+import dayjs from "dayjs";
 
 export default {
   name: "SalesStatisticsScreen",
   components: {
+    DateRangePicker,
     LabelValueGrid,
     TableRanking,
     BarLineZoomCharts,
@@ -78,9 +92,54 @@ export default {
     PiePetalPoseCharts, ScatterRandomTooltipCharts, PieGradientCharts, MapCharts, KeywordGravityCharts
   },
   data() {
-    return {}
+    return {
+      query: {
+        startTime: dayjs().subtract(3, "month").format('YYYYMM'),
+        endTime: dayjs().format('YYYYMM')
+      },
+      salesMapStatisticsData: [],
+      salesMapStatisticsName: "销量地图",
+    }
+  },
+  created() {
   },
   methods: {
+    getMapData(data){
+      this.query.address = data.name
+      this.getSalesMapStatisticsData()
+    },
+    getSalesMapStatisticsData() {
+      this.salesMapStatisticsData = []
+      salesMapStatistics(this.query).then(response => {
+          if (!response.data) return
+          //创建一个map获取到键值对name-key，value-value
+          let map = new Map();
+          for (let i = 0; i < response.data.length; i++) {
+            if (map.has(response.data[i].name)) {
+              map.set(response.data[i].name, map.get(response.data[i].name) + response.data[i].value);
+            } else {
+              map.set(response.data[i].name, response.data[i].value);
+            }
+          }
+          const data = Array.from(map.keys()).map(key => {
+            return {
+              location: key,
+              value: map.get(key)
+            }
+          });
+          this.salesMapStatisticsData.push({
+            name: '销量',
+            value: data
+          })
+        console.log(data)
+        }
+      )
+    },
+    onDateChange(date) {
+      this.query.startTime = dayjs(date[0]).format('YYYYMM');
+      this.query.endTime = dayjs(date[1]).format('YYYYMM');
+      this.getSalesMapStatisticsData();
+    },
     handleToQuery(item, type) {
       if (item && item.name) {
         const routeData = this.$router.resolve({
