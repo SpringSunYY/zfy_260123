@@ -58,6 +58,11 @@ export default {
         '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
         '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
       ]
+    },
+    //大小盘
+    symbolSize: {
+      type: Number,
+      default: 700
     }
   },
   data() {
@@ -114,7 +119,7 @@ export default {
       const processedData = this.chartData.map((item, index) => {
         const percentage = ((item.value / this.totalSum) * 100).toFixed(2);
         // 气泡大小逻辑：基于占比，设定基准大小
-        const symbolSize = (item.value / this.totalSum) * 700;
+        const symbolSize = (item.value / this.totalSum) * this.symbolSize;
         const color = generateRandomColor(this.defaultColor)
         return {
           name: item.name,
@@ -219,6 +224,6 @@ export default {
 <style scoped>
 /* 确保容器有高度 */
 .chart {
-  min-height: 400px;
+  height: 100%;
 }
 </style>

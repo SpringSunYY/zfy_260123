@@ -308,7 +308,7 @@ export default {
       const isChinaMap = currentInfo && currentInfo.level === 'china';
       const layoutSize = isChinaMap ? '150%' : '90%';
       const geoZoom = isChinaMap ? 1.25 : 1.0;
-      const layoutCenter = isChinaMap ? ['0%', '60%'] : ['42%', '50%'];
+      const layoutCenter = isChinaMap ? ['10%', '70%'] : ['42%', '50%'];
       const option = {
         animation: false,
         title: [{
@@ -330,6 +330,7 @@ export default {
           map: mapName,
           roam: true,
           zoom: geoZoom,
+          scaleLimit: {min: 1, max: 5},
           layoutCenter: layoutCenter,
           layoutSize: layoutSize,
           label: {
