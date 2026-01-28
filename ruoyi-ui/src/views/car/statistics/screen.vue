@@ -1,7 +1,6 @@
 <template>
   <div class="app-container">
     <el-row :gutter="0" style="padding: 0">
-
       <el-col :xs="24" :sm="24" :lg="6">
         <div class="chart-wrapper">
           <PieGradientCharts
@@ -13,8 +12,11 @@
             @item-click="(item) => handleToQuery(item, 'brandName')"/>
         </div>
         <div class="chart-wrapper">
-          <PieGradientRoseCharts
-          />
+          <PieGradientRoseCharts/>
+        </div>
+        <div class="chart-wrapper">
+          <BarRankingZoomCharts
+            @item-click="(item) => handleToQuery(item, 'brandName')"/>
         </div>
       </el-col>
       <el-col :xs="24" :sm="24" :lg="12">
@@ -35,7 +37,10 @@
         <div class="chart-wrapper">
           <PiePetalTransparentPoseCharts
             @item-click="(item) => handleToQuery(item, 'country')"/>
-          />
+        </div>
+        <div class="chart-wrapper">
+          <BarRankingZoomCharts
+            @item-click="(item) => handleToQuery(item, 'brandName')"/>
         </div>
       </el-col>
     </el-row>
@@ -49,10 +54,12 @@ import ScatterRandomTooltipCharts from "@/components/Echarts/ScatterRandomCharts
 import PiePetalPoseCharts from "@/components/Echarts/PiePetalPoseCharts.vue";
 import PiePetalTransparentPoseCharts from "@/components/Echarts/PiePetalTransparentPoseCharts.vue";
 import PieGradientRoseCharts from "@/components/Echarts/PieGradientRoseCharts.vue";
+import BarRankingZoomCharts from "@/components/Echarts/BarRankingZoomCharts.vue";
 
 export default {
   name: "SalesStatisticsScreen",
   components: {
+    BarRankingZoomCharts,
     PieGradientRoseCharts,
     PiePetalTransparentPoseCharts,
     PiePetalPoseCharts, ScatterRandomTooltipCharts, PieGradientCharts, MapCharts, KeywordGravityCharts
@@ -81,7 +88,7 @@ export default {
   background-position: center;
   background-attachment: fixed;
   min-height: 100vh;
-  padding: 32px;
+  padding: 0;
 }
 
 .map-chart-wrapper {
