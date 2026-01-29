@@ -43,3 +43,12 @@ export function delStatisticsInfo(id) {
     method: 'delete'
   })
 }
+
+
+//清除统计信息
+export function clearStatisticsInfo() {
+  return request({
+    url: '/car/statisticsInfo/clear',
+    method: 'delete'
+  })
+}

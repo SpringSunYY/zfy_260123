@@ -184,3 +184,20 @@ class StatisticsInfoMapper:
             db.session.rollback()
             print(f"批量删除统计信息出错: {e}")
             return 0
+
+    @classmethod
+    def clear_statistics_info(cls)->int:
+        """
+        清空统计信息
+        Returns:
+            int: 删除的记录数
+        """
+        try:
+            stmt = delete(StatisticsInfoPo)
+            result = db.session.execute(stmt)
+            db.session.commit()
+            return result.rowcount
+        except Exception as e:
+            db.session.rollback()
+            print(f"清空统计信息出错: {e}")
+            return 0

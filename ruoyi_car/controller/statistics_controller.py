@@ -28,3 +28,5 @@ def sales_map_statistics(dto: CarStatisticsRequest):
     if request.address and request.address == "中华人民共和国":
         request.address = None
     return AjaxResponse.from_success(data=statistics_service.sales_map_statistics(request))
+
+

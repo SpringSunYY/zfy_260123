@@ -116,6 +116,17 @@
       </el-col>
       <el-col :span="1.5">
         <el-button
+          type="danger"
+          plain
+          icon="el-icon-delete"
+          size="mini"
+          @click="handleClear"
+          v-hasPermi="['car:statisticsInfo:remove']"
+        >清除
+        </el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
           type="warning"
           plain
           icon="el-icon-download"
@@ -244,7 +255,14 @@
 <script>
 
 
-import { listStatisticsInfo, getStatisticsInfo, delStatisticsInfo, addStatisticsInfo, updateStatisticsInfo } from "@/api/car/statisticsInfo";
+import {
+  listStatisticsInfo,
+  getStatisticsInfo,
+  delStatisticsInfo,
+  addStatisticsInfo,
+  updateStatisticsInfo,
+  clearStatisticsInfo
+} from "@/api/car/statisticsInfo";
 import { getToken } from "@/utils/auth";
 
 export default {
@@ -431,6 +449,14 @@ export default {
         this.getList();
         this.$modal.msgSuccess("删除成功");
       }).catch(() => {});
+    },
+    handleClear(){
+      this.$modal.confirm('是否确认清空所有统计信息数据项？').then(function() {
+        return clearStatisticsInfo();
+      }).then(() => {
+        this.getList();
+        this.$modal.msgSuccess("清空成功");
+      })
     },
     /** 导出按钮操作 */
     handleExport() {

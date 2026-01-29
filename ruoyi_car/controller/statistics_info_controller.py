@@ -107,6 +107,15 @@ def delete_statistics_indo(ids: str):
     except Exception as e:
         return AjaxResponse.from_error(msg=f'删除失败: {str(e)}')
 
+@gen.route('/clear', methods=['DELETE'])
+@PreAuthorize(HasPerm('car:statisticsInfo:remove'))
+@JsonSerializer()
+def clear_statistics_indo():
+    """清空统计信息"""
+    result = statistics_info_service.clear_statistics_info()
+    if result > 0:
+        return AjaxResponse.from_success(msg='清空成功')
+    return AjaxResponse.from_error(msg='清空失败')
 
 @gen.route('/export', methods=['POST'])
 @FileDownloadValidator()

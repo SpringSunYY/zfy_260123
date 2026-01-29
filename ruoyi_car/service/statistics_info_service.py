@@ -25,7 +25,7 @@ class StatisticsInfoService:
         """
         return StatisticsInfoMapper.select_statistics_info_list(statistics_indo)
 
-    
+
     @classmethod
     def select_statistics_info_by_id(cls, id: int) -> Optional[StatisticsInfo]:
         """
@@ -38,7 +38,7 @@ class StatisticsInfoService:
             statistics_info: 统计信息对象
         """
         return StatisticsInfoMapper.select_statistics_info_by_id(id)
-    
+
     @classmethod
     def insert_statistics_info(cls, statistics_indo: StatisticsInfo) -> int:
         """
@@ -52,7 +52,7 @@ class StatisticsInfoService:
         """
         return StatisticsInfoMapper.insert_statistics_info(statistics_indo)
 
-    
+
     @classmethod
     def update_statistics_info(cls, statistics_indo: StatisticsInfo) -> int:
         """
@@ -65,9 +65,9 @@ class StatisticsInfoService:
             int: 更新的记录数
         """
         return StatisticsInfoMapper.update_statistics_info(statistics_indo)
-    
 
-    
+
+
     @classmethod
     def delete_statistics_info_by_ids(cls, ids: List[int]) -> int:
         """
@@ -80,7 +80,7 @@ class StatisticsInfoService:
             int: 删除的记录数
         """
         return StatisticsInfoMapper.delete_statistics_info_by_ids(ids)
-    
+
     @classmethod
     def import_statistics_info(cls, statistics_indo_list: List[StatisticsInfo], is_update: bool = False) -> str:
         """
@@ -104,7 +104,7 @@ class StatisticsInfoService:
         for statistics_indo in statistics_indo_list:
             try:
                 display_value = statistics_indo
-                
+
                 display_value = getattr(statistics_indo, "id", display_value)
                 existing = None
                 if statistics_indo.id is not None:
@@ -118,7 +118,7 @@ class StatisticsInfoService:
                         continue
                 else:
                     result = StatisticsInfoMapper.insert_statistics_info(statistics_indo)
-                
+
                 if result > 0:
                     success_count += 1
                     success_msg += f"<br/> 第{success_count}条数据，操作成功：{display_value}"
@@ -138,3 +138,6 @@ class StatisticsInfoService:
             raise ServiceException(fail_msg)
         success_msg = f"恭喜您，数据已全部导入成功！共 {success_count} 条，数据如下：" + success_msg
         return success_msg
+
+    def clear_statistics_info(self):
+        return StatisticsInfoMapper.clear_statistics_info()
