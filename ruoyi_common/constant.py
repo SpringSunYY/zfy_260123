@@ -202,3 +202,11 @@ class StatisticsConstants:
     MAP_SALES_STATISTICS_COMMON_KEY = "car:statistics:map:sales"
     # 地图销量统计公共类型
     MAP_SALES_STATISTICS_COMMON_TYPE = "1"
+    # 地图销量统计name
+    MAP_SALES_STATISTICS_COMMON_NAME = "销售地图城市统计"
+    # 价格销量统计公共key
+    PRICE_SALES_STATISTICS_COMMON_KEY = "car:statistics:price:sales"
+    # 价格销量统计公共类型
+    PRICE_SALES_STATISTICS_COMMON_TYPE = "2"
+    # 价格销量统计name
+    PRICE_SALES_STATISTICS_COMMON_NAME = "价格销量统计"

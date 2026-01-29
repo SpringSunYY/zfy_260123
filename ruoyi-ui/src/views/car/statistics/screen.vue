@@ -4,6 +4,8 @@
       <el-col :xs="24" :sm="24" :lg="6">
         <div class="chart-wrapper">
           <PieGradientCharts
+            :chart-data="priceSalesStatisticsData"
+            :chart-title="priceSalesStatisticsName"
           />
         </div>
         <div class="chart-wrapper">
@@ -76,7 +78,7 @@ import BarLineZoomCharts from "@/components/Echarts/BarLineZoomCharts.vue";
 import TableRanking from "@/components/Echarts/TableRanking.vue";
 import LabelValueGrid from "@/components/Echarts/LabelValueList.vue";
 import DateRangePicker from "@/components/Echarts/DateRangePicker.vue";
-import {salesMapStatistics} from "@/api/car/statistics";
+import {salesMapStatistics, salesPriceStatistics} from "@/api/car/statistics";
 import dayjs from "dayjs";
 
 export default {
@@ -97,17 +99,47 @@ export default {
         startTime: dayjs().subtract(2, "month").format('YYYYMM'),
         endTime: dayjs().format('YYYYMM')
       },
+      //销量地图
       salesMapStatisticsData: [],
       salesMapStatisticsName: "销量地图",
+      //价格销量
+      priceSalesStatisticsData: [],
+      priceSalesStatisticsName: "价格销量",
     }
   },
   created() {
   },
   methods: {
-    getMapData(data){
+    getMapData(data) {
       this.query.address = data.name
       this.getSalesMapStatisticsData()
+      this.getPriceSalesStatisticsData()
     },
+    //获取价格销量数据
+    getPriceSalesStatisticsData() {
+      this.query.minPrice = null
+      this.query.maxPrice = null
+      salesPriceStatistics(this.query).then(response => {
+        if (!response.data) return
+        console.log(response.data)
+        //创建一个map获取到键值对name-key，value-value
+        let map = new Map();
+        for (let i = 0; i < response.data.length; i++) {
+          if (map.has(response.data[i].name)) {
+            map.set(response.data[i].name, map.get(response.data[i].name) + response.data[i].value);
+          } else {
+            map.set(response.data[i].name, response.data[i].value);
+          }
+        }
+        this.priceSalesStatisticsData = Array.from(map.keys()).map(key => {
+          return {
+            name: key,
+            value: map.get(key)
+          }
+        });
+      })
+    },
+    //获取销量地图数据
     getSalesMapStatisticsData() {
       this.salesMapStatisticsData = []
       salesMapStatistics(this.query).then(response => {
@@ -131,7 +163,7 @@ export default {
             name: '销量',
             value: data
           })
-        console.log(data)
+          console.log(data)
         }
       )
     },
@@ -168,15 +200,15 @@ export default {
 }
 
 .expert-chart-wrapper {
-  height: 30vh;
+  height: 35vh;
 }
 
 .query-chart-wrapper {
-  margin-top: 1vh;
-  height: 6vh;
+  margin-top: 10vh;
+  height: 15vh;
 }
 
 .chart-wrapper {
-  height: 25vh;
+  height: 35vh;
 }
 </style>

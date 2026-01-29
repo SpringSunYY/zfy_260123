@@ -37,7 +37,7 @@ export default {
     cols: {
       type: Number,
       required: false,
-      default: 6,
+      default: 3,
       validator: val => val > 0
     },
     // 网格间隙 (Grid Gap)

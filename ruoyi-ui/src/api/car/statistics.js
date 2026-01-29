@@ -8,3 +8,12 @@ export function salesMapStatistics(params){
     params
   })
 }
+
+//价格销售信息数据分析
+export function salesPriceStatistics(params){
+  return request({
+    url: '/car/statistics/price',
+    method: 'get',
+    params
+  })
+}

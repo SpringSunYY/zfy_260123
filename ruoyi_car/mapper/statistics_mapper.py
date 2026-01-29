@@ -1,12 +1,13 @@
 from typing import List
 
+from django.db.models.expressions import result
 from sqlalchemy import func
 from sqlalchemy.sql import select
 
 from ruoyi_admin.ext import db
 from ruoyi_car.domain.po.sales_po import SalesPo
 from ruoyi_car.domain.statistics.dto import CarStatisticsRequest
-from ruoyi_car.domain.statistics.po.statistics_po import MapStatisticsPo
+from ruoyi_car.domain.statistics.po.statistics_po import MapStatisticsPo, StatisticsPo, PriceStatisticsPo
 
 
 class StatisticsMapper:
@@ -59,8 +60,41 @@ class StatisticsMapper:
 
         except Exception as e:
             print(f"销售地图原始数据查询出错: {e}")
-            import traceback
-            traceback.print_exc()
+            return []
+
+    @classmethod
+    def select_price_sales_statistics(cls, request) -> List[PriceStatisticsPo]:
+        """
+        价格销售信息数据分析（按月，包含城市）
+        select sum(sales) as value, min_price as price, city_full_name as city, month as month
+        from tb_sales
+        group by city, price, month;
+        """
+        try:
+            stmt = select(
+                func.sum(SalesPo.sales).label("value"),
+                SalesPo.min_price.label("price"),
+                SalesPo.city_full_name.label("address"),
+                SalesPo.month.label("month")
+            )
+            stmt = cls.init_query(request, stmt)
+            stmt = stmt.group_by("address", "price", "month")
+            result = db.session.execute(stmt).mappings().all()
+            if not result:
+                return []
+
+            # 手动转换类型（Decimal -> float/int）
+            return [
+                PriceStatisticsPo(
+                    address=str(item['address']) if item['address'] else '',
+                    price=float(item['price']) if item['price'] else 0.0,
+                    value=int(item['value']) if item['value'] else 0,
+                    month=int(item['month']) if item['month'] else 0
+                )
+                for item in result
+            ]
+        except Exception as e:
+            print(f"价格销售信息查询出错: {e}")
             return []
 
     @classmethod

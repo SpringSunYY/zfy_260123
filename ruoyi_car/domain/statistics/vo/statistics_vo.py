@@ -13,8 +13,8 @@ class StatisticsVo(BaseModel, Generic[T]):
     name: Optional[str] = ''
     tooltipText: Optional[str] = ''
     moreInfo: Optional[str] = ''
-    movieId: Optional[int] = None
-
+    month: Optional[int] = 0
+    address: Optional[str] = ''
 
 class PieBarStatisticsVo(BaseModel):
     """
