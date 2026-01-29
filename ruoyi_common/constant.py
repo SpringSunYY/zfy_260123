@@ -222,3 +222,9 @@ class StatisticsConstants:
     BRAND_SALES_STATISTICS_COMMON_TYPE = "4"
     # 品牌销售统计name
     BRAND_SALES_STATISTICS_COMMON_NAME = "品牌销量统计"
+    # 国家销售统计公共key
+    COUNTRY_SALES_STATISTICS_COMMON_KEY = "car:statistics:country:sales"
+    # 国家销售统计公共类型
+    COUNTRY_SALES_STATISTICS_COMMON_TYPE = "5"
+    # 国家销售统计name
+    COUNTRY_SALES_STATISTICS_COMMON_NAME = "国家销量统计"

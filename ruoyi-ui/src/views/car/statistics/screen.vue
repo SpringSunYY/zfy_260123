@@ -19,6 +19,9 @@
         </div>
         <div class="chart-wrapper">
           <PieGradientRoseCharts
+            :chart-data="countrySalesStatisticsData"
+            :chart-title="countrySalesStatisticsName"
+            @item-click="(item) => handleToQuery(item, 'country')"
             :label-show-value="false"
           />
         </div>
@@ -91,7 +94,7 @@ import TableRanking from "@/components/Echarts/TableRanking.vue";
 import LabelValueGrid from "@/components/Echarts/LabelValueList.vue";
 import DateRangePicker from "@/components/Echarts/DateRangePicker.vue";
 import {
-  salesBrandStatistics,
+  salesBrandStatistics, salesCountryStatistics,
   salesEnergyTypeStatistics,
   salesMapStatistics,
   salesPriceStatistics
@@ -141,7 +144,12 @@ export default {
           label: '能源',
           value: '全部',
           key: 'energyType',
-        }
+        },
+        {
+          label: '国家',
+          value: '全部',
+          key: 'country',
+        },
       ],
       //销量地图
       salesMapStatisticsData: [],
@@ -155,6 +163,9 @@ export default {
       //品牌
       brandSalesStatisticsData: [],
       brandSalesStatisticsName: "品牌",
+      //国家
+      countrySalesStatisticsData: [],
+      countrySalesStatisticsName: "国家",
     }
   },
   created() {
@@ -171,9 +182,35 @@ export default {
       this.getPriceSalesStatisticsData()
       this.getEnergyTypeSalesStatisticsData()
       this.getBrandSalesStatisticsData()
+      this.getCountrySalesStatisticsData()
     },
     getMapDataByClick() {
       this.getSalesMapStatisticsData()
+    },
+    //国家
+    getCountrySalesStatisticsData() {
+      salesCountryStatistics({
+        startTime: this.query.startTime,
+        endTime: this.query.endTime,
+        address: this.query.address
+      }).then(response => {
+        if (!response.data) return
+        //创建一个map获取到键值对name-key，value-value
+        let map = new Map();
+        for (let i = 0; i < response.data.length; i++) {
+          if (map.has(response.data[i].name)) {
+            map.set(response.data[i].name, map.get(response.data[i].name) + response.data[i].value);
+          } else {
+            map.set(response.data[i].name, response.data[i].value);
+          }
+        }
+        this.countrySalesStatisticsData = Array.from(map.keys()).map(key => {
+          return {
+            name: key,
+            value: map.get(key)
+          }
+        });
+      })
     },
     //品牌
     getBrandSalesStatisticsData() {
@@ -293,7 +330,14 @@ export default {
       if (type === 'brandName') {
         this.processBrandQuery(item, type)
       }
+      if (type === 'country') {
+        this.processCountryQuery(item, type)
+      }
       this.getMapDataByClick();
+    },
+    processCountryQuery(item, type) {
+      this.query.country = item.name;
+      this.resetLabelQuery(type, item.name)
     },
     processBrandQuery(item, type) {
       this.query.brandName = item.name;

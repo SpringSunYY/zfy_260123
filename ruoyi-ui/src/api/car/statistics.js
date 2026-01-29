@@ -39,3 +39,13 @@ export function salesBrandStatistics(params){
     timeout: 30000
   })
 }
+
+//国家销售信息数据分析
+export function salesCountryStatistics(params){
+  return request({
+    url: '/car/statistics/country',
+    method: 'get',
+    params,
+    timeout: 30000
+  })
+}

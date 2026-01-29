@@ -95,12 +95,14 @@ class StatisticsService:
                 province_request = cls._build_request_with_province(request, province, month)
                 stats_key = cls._build_stats_key(province_request, month,
                                                  StatisticsConstants.MAP_SALES_STATISTICS_COMMON_KEY)
-                cls._save_to_cache(stats_key, cities, province)
+                cls._save_to_cache(stats_key, cities, province,
+                                   statistics_name=StatisticsConstants.MAP_SALES_STATISTICS_COMMON_NAME)
 
             # 保存月份汇总缓存（省份聚合数据）
             province_results = cls._aggregate_by_province(raw_data)
             month_key = cls._build_stats_key(request, month, StatisticsConstants.MAP_SALES_STATISTICS_COMMON_KEY)
-            cls._save_to_cache(month_key, province_results, None)
+            cls._save_to_cache(month_key, province_results, None,
+                               statistics_name=StatisticsConstants.MAP_SALES_STATISTICS_COMMON_NAME)
             cached_results.extend(province_results)
 
     @classmethod
@@ -117,7 +119,8 @@ class StatisticsService:
             db_results = cls._fetch_province_all_cities_data(temp_request)
 
             stats_key = cls._build_stats_key(temp_request, month, StatisticsConstants.MAP_SALES_STATISTICS_COMMON_KEY)
-            cls._save_to_cache(stats_key, db_results, request.address)
+            cls._save_to_cache(stats_key, db_results, request.address,
+                               statistics_name=StatisticsConstants.MAP_SALES_STATISTICS_COMMON_NAME)
             cached_results.extend(db_results)
 
     @classmethod
@@ -164,10 +167,11 @@ class StatisticsService:
         series = request.series_name or 'all'
         model = request.model_type or 'all'
         energy = request.energy_type or 'all'
+        country = request.country or 'all'
         min_price = request.min_price if request.min_price is not None else 'all'
         max_price = request.max_price if request.max_price is not None else 'all'
 
-        return f"{common_key}:{province}:{month}:{brand}:{series}:{model}:{energy}:{min_price}:{max_price}"
+        return f"{common_key}:{province}:{month}:{country}:{brand}:{series}:{model}:{energy}:{min_price}:{max_price}"
 
     @classmethod
     def _get_cached_data(cls, stats_key: str, vo_class=None) -> tuple:
@@ -253,21 +257,11 @@ class StatisticsService:
                 content=content_str
             )
 
-            # 使用传入的名称，如果未传入则根据common_key生成
+            # 如果传入了statistics_name，直接使用；否则报错（调用方必须传入）
             if statistics_name:
                 stat_info.statistics_name = statistics_name
             else:
-                # 根据common_key获取对应的名称
-                if use_key == StatisticsConstants.PRICE_SALES_STATISTICS_COMMON_KEY:
-                    common_name = StatisticsConstants.PRICE_SALES_STATISTICS_COMMON_NAME
-                else:
-                    common_name = StatisticsConstants.MAP_SALES_STATISTICS_COMMON_NAME
-
-                if address:
-                    province = cls._extract_province_from_address(address)
-                    stat_info.statistics_name = f"{common_name}-{province}"
-                else:
-                    stat_info.statistics_name = f"{common_name}-全国"
+                raise ValueError("statistics_name is required")
 
             if existing_list:
                 stat_info.id = existing_list[0].id
@@ -473,14 +467,16 @@ class StatisticsService:
                 month_results = cls._aggregate_by_price_range(province_data, price_range, province)
                 cls._save_to_cache(stats_key, month_results, province,
                                    stat_type=StatisticsConstants.PRICE_SALES_STATISTICS_COMMON_TYPE,
-                                   common_key=StatisticsConstants.PRICE_SALES_STATISTICS_COMMON_KEY)
+                                   common_key=StatisticsConstants.PRICE_SALES_STATISTICS_COMMON_KEY,
+                                   statistics_name=StatisticsConstants.PRICE_SALES_STATISTICS_COMMON_NAME)
 
             # 保存月份汇总缓存（全国数据）
             month_key = cls._build_stats_key(temp_request, month, StatisticsConstants.PRICE_SALES_STATISTICS_COMMON_KEY)
             month_results = cls._aggregate_by_price_range(raw_data, price_range, None)
             cls._save_to_cache(month_key, month_results, None,
                                stat_type=StatisticsConstants.PRICE_SALES_STATISTICS_COMMON_TYPE,
-                               common_key=StatisticsConstants.PRICE_SALES_STATISTICS_COMMON_KEY)
+                               common_key=StatisticsConstants.PRICE_SALES_STATISTICS_COMMON_KEY,
+                               statistics_name=StatisticsConstants.PRICE_SALES_STATISTICS_COMMON_NAME)
             cached_results.extend(month_results)
 
     @classmethod
@@ -503,7 +499,8 @@ class StatisticsService:
             stats_key = cls._build_stats_key(temp_request, month, StatisticsConstants.PRICE_SALES_STATISTICS_COMMON_KEY)
             cls._save_to_cache(stats_key, month_results, request.address,
                                stat_type=StatisticsConstants.PRICE_SALES_STATISTICS_COMMON_TYPE,
-                               common_key=StatisticsConstants.PRICE_SALES_STATISTICS_COMMON_KEY)
+                               common_key=StatisticsConstants.PRICE_SALES_STATISTICS_COMMON_KEY,
+                               statistics_name=StatisticsConstants.PRICE_SALES_STATISTICS_COMMON_NAME)
             cached_results.extend(month_results)
 
     @classmethod
@@ -620,14 +617,16 @@ class StatisticsService:
                                                    lambda req: StatisticsMapper.energy_type_sales_statistics(req),
                                                    StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_KEY,
                                                    StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_TYPE,
-                                                   StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_KEY)
+                                                   StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_KEY,
+                                                   StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_NAME)
         # 省份查询
         else:
             cls._build_province_dimension_cache(request, uncached_months, cached_results,
                                                  lambda req: StatisticsMapper.energy_type_sales_statistics(req),
                                                  StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_KEY,
                                                  StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_TYPE,
-                                                 StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_KEY)
+                                                 StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_KEY,
+                                                 StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_NAME)
 
         return cached_results
 
@@ -680,7 +679,8 @@ class StatisticsService:
     @classmethod
     def _build_nationwide_dimension_cache(cls, request: CarStatisticsRequest, months: List[int],
                                           uncached_months: List[int], cached_results: List[StatisticsVo],
-                                          mapper_method, stat_key: str, stat_type: str, common_key: str) -> None:
+                                          mapper_method, stat_key: str, stat_type: str, common_key: str,
+                                          statistics_name: str) -> None:
         """
         构建全国统计缓存（通用方法）
         """
@@ -713,18 +713,21 @@ class StatisticsService:
                 stats_key = cls._build_stats_key(province_request, month, common_key)
                 month_results = cls._aggregate_by_dimension(province_data, province)
                 cls._save_to_cache(stats_key, month_results, province,
-                                   stat_type=stat_type, common_key=common_key)
+                                   stat_type=stat_type, common_key=common_key,
+                                   statistics_name=statistics_name)
 
             month_key = cls._build_stats_key(temp_request, month, common_key)
             month_results = cls._aggregate_by_dimension(raw_data, None)
             cls._save_to_cache(month_key, month_results, None,
-                               stat_type=stat_type, common_key=common_key)
+                               stat_type=stat_type, common_key=common_key,
+                               statistics_name=statistics_name)
             cached_results.extend(month_results)
 
     @classmethod
     def _build_province_dimension_cache(cls, request: CarStatisticsRequest, uncached_months: List[int],
                                         cached_results: List[StatisticsVo],
-                                        mapper_method, stat_key: str, stat_type: str, common_key: str) -> None:
+                                        mapper_method, stat_key: str, stat_type: str, common_key: str,
+                                        statistics_name: str) -> None:
         """构建省份统计缓存（通用方法）"""
         for month in uncached_months:
             temp_request = CarStatisticsRequest(
@@ -738,7 +741,8 @@ class StatisticsService:
 
             stats_key = cls._build_stats_key(temp_request, month, common_key)
             cls._save_to_cache(stats_key, month_results, request.address,
-                               stat_type=stat_type, common_key=common_key)
+                               stat_type=stat_type, common_key=common_key,
+                               statistics_name=statistics_name)
             cached_results.extend(month_results)
 
     @classmethod
@@ -778,13 +782,64 @@ class StatisticsService:
                                                    lambda req: StatisticsMapper.brand_sales_statistics(req),
                                                    StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_KEY,
                                                    StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_TYPE,
-                                                   StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_KEY)
+                                                   StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_KEY,
+                                                   StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_NAME)
         # 省份查询
         else:
             cls._build_province_dimension_cache(request, uncached_months, cached_results,
                                                  lambda req: StatisticsMapper.brand_sales_statistics(req),
                                                  StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_KEY,
                                                  StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_TYPE,
-                                                 StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_KEY)
+                                                 StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_KEY,
+                                                 StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_NAME)
+
+        return cached_results
+
+    @classmethod
+    def country_sales_statistics(cls, request)->List[StatisticsVo]:
+        """
+        国家销售信息数据分析
+        """
+        # 生成月份列表
+        months = DateUtil.generate_months_list(request.start_time, request.end_time)
+        # 收集缓存命中的数据和未缓存的月份
+        cached_results = []
+        uncached_months = []
+
+        for month in months:
+            temp_request = CarStatisticsRequest(
+                start_time=month, end_time=month,
+                address=request.address, country=request.country,
+                brand_name=request.brand_name, series_name=request.series_name,
+                model_type=request.model_type, energy_type=request.energy_type,
+                min_price=request.min_price, max_price=request.max_price
+            )
+            stats_key = cls._build_stats_key(temp_request, month, StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_KEY)
+            cached_list, cached_data = cls._get_cached_data(stats_key, vo_class=StatisticsVo)
+
+            if cached_list:
+                cached_results.extend(cached_data)
+            else:
+                uncached_months.append(month)
+
+        if not uncached_months:
+            return cached_results
+
+        # 全国查询
+        if not request.address:
+            cls._build_nationwide_dimension_cache(request, months, uncached_months, cached_results,
+                                                  lambda req: StatisticsMapper.country_sales_statistics(req),
+                                                  StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_KEY,
+                                                  StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_TYPE,
+                                                  StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_KEY,
+                                                  StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_NAME)
+        # 省份查询
+        else:
+            cls._build_province_dimension_cache(request, uncached_months, cached_results,
+                                                lambda req: StatisticsMapper.country_sales_statistics(req),
+                                                StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_KEY,
+                                                StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_TYPE,
+                                                StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_KEY,
+                                                StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_NAME)
 
         return cached_results

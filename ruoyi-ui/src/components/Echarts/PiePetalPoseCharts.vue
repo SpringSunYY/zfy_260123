@@ -63,12 +63,12 @@ export default {
     // 图表位置配置
     pieCenter: {
       type: Array,
-      default: () => ['40%', '55%']
+      default: () => ['40%', '50%']
     },
     // 半径大小配置
     radiusSize: {
       type: Array,
-      default: () => ['16%', '80%']
+      default: () => ['16%', '70%']
     },
     //label是否显示value
     labelShowValue: {
