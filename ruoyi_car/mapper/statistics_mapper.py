@@ -74,21 +74,33 @@ class StatisticsMapper:
         销售地图销量分析（原始版本，不进行省份聚合）
         返回所有城市级别的数据
         """
+        import time
         try:
+            t_start = time.time()
+            
             # 按具体城市查询
             stmt = select(
                 func.sum(SalesPo.sales).label("value"),
                 SalesPo.city_full_name.label("name"),
                 SalesPo.month.label("month")
             )
-            
+
             # 应用查询条件（不包含地址限制）
             stmt = cls.init_query_without_address(request, stmt)
             # 按城市和月份分组
             stmt = stmt.group_by(SalesPo.city_full_name, SalesPo.month)
-            
+
+            # 打印SQL语句（方便优化）
+            sql_str = stmt.compile(compile_kwargs={"literal_binds": True})
+            print(f"[SQL日志] select_sales_map_statistics_raw: {sql_str}")
+
             # 执行查询
             result = db.session.execute(stmt).mappings().all()
+            t_query = (time.time() - t_start) * 1000
+            
+            if t_query > 500:
+                print(f"[性能警告] select_sales_map_statistics_raw 慢查询: {t_query:.2f}ms, 结果数={len(result)}")
+            
             if not result:
                 return []
             
@@ -154,12 +166,12 @@ class StatisticsMapper:
         """
         初始化查询条件（不包含地址条件）
         """
-        # 开始时间
+        # 开始时间 - 使用整数比较，不再转字符串
         if request.start_time:
-            stmt = stmt.where(SalesPo.month >= str(request.start_time))
+            stmt = stmt.where(SalesPo.month >= request.start_time)
         # 结束时间
         if request.end_time:
-            stmt = stmt.where(SalesPo.month <= str(request.end_time))
+            stmt = stmt.where(SalesPo.month <= request.end_time)
         # 国家
         if request.country:
             stmt = stmt.where(SalesPo.country == request.country)
@@ -189,12 +201,12 @@ class StatisticsMapper:
         """
         初始化查询条件
         """
-        # 开始时间
+        # 开始时间 - 使用整数比较，不再转字符串
         if request.start_time:
-            stmt = stmt.where(SalesPo.month >= str(request.start_time))
+            stmt = stmt.where(SalesPo.month >= request.start_time)
         # 结束时间
         if request.end_time:
-            stmt = stmt.where(SalesPo.month <= str(request.end_time))
+            stmt = stmt.where(SalesPo.month <= request.end_time)
         # 国家
         if request.country:
             stmt = stmt.where(SalesPo.country == request.country)

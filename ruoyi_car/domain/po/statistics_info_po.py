@@ -6,7 +6,7 @@
 from typing import Optional
 from datetime import datetime
 
-from sqlalchemy import BigInteger, Boolean, Date, DateTime, Float, Integer, JSON, LargeBinary, Numeric, String, Text, Time
+from sqlalchemy import BigInteger, Boolean, Date, DateTime, Float, Integer, JSON, LargeBinary, Numeric, String, Text, Time, Index
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ruoyi_admin.ext import db
@@ -16,7 +16,15 @@ class StatisticsInfoPo(db.Model):
     统计信息PO对象
     """
     __tablename__ = 'tb_statistics_info'
-    __table_args__ = {'comment': '统计信息'}
+    __table_args__ = (
+        # 【性能优化】给 statistics_key 添加索引，加速缓存查询
+        Index('idx_statistics_key', 'statistics_key'),
+        # 【性能优化】给 common_key 添加索引
+        Index('idx_common_key', 'common_key'),
+        # 【性能优化】给 type 添加索引
+        Index('idx_type', 'type'),
+        {'comment': '统计信息'}
+    )
     id: Mapped[int] = mapped_column(
         'id',
         BigInteger,

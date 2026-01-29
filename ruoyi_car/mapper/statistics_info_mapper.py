@@ -27,10 +27,12 @@ class StatisticsInfoMapper:
         Returns:
             List[statistics_info]: 统计信息列表
         """
+        import time
         try:
             # 构建查询条件
             stmt = select(StatisticsInfoPo)
-
+            
+            t_query_start = time.time()
 
             if statistics_indo.id is not None:
                 stmt = stmt.where(StatisticsInfoPo.id == statistics_indo.id)
@@ -45,7 +47,9 @@ class StatisticsInfoMapper:
                 stmt = stmt.where(StatisticsInfoPo.common_key.like("%" + str(statistics_indo.common_key) + "%"))
 
             if statistics_indo.statistics_key:
-                stmt = stmt.where(StatisticsInfoPo.statistics_key.like("%" + str(statistics_indo.statistics_key) + "%"))
+                # 【性能优化】使用精确匹配而不是模糊查询，否则无法使用索引
+                # 原来: stmt = stmt.where(StatisticsInfoPo.statistics_key.like("%" + str(statistics_indo.statistics_key) + "%"))
+                stmt = stmt.where(StatisticsInfoPo.statistics_key == statistics_indo.statistics_key)
 
             if statistics_indo.content is not None:
                 stmt = stmt.where(StatisticsInfoPo.content == statistics_indo.content)
@@ -65,10 +69,21 @@ class StatisticsInfoMapper:
                 stmt = stmt.where(StatisticsInfoPo.create_time <= end_val)
             if "criterian_meta" in g and g.criterian_meta.page:
                 g.criterian_meta.page.stmt = stmt
+            
+            t_db_start = time.time()
             result = db.session.execute(stmt).scalars().all()
+            t_db_end = time.time()
+            
+            # 性能日志
+            print(f"[性能日志] statistics_info_mapper - SQL构建耗时: {(t_db_start - t_query_start)*1000:.2f}ms, "
+                  f"数据库查询耗时: {(t_db_end - t_db_start)*1000:.2f}ms, "
+                  f"结果数: {len(result) if result else 0}")
+            
             return [StatisticsInfo.model_validate(item) for item in result] if result else []
         except Exception as e:
             print(f"查询统计信息列表出错: {e}")
+            import traceback
+            traceback.print_exc()
             return []
 
 

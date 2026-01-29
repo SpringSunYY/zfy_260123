@@ -6,7 +6,7 @@
 from typing import Optional
 from datetime import datetime
 
-from sqlalchemy import BigInteger, Boolean, Date, DateTime, Float, Integer, JSON, LargeBinary, Numeric, String, Text, Time
+from sqlalchemy import BigInteger, Boolean, Date, DateTime, Float, Integer, JSON, LargeBinary, Numeric, String, Text, Time, Index
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ruoyi_admin.ext import db
@@ -121,10 +121,11 @@ class SalesPo(db.Model):
         nullable=True,
         comment='上月城市总销量'
     )
-    month: Mapped[Optional[str]] = mapped_column(
+    month: Mapped[Optional[int]] = mapped_column(
         'month',
         Integer,
         nullable=True,
+        index=True,  # 添加索引，加速月份查询
         comment='月份'
     )
     month_date: Mapped[Optional[datetime]] = mapped_column(
@@ -143,7 +144,12 @@ class SalesPo(db.Model):
         'city_full_name',
         String(255),
         nullable=True,
+        index=True,  # 添加索引，加速城市查询
         comment='省市'
+    )
+    # 【性能优化】添加复合索引，优化 group_by(city_full_name, month) 查询
+    __table_args__ = (
+        Index('idx_month_city_full_name', 'month', 'city_full_name'),
     )
     create_time: Mapped[Optional[datetime]] = mapped_column(
         'create_time',

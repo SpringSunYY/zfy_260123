@@ -188,15 +188,17 @@ class ConfigConstants:
     CAR_LIKE_RECORD_NUM = "car:like:number"
     # 推荐数
     CAR_RECOMMEND_NUM = "car:recommend:number"
-    #time_decay_factor 时间衰减因子
-    CAR_TIME_DECAY_FACTOR="car:time:decay:factor"
-    #推荐模型权重
-    CAE_MODEL_WEIGHT="car:model:weight"
+    # time_decay_factor 时间衰减因子
+    CAR_TIME_DECAY_FACTOR = "car:time:decay:factor"
+    # 推荐模型权重
+    CAE_MODEL_WEIGHT = "car:model:weight"
     STATISTICS_PRICE_RANGE = "statistics:price:range"
-    #综合评分
-    CAR_OVERALL_SCORE_WEIGHT="car:overall:score:weight"
+    # 综合评分
+    CAR_OVERALL_SCORE_WEIGHT = "car:overall:score:weight"
 
 
 class StatisticsConstants:
-    #地图销量统计公共key
+    # 地图销量统计公共key
     MAP_SALES_STATISTICS_COMMON_KEY = "car:statistics:map:sales"
+    # 地图销量统计公共类型
+    MAP_SALES_STATISTICS_COMMON_TYPE = "1"
