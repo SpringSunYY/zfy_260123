@@ -6,6 +6,7 @@
           <PieGradientCharts
             :chart-data="priceSalesStatisticsData"
             :chart-title="priceSalesStatisticsName"
+            :label-show-value="false"
             @item-click="(item) => handleToQuery(item, 'price')"
           />
         </div>
@@ -15,7 +16,9 @@
             @item-click="(item) => handleToQuery(item, 'brandName')"/>
         </div>
         <div class="chart-wrapper">
-          <PieGradientRoseCharts/>
+          <PieGradientRoseCharts
+            :label-show-value="false"
+          />
         </div>
         <div class="chart-wrapper">
           <div class="chart-wrapper">
@@ -49,10 +52,14 @@
         </div>
         <div class="chart-wrapper">
           <PiePetalPoseCharts
+            :chart-data="energyTypeSalesStatisticsData"
+            :chart-title="energyTypeSalesStatisticsName"
+            :label-show-value="false"
             @item-click="(item) => handleToQuery(item, 'energyType')"/>
         </div>
         <div class="chart-wrapper">
           <PiePetalTransparentPoseCharts
+            :label-show-value="false"
             @item-click="(item) => handleToQuery(item, 'country')"/>
         </div>
         <div class="chart-wrapper">
@@ -81,7 +88,7 @@ import BarLineZoomCharts from "@/components/Echarts/BarLineZoomCharts.vue";
 import TableRanking from "@/components/Echarts/TableRanking.vue";
 import LabelValueGrid from "@/components/Echarts/LabelValueList.vue";
 import DateRangePicker from "@/components/Echarts/DateRangePicker.vue";
-import {salesMapStatistics, salesPriceStatistics} from "@/api/car/statistics";
+import {salesEnergyTypeStatistics, salesMapStatistics, salesPriceStatistics} from "@/api/car/statistics";
 import dayjs from "dayjs";
 
 export default {
@@ -117,6 +124,16 @@ export default {
           label: '价格',
           value: '全部',
           key: 'price',
+        },
+        {
+          label: '车型',
+          value: '全部',
+          key: 'modelType',
+        },
+        {
+          label: '能源',
+          value: '全部',
+          key: 'energyType',
         }
       ],
       //销量地图
@@ -125,6 +142,9 @@ export default {
       //价格销量
       priceSalesStatisticsData: [],
       priceSalesStatisticsName: "价格销量",
+      //能源类型
+      energyTypeSalesStatisticsData: [],
+      energyTypeSalesStatisticsName: "能源类型",
     }
   },
   created() {
@@ -139,20 +159,44 @@ export default {
       this.resetLabelQuery('address', addressName)
       this.getSalesMapStatisticsData()
       this.getPriceSalesStatisticsData()
+      this.getEnergyTypeSalesStatisticsData()
     },
     getMapDataByClick() {
       this.getSalesMapStatisticsData()
     },
-    //获取价格销量数据
-    getPriceSalesStatisticsData() {
-
-      salesPriceStatistics({
-        ...this.query,
-        maxPrice: null,
-        minPrice: null
+    //能源类型
+    getEnergyTypeSalesStatisticsData() {
+      salesEnergyTypeStatistics({
+        startTime: this.query.startTime,
+        endTime: this.query.endTime,
+        address: this.query.address
       }).then(response => {
         if (!response.data) return
-        console.log(response.data)
+        //创建一个map获取到键值对name-key，value-value
+        let map = new Map();
+        for (let i = 0; i < response.data.length; i++) {
+          if (map.has(response.data[i].name)) {
+            map.set(response.data[i].name, map.get(response.data[i].name) + response.data[i].value);
+          } else {
+            map.set(response.data[i].name, response.data[i].value);
+          }
+        }
+        this.energyTypeSalesStatisticsData = Array.from(map.keys()).map(key => {
+          return {
+            name: key,
+            value: map.get(key)
+          }
+        });
+      })
+    },
+    //获取价格销量数据
+    getPriceSalesStatisticsData() {
+      salesPriceStatistics({
+        startTime: this.query.startTime,
+        endTime: this.query.endTime,
+        address: this.query.address
+      }).then(response => {
+        if (!response.data) return
         //创建一个map获取到键值对name-key，value-value
         let map = new Map();
         for (let i = 0; i < response.data.length; i++) {
@@ -194,7 +238,6 @@ export default {
             name: '销量',
             value: data
           })
-          console.log(data)
         }
       )
     },
@@ -208,7 +251,14 @@ export default {
       if (type === 'price') {
         this.processPriceQuery(item, type)
       }
+      if (type === 'energyType') {
+        this.processEnergyTypeQuery(item, type)
+      }
       this.getMapDataByClick();
+    },
+    processEnergyTypeQuery(item, type) {
+      this.query.energyType = item.name;
+      this.resetLabelQuery(type, item.name)
     },
     processPriceQuery(item, type) {
       // 价格传过来的是'8k以下'、'10w-20w'等格式，解析成最小值和最大值
@@ -286,8 +336,9 @@ export default {
 }
 
 .query-chart-wrapper {
-  margin-top: 10vh;
+  margin-top: 2vh;
   height: 15vh;
+  margin-bottom: 2vh;
 }
 
 .chart-wrapper {

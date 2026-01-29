@@ -63,6 +63,15 @@ export default {
         'rgb(78, 214, 230)', 'rgb(111, 231, 240)', 'rgb(159, 243, 245)', 'rgb(214, 251, 251)',
         'rgb(244, 143, 177)', 'rgb(245, 138, 217)', 'rgb(227, 140, 235)', 'rgb(255, 209, 232)'
       ]
+    },
+    //label是否显示value
+    labelShowValue: {
+      type: Boolean,
+      default: true
+    },
+    maxLabelLength: {
+      type: Number,
+      default: 4
     }
   },
   data() {
@@ -102,7 +111,7 @@ export default {
       this.chart = echarts.init(this.$refs.chartRef);
       // 点击事件监听
       this.chart.on('click', (params) => {
-        if (params.name && params.data ) {
+        if (params.name && params.data) {
           this.$emit('item-click', params.data);
         }
       });
@@ -182,7 +191,9 @@ export default {
           pageIconColor: '#0be5ff',
           pageTextStyle: {color: '#fff'},
           textStyle: {color: '#8E99B3', fontSize: 14},
-          data: sortedData.map(item => item.name)
+          data: sortedData.map(item => {
+            return item.name.legend > this.maxLabelLength ? item.name.substring(0, this.maxLabelLength) : item.name
+          })
         },
         series: [
           // 中心装饰圆
@@ -206,7 +217,14 @@ export default {
               show: true,
               color: '#fff',
               fontSize: 14,
-              formatter: '{percent|{d}%}\n{name|{b}}',
+              formatter: (params) => {
+                const name = params.name.length > this.maxLabelLength ? params.name.substring(0, this.maxLabelLength) : params.name;
+                if (this.labelShowValue) {
+                  return `${name}: ${params.value}`;
+                } else {
+                  return `${name}`;
+                }
+              },
               rich: {
                 percent: {
                   fontSize: 18,

@@ -19,3 +19,13 @@ export function salesPriceStatistics(params){
     timeout: 30000
   })
 }
+
+//能源类型销售信息数据分析
+export function salesEnergyTypeStatistics(params){
+  return request({
+    url: '/car/statistics/energy_type',
+    method: 'get',
+    params,
+    timeout: 30000
+  })
+}

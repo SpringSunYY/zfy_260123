@@ -80,6 +80,15 @@ export default {
       type: String,
       default: 'bottom', // 'bottom' | 'right' | 'left' | 'top'
       validator: (value) => ['bottom', 'right', 'left', 'top'].includes(value)
+    },
+    //label是否显示value
+    labelShowValue: {
+      type: Boolean,
+      default: true
+    },
+    maxLabelLength: {
+      type: Number,
+      default: 4
     }
   },
   data() {
@@ -161,7 +170,9 @@ export default {
         pageTextStyle: {
           color: '#fff'
         },
-        data: data.map(item => item.name)
+        data: data.map(item => {
+          return item.name = item.name.length > this.maxLabelLength ? item.name.substring(0, this.maxLabelLength) : item.name;
+        })
       };
 
       // 根据位置设置图例
@@ -244,7 +255,15 @@ export default {
             },
             label: {
               show: true,
-              color: '#fff'
+              color: '#fff',
+              formatter: (params) => {
+                const name = params.name.length > this.maxLabelLength ? params.name.substring(0, this.maxLabelLength) : params.name;
+                if (this.labelShowValue) {
+                  return `${name}: ${params.value}`;
+                } else {
+                  return `${name}`;
+                }
+              },
             },
             labelLine: {
               show: true,

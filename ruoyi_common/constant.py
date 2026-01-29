@@ -210,3 +210,9 @@ class StatisticsConstants:
     PRICE_SALES_STATISTICS_COMMON_TYPE = "2"
     # 价格销量统计name
     PRICE_SALES_STATISTICS_COMMON_NAME = "价格销量统计"
+    # 能源类型销售统计公共key
+    ENERGY_TYPE_SALES_STATISTICS_COMMON_KEY = "car:statistics:energy:type:sales"
+    # 能源类型销售统计公共类型
+    ENERGY_TYPE_SALES_STATISTICS_COMMON_TYPE = "3"
+    # 能源类型销售统计name
+    ENERGY_TYPE_SALES_STATISTICS_COMMON_NAME = "能源类型销量统计"

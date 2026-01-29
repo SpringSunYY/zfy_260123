@@ -40,6 +40,15 @@ export default {
         'rgb(78, 214, 230)', 'rgb(111, 231, 240)', 'rgb(159, 243, 245)', 'rgb(214, 251, 251)',
         'rgb(244, 143, 177)', 'rgb(245, 138, 217)', 'rgb(227, 140, 235)', 'rgb(255, 209, 232)'
       ]
+    },
+    //label是否显示value
+    labelShowValue: {
+      type: Boolean,
+      default: true
+    },
+    maxLabelLength: {
+      type: Number,
+      default: 10
     }
   },
   data() {
@@ -103,7 +112,14 @@ export default {
             },
             label: {
               show: true,
-              formatter: '{b}: {c}',
+              formatter: (params) => {
+                const name = params.name.length > this.maxLabelLength ? params.name.substring(0, this.maxLabelLength) : params.name;
+                if (this.labelShowValue) {
+                  return `${name}: ${params.value}`;
+                } else {
+                  return `${name}`;
+                }
+              },
               textStyle: {fontSize: 13, color: '#ffffff'}
             }
           },
@@ -170,7 +186,9 @@ export default {
           left: 'center',
           itemGap: 10,
           textStyle: {color: '#ffffff', fontSize: 12},
-          data: data.map(item => item.name)
+          data: data.map(item => {
+            return item.name.length > this.maxLabelLength ? item.name.substring(0, this.maxLabelLength) : item.name;
+          })
         },
         series: [
           {
@@ -179,7 +197,10 @@ export default {
             center: ['50%', '50%'],
             silent: true,
             itemStyle: {color: 'rgba(255,255,255,0.38)'},
-            data: [100]
+            data: [100],
+            labelLine: {
+              show: false,
+            },
           },
           {
             name: this.chartTitle,
@@ -192,7 +213,7 @@ export default {
           },
           {
             type: 'pie',
-            radius: ['0%', '82%'],
+            radius: ['0%', '80%'],
             center: ['50%', '50%'],
             silent: true,
             itemStyle: {color: 'rgba(0,161,163,0.01)'},

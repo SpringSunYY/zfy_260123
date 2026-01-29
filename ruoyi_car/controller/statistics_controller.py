@@ -47,3 +47,22 @@ def price_sales_statistics(dto: CarStatisticsRequest):
     if request.address and request.address == "中华人民共和国":
         request.address = None
     return AjaxResponse.from_success(data=statistics_service.price_sales_statistics(request))
+
+
+# 能源类型销售信息数据分析
+@gen.route('/energy_type', methods=['GET'])
+@QueryValidator(is_page=True)
+@PreAuthorize(HasPerm("car:sales:statistics"))
+@JsonSerializer()
+def energy_type_sales_statistics(dto: CarStatisticsRequest):
+    """
+        能源类型销售信息数据分析
+    """
+    request = CarStatisticsRequest()
+    # 转换PO到Entity对象
+    for attr in dto.model_fields.keys():
+        if hasattr(request, attr):
+            setattr(request, attr, getattr(dto, attr))
+    if request.address and request.address == "中华人民共和国":
+        request.address = None
+    return AjaxResponse.from_success(data=statistics_service.energy_type_sales_statistics(request))

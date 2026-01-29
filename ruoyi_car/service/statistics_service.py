@@ -5,7 +5,7 @@ from typing import List, Optional
 # project imports
 from ruoyi_car.domain.entity import StatisticsInfo
 from ruoyi_car.domain.statistics.dto import CarStatisticsRequest
-from ruoyi_car.domain.statistics.po.statistics_po import MapStatisticsPo, PriceStatisticsPo
+from ruoyi_car.domain.statistics.po.statistics_po import MapStatisticsPo, PriceStatisticsPo, StatisticsPo
 from ruoyi_car.domain.statistics.vo.statistics_vo import MapStatisticsVo, StatisticsVo
 from ruoyi_car.mapper.statistics_mapper import StatisticsMapper
 from ruoyi_car.service.statistics_info_service import StatisticsInfoService
@@ -576,3 +576,161 @@ class StatisticsService:
                 return f"{int(w_value)}W"
             else:
                 return f"{w_value:.1f}W"
+                
+    @classmethod
+    def energy_type_sales_statistics(cls, request: CarStatisticsRequest) -> List[StatisticsVo]:
+        """
+        能源销售信息数据分析
+        按月份和能源类型统计销量，支持缓存
+        """
+        # 生成月份列表
+        months = DateUtil.generate_months_list(request.start_time, request.end_time)
+
+        # 收集缓存命中的数据和未缓存的月份
+        cached_results = []
+        uncached_months = []
+
+        for month in months:
+            temp_request = CarStatisticsRequest(
+                start_time=month, end_time=month,
+                address=request.address, country=request.country,
+                brand_name=request.brand_name, series_name=request.series_name,
+                model_type=request.model_type, energy_type=request.energy_type,
+                min_price=request.min_price, max_price=request.max_price
+            )
+            stats_key = cls._build_stats_key(temp_request, month, StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_KEY)
+            cached_list, cached_data = cls._get_cached_data(stats_key, vo_class=StatisticsVo)
+
+            if cached_list:
+                cached_results.extend(cached_data)
+            else:
+                uncached_months.append(month)
+
+        if not uncached_months:
+            return cached_results
+
+        # 全国查询
+        if not request.address:
+            cls._build_nationwide_energy_cache(request, months, uncached_months, cached_results)
+        # 省份查询
+        else:
+            cls._build_province_energy_cache(request, uncached_months, cached_results)
+
+        return cached_results
+
+    @classmethod
+    def _aggregate_by_energy(cls, pos: List[StatisticsPo], address: str = None) -> List[StatisticsVo]:
+        """
+        按能源类型聚合数据
+        - 全国查询（address=None）：按省份+能源类型聚合
+        - 省份查询（address=xxx）：按城市+能源类型聚合
+        """
+        is_nationwide = not address
+        result_map = {}
+
+        for item in pos:
+            city = item.address  # "广东省 东莞市"
+            province = city.split(' ')[0] if ' ' in city else city  # "广东省"
+            energy_name = item.name  # "电动"
+            value = item.value
+            month = item.month
+
+            # 如果指定了省份，过滤掉不匹配的城市数据
+            if address:
+                filter_province = address.split(' ')[0] if ' ' in address else address
+                if province != filter_province:
+                    continue
+                # 省份查询：按城市+能源类型聚合
+                group_key = f"{city}:{energy_name}"
+                display_address = city
+            else:
+                # 全国查询：按省份+能源类型聚合
+                group_key = f"{province}:{energy_name}"
+                display_address = province
+
+            key = f"{group_key}:{month}"
+            if key not in result_map:
+                result_map[key] = {
+                    'name': energy_name,
+                    'value': 0,
+                    'month': month,
+                    'address': display_address
+                }
+
+            result_map[key]['value'] += value
+
+        return [
+            StatisticsVo(name=data['name'], value=data['value'], month=data['month'], address=data['address'])
+            for data in result_map.values()
+        ]
+
+    @classmethod
+    def _build_nationwide_energy_cache(cls, request: CarStatisticsRequest, months: List[int],
+                                        uncached_months: List[int], cached_results: List[StatisticsVo]) -> None:
+        """
+        构建全国能源统计缓存
+        收集所有省份，为每个省份的每个月保存缓存
+        """
+        # 收集所有出现过的省份
+        all_provinces = set()
+        for month in uncached_months:
+            temp_request = CarStatisticsRequest(start_time=month, end_time=month)
+            temp_request = cls._copy_request_params(request, temp_request)
+            raw_data = StatisticsMapper.energy_type_sales_statistics(temp_request)
+            for item in raw_data:
+                province = item.address.split(' ')[0] if ' ' in item.address else item.address
+                all_provinces.add(province)
+
+        # 为每个未缓存的月份构建缓存
+        for month in uncached_months:
+            temp_request = CarStatisticsRequest(start_time=month, end_time=month)
+            temp_request = cls._copy_request_params(request, temp_request)
+            raw_data = StatisticsMapper.energy_type_sales_statistics(temp_request)
+
+            # 按省份分组数据
+            provinces_data = {}
+            for item in raw_data:
+                province = item.address.split(' ')[0] if ' ' in item.address else item.address
+                if province not in provinces_data:
+                    provinces_data[province] = []
+                provinces_data[province].append(item)
+
+            # 保存每个省份的缓存
+            for province in all_provinces:
+                province_data = provinces_data.get(province, [])
+                province_request = CarStatisticsRequest(start_time=month, end_time=month, address=province)
+                province_request = cls._copy_request_params(request, province_request)
+
+                stats_key = cls._build_stats_key(province_request, month, StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_KEY)
+                month_results = cls._aggregate_by_energy(province_data, province)
+                cls._save_to_cache(stats_key, month_results, province,
+                                   stat_type=StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_TYPE,
+                                   common_key=StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_KEY)
+
+            # 保存月份汇总缓存（全国数据）
+            month_key = cls._build_stats_key(temp_request, month, StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_KEY)
+            month_results = cls._aggregate_by_energy(raw_data, None)
+            cls._save_to_cache(month_key, month_results, None,
+                               stat_type=StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_TYPE,
+                               common_key=StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_KEY)
+            cached_results.extend(month_results)
+
+    @classmethod
+    def _build_province_energy_cache(cls, request: CarStatisticsRequest, uncached_months: List[int],
+                                      cached_results: List[StatisticsVo]) -> None:
+        """构建省份能源统计缓存"""
+        for month in uncached_months:
+            temp_request = CarStatisticsRequest(
+                start_time=month, end_time=month, address=request.address
+            )
+            temp_request = cls._copy_request_params(request, temp_request)
+
+            raw_data = StatisticsMapper.energy_type_sales_statistics(temp_request)
+
+            month_results = cls._aggregate_by_energy(raw_data, request.address)
+
+            stats_key = cls._build_stats_key(temp_request, month, StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_KEY)
+            cls._save_to_cache(stats_key, month_results, request.address,
+                               stat_type=StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_TYPE,
+                               common_key=StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_KEY)
+            cached_results.extend(month_results)

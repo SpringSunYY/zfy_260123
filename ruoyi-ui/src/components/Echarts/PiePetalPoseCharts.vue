@@ -68,7 +68,16 @@ export default {
     // 半径大小配置
     radiusSize: {
       type: Array,
-      default: () => ['16%', '90%']
+      default: () => ['16%', '80%']
+    },
+    //label是否显示value
+    labelShowValue: {
+      type: Boolean,
+      default: true
+    },
+    maxLabelLength: {
+      type: Number,
+      default: 4
     }
   },
   data() {
@@ -189,7 +198,9 @@ export default {
             color: '#FFF'
           },
           itemGap: 15,
-          formatter: (name) => name,
+          formatter: (name) => {
+            return name.legend <= this.maxLabelLength ? name : name.substring(0, this.maxLabelLength)
+          },
           data: data.map(item => item.name)
         },
         color: this.defaultColor,
@@ -198,7 +209,7 @@ export default {
           {
             type: 'pie',
             zlevel: 1,
-            radius: ['0%', '85%'],
+            radius: ['0%', '80%'],
             center: this.pieCenter,
             silent: true,
             label: {
@@ -262,7 +273,19 @@ export default {
             label: {
               show: true,
               color: '#ddd',
-              formatter: '{b}: {c}'
+              formatter: (params) => {
+                const name = params.name.length > this.maxLabelLength ? params.name.substring(0, this.maxLabelLength)  : params.name;
+                if (this.labelShowValue) {
+                  return `${name}: ${params.value}`;
+                } else {
+                  return `${name}`;
+                }
+              },
+            },
+            labelLine: {
+              show: true,
+              length: 10,
+              length2: 5
             },
             data: seriesData
           }

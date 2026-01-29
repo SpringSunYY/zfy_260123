@@ -10,8 +10,8 @@ class StatisticsPo(BaseModel, Generic[T]):
     """
     value: T
     name: str
-
-
+    address: str
+    month: int
 class PriceStatisticsPo(BaseModel):
     """
     价格统计对象（按月，包含城市）
