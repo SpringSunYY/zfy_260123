@@ -254,8 +254,8 @@ export default {
                 <span style="color:rgba(255,255,255,0.6); margin-left:10px;">(占比: ${percent}%)</span><br/>`;
 
             if (this.showExtraInfo) {
-              res += `当前总额: <span style="color:#00E08B;">${total}</span><br/>`;
-              res += `平均数值: <span style="color:#00E08B;">${avg}</span><br/>`;
+              res += `总计: <span style="color:#00E08B;">${total}</span><br/>`;
+              res += `平均: <span style="color:#00E08B;">${avg}</span><br/>`;
             }
 
             if (item.tooltipText) {

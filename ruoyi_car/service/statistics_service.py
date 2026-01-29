@@ -22,15 +22,21 @@ class StatisticsService:
         # 生成请求的时间范围内的所有月份
         months = DateUtil.generate_months_list(request.start_time, request.end_time)
 
-        # 收集缓存命中的数据和未缓存的月份
+        # 步骤1：构建所有月份的缓存 Key
+        stats_keys = []
+        for month in months:
+            stats_key = cls._build_stats_key(request, month, StatisticsConstants.MAP_SALES_STATISTICS_COMMON_KEY)
+            stats_keys.append(stats_key)
+
+        # 步骤2：批量查询缓存
+        cached_map = cls._get_cached_data_batch(stats_keys, vo_class=MapStatisticsVo)
+
+        # 步骤3：收集缓存命中的数据和未缓存的月份
         cached_results = []
         uncached_months = []
 
-        for month in months:
-            # 构建缓存key
-            stats_key = cls._build_stats_key(request, month, StatisticsConstants.MAP_SALES_STATISTICS_COMMON_KEY)
-            # 查询缓存
-            cached_list, cached_data = cls._get_cached_data(stats_key, vo_class=MapStatisticsVo)
+        for month, stats_key in zip(months, stats_keys):
+            cached_list, cached_data = cached_map.get(stats_key, ([], []))
 
             if cached_list:
                 # 缓存存在，直接使用
@@ -176,7 +182,7 @@ class StatisticsService:
     @classmethod
     def _get_cached_data(cls, stats_key: str, vo_class=None) -> tuple:
         """
-        从缓存获取数据
+        从缓存获取单个Key的数据
         返回: (缓存记录列表, 解析后的数据列表)
         vo_class: 可选，指定返回的Vo类型（MapStatisticsVo 或 StatisticsVo）
         """
@@ -188,47 +194,87 @@ class StatisticsService:
                 return ([], [])
 
             cached_item = cached_list[0]
-
-            # 调试日志
-            content_len = len(cached_item.content) if cached_item.content else 0
-            print(f"[缓存读取] key={stats_key}, content长度={content_len}")
-
-            # 尝试解析 JSON
-            try:
-                content_data = json.loads(cached_item.content) if cached_item.content else []
-            except json.JSONDecodeError as e:
-                print(f"[缓存错误] JSON解析失败: key={stats_key}, 错误={e}")
-                print(f"[缓存错误] content长度={len(cached_item.content) if cached_item.content else 0}")
-                print(
-                    f"[缓存错误] content前200字符: {str(cached_item.content)[:200] if cached_item.content else 'None'}")
-                print(
-                    f"[缓存错误] content后200字符: {str(cached_item.content)[-200:] if cached_item.content else 'None'}")
-                return ([], [])
-
-            # 如果指定了vo_class，使用vo_class，否则使用通用的StatisticsVo
-            VoClass = vo_class if vo_class else StatisticsVo
-
-            results = []
-            for item in content_data:
-                # 尝试获取month字段，如果没有则忽略
-                month = item.get('month', 0)
-
-                vo = VoClass(
-                    name=item.get('name', ''),
-                    value=item.get('value', 0),
-                    tooltipText=item.get('tooltipText', ''),
-                    moreInfo=item.get('moreInfo', '')
-                )
-                # 如果有month字段且Vo支持，尝试设置
-                if hasattr(vo, 'month') and month:
-                    vo.month = month
-                results.append(vo)
-
-            return (cached_list, results)
+            return cls._parse_cached_data(cached_item, vo_class)
 
         except Exception as e:
             print(f"获取缓存数据出错: {e}")
             return ([], [])
+
+    @classmethod
+    def _get_cached_data_batch(cls, stats_keys: List[str], vo_class=None) -> dict:
+        """
+        批量从缓存获取数据
+        说明：使用 IN 查询一次获取所有 Key 的缓存数据
+        返回: {stats_key: (cached_list, parsed_data)}
+        """
+        if not stats_keys:
+            return {}
+
+        try:
+            # 批量查询缓存
+            cached_list = StatisticsInfoService.select_statistics_info_list_by_keys(stats_keys)
+
+            # 构建 Key -> 缓存记录的映射
+            key_to_record = {item.statistics_key: item for item in cached_list}
+
+            # 解析每个缓存记录
+            result = {}
+            for key in stats_keys:
+                if key in key_to_record:
+                    cached_item = key_to_record[key]
+                    parsed_data = cls._parse_cached_data(cached_item, vo_class)
+                    result[key] = parsed_data
+                else:
+                    # 缓存未命中
+                    result[key] = ([], [])
+
+            return result
+
+        except Exception as e:
+            print(f"批量获取缓存数据出错: {e}")
+            # 返回空结果
+            return {key: ([], []) for key in stats_keys}
+
+    @classmethod
+    def _parse_cached_data(cls, cached_item, vo_class=None) -> tuple:
+        """
+        解析缓存数据
+        返回: (缓存记录列表, 解析后的数据列表)
+        """
+        # 调试日志
+        content_len = len(cached_item.content) if cached_item.content else 0
+        print(f"[缓存读取] key={cached_item.statistics_key}, content长度={content_len}")
+
+        # 尝试解析 JSON
+        try:
+            content_data = json.loads(cached_item.content) if cached_item.content else []
+        except json.JSONDecodeError as e:
+            print(f"[缓存错误] JSON解析失败: key={cached_item.statistics_key}, 错误={e}")
+            print(f"[缓存错误] content长度={content_len}")
+            print(f"[缓存错误] content前200字符: {str(cached_item.content)[:200] if cached_item.content else 'None'}")
+            print(f"[缓存错误] content后200字符: {str(cached_item.content)[-200:] if cached_item.content else 'None'}")
+            return ([], [])
+
+        # 如果指定了vo_class，使用vo_class，否则使用通用的StatisticsVo
+        VoClass = vo_class if vo_class else StatisticsVo
+
+        results = []
+        for item in content_data:
+            # 尝试获取month字段，如果没有则忽略
+            month = item.get('month', 0)
+
+            vo = VoClass(
+                name=item.get('name', ''),
+                value=item.get('value', 0),
+                tooltipText=item.get('tooltipText', ''),
+                moreInfo=item.get('moreInfo', '')
+            )
+            # 如果有month字段且Vo支持，尝试设置
+            if hasattr(vo, 'month') and month:
+                vo.month = month
+            results.append(vo)
+
+        return ([cached_item], results)
 
     @classmethod
     def _save_to_cache(cls, stats_key: str, data: List, address: Optional[str],
@@ -390,12 +436,9 @@ class StatisticsService:
         # 生成月份列表
         months = DateUtil.generate_months_list(request.start_time, request.end_time)
 
-        # 收集缓存命中的数据和未缓存的月份
-        cached_results = []
-        uncached_months = []
-
+        # 步骤1：构建所有月份的缓存 Key
+        stats_keys = []
         for month in months:
-            # 构建缓存key
             temp_request = CarStatisticsRequest(
                 start_time=month, end_time=month,
                 address=request.address, country=request.country,
@@ -404,7 +447,17 @@ class StatisticsService:
                 min_price=request.min_price, max_price=request.max_price
             )
             stats_key = cls._build_stats_key(temp_request, month, StatisticsConstants.PRICE_SALES_STATISTICS_COMMON_KEY)
-            cached_list, cached_data = cls._get_cached_data(stats_key, vo_class=StatisticsVo)
+            stats_keys.append(stats_key)
+
+        # 步骤2：批量查询缓存
+        cached_map = cls._get_cached_data_batch(stats_keys, vo_class=StatisticsVo)
+
+        # 步骤3：收集缓存命中的数据和未缓存的月份
+        cached_results = []
+        uncached_months = []
+
+        for month, stats_key in zip(months, stats_keys):
+            cached_list, cached_data = cached_map.get(stats_key, ([], []))
 
             if cached_list:
                 cached_results.extend(cached_data)
@@ -588,7 +641,6 @@ class StatisticsService:
             lambda req: StatisticsMapper.energy_type_sales_statistics(req),
             StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_KEY,
             StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_TYPE,
-            StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_KEY,
             StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_NAME
         )
     @classmethod
@@ -601,9 +653,102 @@ class StatisticsService:
             lambda req: StatisticsMapper.series_sales_statistics(req),
             StatisticsConstants.SERIES_SALES_STATISTICS_COMMON_KEY,
             StatisticsConstants.SERIES_SALES_STATISTICS_COMMON_TYPE,
-            StatisticsConstants.SERIES_SALES_STATISTICS_COMMON_KEY,
             StatisticsConstants.SERIES_SALES_STATISTICS_COMMON_NAME
         )
+
+    @classmethod
+    def brand_sales_statistics(cls, request: CarStatisticsRequest) -> List[StatisticsVo]:
+        """
+        品牌销售信息数据分析
+        """
+        return cls._dimension_statistics(
+            request,
+            StatisticsMapper.brand_sales_statistics,
+            StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_KEY,
+            StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_TYPE,
+            StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_NAME
+        )
+
+    @classmethod
+    def country_sales_statistics(cls, request: CarStatisticsRequest) -> List[StatisticsVo]:
+        """
+        国家销售信息数据分析
+        """
+        return cls._dimension_statistics(
+            request,
+            StatisticsMapper.country_sales_statistics,
+            StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_KEY,
+            StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_TYPE,
+            StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_NAME
+        )
+
+    @classmethod
+    def model_type_sales_statistics(cls, request: CarStatisticsRequest)-> List[StatisticsVo]:
+        """
+        车型类型销售信息数据分析
+        """
+        return cls._dimension_statistics(
+            request,
+            StatisticsMapper.model_type_sales_statistics,
+            StatisticsConstants.MODEL_TYPE_SALES_STATISTICS_COMMON_KEY,
+            StatisticsConstants.MODEL_TYPE_SALES_STATISTICS_COMMON_TYPE,
+            StatisticsConstants.MODEL_TYPE_SALES_STATISTICS_COMMON_NAME
+        )
+
+    @classmethod
+    def _dimension_statistics(cls, request: CarStatisticsRequest,
+                               mapper_method, common_key: str, stat_type: str,
+                               statistics_name: str) -> List[StatisticsVo]:
+        """
+        维度统计通用方法（品牌、国家等）
+        """
+        # 生成月份列表
+        months = DateUtil.generate_months_list(request.start_time, request.end_time)
+
+        # 步骤1：构建所有月份的缓存 Key
+        stats_keys = []
+        for month in months:
+            temp_request = CarStatisticsRequest(
+                start_time=month, end_time=month,
+                address=request.address, country=request.country,
+                brand_name=request.brand_name, series_name=request.series_name,
+                model_type=request.model_type, energy_type=request.energy_type,
+                min_price=request.min_price, max_price=request.max_price
+            )
+            stats_key = cls._build_stats_key(temp_request, month, common_key)
+            stats_keys.append(stats_key)
+
+        # 步骤2：批量查询缓存
+        cached_map = cls._get_cached_data_batch(stats_keys, vo_class=StatisticsVo)
+
+        # 步骤3：收集缓存命中的数据和未缓存的月份
+        cached_results = []
+        uncached_months = []
+
+        for month, stats_key in zip(months, stats_keys):
+            cached_list, cached_data = cached_map.get(stats_key, ([], []))
+
+            if cached_list:
+                cached_results.extend(cached_data)
+            else:
+                uncached_months.append(month)
+
+        if not uncached_months:
+            return cached_results
+
+        # 全国查询
+        if not request.address:
+            cls._build_nationwide_dimension_cache(request, months, uncached_months, cached_results,
+                                                   mapper_method, stat_type, common_key,
+                                                   statistics_name)
+        # 省份查询
+        else:
+            cls._build_province_dimension_cache(request, uncached_months, cached_results,
+                                                 mapper_method, stat_type, common_key,
+                                                 statistics_name)
+
+        return cached_results
+
     @classmethod
     def _aggregate_by_dimension(cls, pos: List[StatisticsPo], address: str = None) -> List[StatisticsVo]:
         """
@@ -653,11 +798,17 @@ class StatisticsService:
     @classmethod
     def _build_nationwide_dimension_cache(cls, request: CarStatisticsRequest, months: List[int],
                                           uncached_months: List[int], cached_results: List[StatisticsVo],
-                                          mapper_method, stat_key: str, stat_type: str, common_key: str,
+                                          mapper_method, stat_type: str, common_key: str,
                                           statistics_name: str) -> None:
         """
-        构建全国统计缓存（通用方法）
+        构建全国维度统计缓存（通用方法）
+        说明：
+        1. 遍历所有未缓存的月份，收集每个月份出现的省份
+        2. 再次遍历月份，查询原始数据
+        3. 为每个省份保存该月份的缓存（按省份聚合）
+        4. 保存月份汇总缓存（按省份聚合全国）
         """
+        # 步骤1：收集所有未缓存月份中出现的省份
         all_provinces = set()
         for month in uncached_months:
             temp_request = CarStatisticsRequest(start_time=month, end_time=month)
@@ -667,11 +818,13 @@ class StatisticsService:
                 province = item.address.split(' ')[0] if ' ' in item.address else item.address
                 all_provinces.add(province)
 
+        # 步骤2：遍历月份，查询数据并构建缓存
         for month in uncached_months:
             temp_request = CarStatisticsRequest(start_time=month, end_time=month)
             temp_request = cls._copy_request_params(request, temp_request)
             raw_data = mapper_method(temp_request)
 
+            # 按省份分组原始数据
             provinces_data = {}
             for item in raw_data:
                 province = item.address.split(' ')[0] if ' ' in item.address else item.address
@@ -679,6 +832,7 @@ class StatisticsService:
                     provinces_data[province] = []
                 provinces_data[province].append(item)
 
+            # 步骤3：为每个省份保存缓存（按省份聚合）
             for province in all_provinces:
                 province_data = provinces_data.get(province, [])
                 province_request = CarStatisticsRequest(start_time=month, end_time=month, address=province)
@@ -690,6 +844,7 @@ class StatisticsService:
                                    stat_type=stat_type, common_key=common_key,
                                    statistics_name=statistics_name)
 
+            # 步骤4：保存月份汇总缓存（全国数据）
             month_key = cls._build_stats_key(temp_request, month, common_key)
             month_results = cls._aggregate_by_dimension(raw_data, None)
             cls._save_to_cache(month_key, month_results, None,
@@ -700,113 +855,30 @@ class StatisticsService:
     @classmethod
     def _build_province_dimension_cache(cls, request: CarStatisticsRequest, uncached_months: List[int],
                                         cached_results: List[StatisticsVo],
-                                        mapper_method, stat_key: str, stat_type: str, common_key: str,
+                                        mapper_method, stat_type: str, common_key: str,
                                         statistics_name: str) -> None:
-        """构建省份统计缓存（通用方法）"""
+        """
+        构建省份维度统计缓存（通用方法）
+        说明：
+        1. 遍历所有未缓存的月份
+        2. 查询该省份的原始数据
+        3. 按城市聚合数据并保存缓存
+        """
         for month in uncached_months:
             temp_request = CarStatisticsRequest(
                 start_time=month, end_time=month, address=request.address
             )
             temp_request = cls._copy_request_params(request, temp_request)
 
+            # 查询原始数据
             raw_data = mapper_method(temp_request)
 
+            # 按城市聚合数据
             month_results = cls._aggregate_by_dimension(raw_data, request.address)
 
+            # 保存缓存
             stats_key = cls._build_stats_key(temp_request, month, common_key)
             cls._save_to_cache(stats_key, month_results, request.address,
                                stat_type=stat_type, common_key=common_key,
                                statistics_name=statistics_name)
             cached_results.extend(month_results)
-
-    @classmethod
-    def brand_sales_statistics(cls, request: CarStatisticsRequest) -> List[StatisticsVo]:
-        """
-        品牌销售信息数据分析
-        """
-        return cls._dimension_statistics(
-            request,
-            StatisticsMapper.brand_sales_statistics,
-            StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_KEY,
-            StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_TYPE,
-            StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_KEY,
-            StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_NAME
-        )
-
-    @classmethod
-    def country_sales_statistics(cls, request: CarStatisticsRequest) -> List[StatisticsVo]:
-        """
-        国家销售信息数据分析
-        """
-        return cls._dimension_statistics(
-            request,
-            StatisticsMapper.country_sales_statistics,
-            StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_KEY,
-            StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_TYPE,
-            StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_KEY,
-            StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_NAME
-        )
-
-    @classmethod
-    def model_type_sales_statistics(cls, request: CarStatisticsRequest)-> List[StatisticsVo]:
-        """
-        车型类型销售信息数据分析
-        """
-        return cls._dimension_statistics(
-            request,
-            StatisticsMapper.model_type_sales_statistics,
-            StatisticsConstants.MODEL_TYPE_SALES_STATISTICS_COMMON_KEY,
-            StatisticsConstants.MODEL_TYPE_SALES_STATISTICS_COMMON_TYPE,
-            StatisticsConstants.MODEL_TYPE_SALES_STATISTICS_COMMON_KEY,
-            StatisticsConstants.MODEL_TYPE_SALES_STATISTICS_COMMON_NAME
-        )
-        pass
-
-    @classmethod
-    def _dimension_statistics(cls, request: CarStatisticsRequest,
-                               mapper_method,
-                               common_key: str, stat_type: str,
-                               cache_key: str, statistics_name: str) -> List[StatisticsVo]:
-        """
-        维度统计通用方法（品牌、国家等）
-        """
-        # 生成月份列表
-        months = DateUtil.generate_months_list(request.start_time, request.end_time)
-
-        # 收集缓存命中的数据和未缓存的月份
-        cached_results = []
-        uncached_months = []
-
-        for month in months:
-            temp_request = CarStatisticsRequest(
-                start_time=month, end_time=month,
-                address=request.address, country=request.country,
-                brand_name=request.brand_name, series_name=request.series_name,
-                model_type=request.model_type, energy_type=request.energy_type,
-                min_price=request.min_price, max_price=request.max_price
-            )
-            stats_key = cls._build_stats_key(temp_request, month, cache_key)
-            cached_list, cached_data = cls._get_cached_data(stats_key, vo_class=StatisticsVo)
-
-            if cached_list:
-                cached_results.extend(cached_data)
-            else:
-                uncached_months.append(month)
-
-        if not uncached_months:
-            return cached_results
-
-        # 全国查询
-        if not request.address:
-            cls._build_nationwide_dimension_cache(request, months, uncached_months, cached_results,
-                                                   mapper_method,
-                                                   cache_key, stat_type, common_key,
-                                                   statistics_name)
-        # 省份查询
-        else:
-            cls._build_province_dimension_cache(request, uncached_months, cached_results,
-                                                 mapper_method,
-                                                 cache_key, stat_type, common_key,
-                                                 statistics_name)
-
-        return cached_results

@@ -18,7 +18,7 @@
             @item-click="(item) => handleToQuery(item, 'brandName')"/>
         </div>
         <div class="chart-wrapper">
-          <PieGradientRoseCharts
+          <PiePetalTransparentPoseCharts
             :chart-data="countrySalesStatisticsData"
             :chart-title="countrySalesStatisticsName"
             @item-click="(item) => handleToQuery(item, 'country')"
@@ -47,7 +47,7 @@
         <div class="chart-wrapper">
           <ScatterRandomTooltipCharts
             :chart-data="modelTypeSalesStatisticsData"
-            :chart-name="modelTypeSalesStatisticsName"
+            :chart-title="modelTypeSalesStatisticsName"
             :symbol-size="600"
             @item-click="(item) => handleToQuery(item, 'modelType')"/>
         </div>
@@ -64,18 +64,20 @@
             :label-show-value="false"
             @item-click="(item) => handleToQuery(item, 'energyType')"/>
         </div>
-        <div class="chart-wrapper">
-          <PiePetalTransparentPoseCharts
-            :label-show-value="false"
-            :chart-data="monthSalesStatisticsData"
-            :chart-name="monthSalesStatisticsName"
-          />
-        </div>
-        <div class="chart-wrapper">
+        <div class="rank-chart-wrapper">
           <BarRankingZoomCharts
             :chart-data="seriesSalesStatisticsData"
             :chart-name="seriesSalesStatisticsName"
+            :displayCount="12"
             @item-click="(item) => handleToQuery(item, 'seriesName')"/>
+        </div>
+        <div class="chart-wrapper">
+          <PieGradientRoseCharts
+            :label-show-value="false"
+            :chart-data="monthSalesStatisticsData"
+            :chart-title="monthSalesStatisticsName"
+            :max-label-length="6"
+          />
         </div>
       </el-col>
     </el-row>
@@ -409,6 +411,7 @@ export default {
       this.getCountrySalesStatisticsData()
       this.getModelTypeSalesStatisticsData()
       this.getCountrySalesStatisticsData()
+      this.getSeriesSalesStatisticsData()
     },
     handleToQuery(item, type) {
       if (!item && !item.name) return
@@ -535,5 +538,9 @@ export default {
 
 .chart-wrapper {
   height: 35vh;
+}
+
+.rank-chart-wrapper {
+  height: 42vh;
 }
 </style>

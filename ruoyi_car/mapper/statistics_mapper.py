@@ -13,6 +13,49 @@ class StatisticsMapper:
     """统计信息服务类 - 负责SQL查询"""
 
     @classmethod
+    def _print_sql_log(cls, stmt, method_name: str = "SQL"):
+        """
+        打印 SQL 日志（显示实际值）
+        """
+        try:
+            sql_str = str(stmt)
+            
+            # 获取 dialect
+            dialect = None
+            try:
+                if hasattr(db, 'session') and db.session:
+                    conn = db.session.connection()
+                    if conn and hasattr(conn, 'dialect'):
+                        dialect = conn.dialect
+            except Exception:
+                pass
+            
+            # 编译获取参数
+            params = {}
+            if dialect:
+                try:
+                    compiled = stmt.compile(dialect=dialect)
+                    params = compiled.params or {}
+                except Exception:
+                    pass
+            
+            # 替换参数
+            for key, value in params.items():
+                placeholder = f":{key}"
+                if isinstance(value, str):
+                    replacement = f"'{value}'"
+                elif value is None:
+                    replacement = "NULL"
+                else:
+                    replacement = str(value)
+                sql_str = sql_str.replace(placeholder, replacement)
+            
+            print(f"[SQL日志] {method_name}: {sql_str}")
+
+        except Exception as e:
+            print(f"[SQL日志] {method_name}: <打印失败: {e}>")
+
+    @classmethod
     def select_sales_map_statistics_raw(cls, request: CarStatisticsRequest) -> List[MapStatisticsPo]:
         """
         销售地图销量分析（原始版本）
@@ -32,7 +75,9 @@ class StatisticsMapper:
             # 按城市和月份分组
             stmt = stmt.group_by(SalesPo.city_full_name, SalesPo.month)
 
-            # 执行查询
+            # 打印 SQL 日志
+            cls._print_sql_log(stmt, "select_sales_map_statistics_raw")
+
             result = db.session.execute(stmt).mappings().all()
 
             if not result:
@@ -78,6 +123,10 @@ class StatisticsMapper:
             )
             stmt = cls.init_query(request, stmt)
             stmt = stmt.group_by("address", "price", "month")
+
+            # 打印 SQL 日志
+            cls._print_sql_log(stmt, "select_price_sales_statistics")
+
             result = db.session.execute(stmt).mappings().all()
             if not result:
                 return []
@@ -114,6 +163,10 @@ class StatisticsMapper:
             )
             stmt = cls.init_query(request, stmt)
             stmt = stmt.group_by("name", "address", "month")
+
+            # 打印 SQL 日志
+            cls._print_sql_log(stmt, "energy_type_sales_statistics")
+
             result = db.session.execute(stmt).mappings().all()
             if not result:
                 return []
@@ -148,6 +201,10 @@ class StatisticsMapper:
             )
             stmt = cls.init_query(request, stmt)
             stmt = stmt.group_by("name", "address", "month")
+
+            # 打印 SQL 日志
+            cls._print_sql_log(stmt, "energy_type_sales_statistics")
+
             result = db.session.execute(stmt).mappings().all()
             if not result:
                 return []
@@ -182,6 +239,10 @@ class StatisticsMapper:
             )
             stmt = cls.init_query(request, stmt)
             stmt = stmt.group_by("name", "address", "month")
+
+            # 打印 SQL 日志
+            cls._print_sql_log(stmt, "energy_type_sales_statistics")
+
             result = db.session.execute(stmt).mappings().all()
             if not result:
                 return []
@@ -216,6 +277,10 @@ class StatisticsMapper:
             )
             stmt = cls.init_query(request, stmt)
             stmt = stmt.group_by("name", "address", "month")
+
+            # 打印 SQL 日志
+            cls._print_sql_log(stmt, "energy_type_sales_statistics")
+
             result = db.session.execute(stmt).mappings().all()
             if not result:
                 return []
@@ -250,6 +315,10 @@ class StatisticsMapper:
             )
             stmt = cls.init_query(request, stmt)
             stmt = stmt.group_by("name", "address", "month")
+
+            # 打印 SQL 日志
+            cls._print_sql_log(stmt, "energy_type_sales_statistics")
+
             result = db.session.execute(stmt).mappings().all()
             if not result:
                 return []

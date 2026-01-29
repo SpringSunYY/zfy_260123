@@ -46,8 +46,8 @@ class StatisticsInfoMapper:
 
             if statistics_indo.statistics_key:
                 # 【性能优化】使用精确匹配而不是模糊查询，否则无法使用索引
-                # 原来: stmt = stmt.where(StatisticsInfoPo.statistics_key.like("%" + str(statistics_indo.statistics_key) + "%"))
-                stmt = stmt.where(StatisticsInfoPo.statistics_key == statistics_indo.statistics_key)
+                stmt = stmt.where(StatisticsInfoPo.statistics_key.like("%" + str(statistics_indo.statistics_key) + "%"))
+                # stmt = stmt.where(StatisticsInfoPo.statistics_key == statistics_indo.statistics_key)
 
             if statistics_indo.content is not None:
                 stmt = stmt.where(StatisticsInfoPo.content == statistics_indo.content)
@@ -74,6 +74,30 @@ class StatisticsInfoMapper:
             return [StatisticsInfo.model_validate(item) for item in result] if result else []
         except Exception as e:
             print(f"查询统计信息列表出错: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
+
+    @classmethod
+    def select_statistics_info_list_by_keys(cls, statistics_keys: List[str]) -> List[StatisticsInfo]:
+        """
+        根据多个key批量查询统计信息列表
+
+        Args:
+            statistics_keys (List[str]): 统计Key列表
+
+        Returns:
+            List[StatisticsInfo]: 统计信息列表
+        """
+        if not statistics_keys:
+            return []
+
+        try:
+            stmt = select(StatisticsInfoPo).where(StatisticsInfoPo.statistics_key.in_(statistics_keys))
+            result = db.session.execute(stmt).scalars().all()
+            return [StatisticsInfo.model_validate(item) for item in result] if result else []
+        except Exception as e:
+            print(f"批量查询统计信息列表出错: {e}")
             import traceback
             traceback.print_exc()
             return []

@@ -211,7 +211,7 @@ export default {
       };
 
       // 核心：设置 notMerge 为 false，不强制刷新整个图表
-      this.chart.setOption(option, { notMerge: false });
+      this.chart.setOption(option);
 
       this.isFirstRender = false;
 

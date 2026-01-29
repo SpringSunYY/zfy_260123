@@ -239,8 +239,8 @@ export default {
               }
             },
             labelLine: {
-              length: 15,
-              length2: 15,
+              length: 5,
+              length2: 10,
               smooth: true,
               lineStyle: {color: 'rgba(255, 255, 255, 0.5)'}
             },
