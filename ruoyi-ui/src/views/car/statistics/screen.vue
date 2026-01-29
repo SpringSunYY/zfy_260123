@@ -12,7 +12,9 @@
         </div>
         <div class="chart-wrapper">
           <KeywordGravityCharts
-            :font-size-range="[12,24]"
+            :font-size-range="[12,36]"
+            :chart-data="brandSalesStatisticsData"
+            :chart-name="brandSalesStatisticsName"
             @item-click="(item) => handleToQuery(item, 'brandName')"/>
         </div>
         <div class="chart-wrapper">
@@ -88,7 +90,12 @@ import BarLineZoomCharts from "@/components/Echarts/BarLineZoomCharts.vue";
 import TableRanking from "@/components/Echarts/TableRanking.vue";
 import LabelValueGrid from "@/components/Echarts/LabelValueList.vue";
 import DateRangePicker from "@/components/Echarts/DateRangePicker.vue";
-import {salesEnergyTypeStatistics, salesMapStatistics, salesPriceStatistics} from "@/api/car/statistics";
+import {
+  salesBrandStatistics,
+  salesEnergyTypeStatistics,
+  salesMapStatistics,
+  salesPriceStatistics
+} from "@/api/car/statistics";
 import dayjs from "dayjs";
 
 export default {
@@ -145,6 +152,9 @@ export default {
       //能源类型
       energyTypeSalesStatisticsData: [],
       energyTypeSalesStatisticsName: "能源类型",
+      //品牌
+      brandSalesStatisticsData: [],
+      brandSalesStatisticsName: "品牌",
     }
   },
   created() {
@@ -160,9 +170,35 @@ export default {
       this.getSalesMapStatisticsData()
       this.getPriceSalesStatisticsData()
       this.getEnergyTypeSalesStatisticsData()
+      this.getBrandSalesStatisticsData()
     },
     getMapDataByClick() {
       this.getSalesMapStatisticsData()
+    },
+    //品牌
+    getBrandSalesStatisticsData() {
+      salesBrandStatistics({
+        startTime: this.query.startTime,
+        endTime: this.query.endTime,
+        address: this.query.address
+      }).then(response => {
+        if (!response.data) return
+        //创建一个map获取到键值对name-key，value-value
+        let map = new Map();
+        for (let i = 0; i < response.data.length; i++) {
+          if (map.has(response.data[i].name)) {
+            map.set(response.data[i].name, map.get(response.data[i].name) + response.data[i].value);
+          } else {
+            map.set(response.data[i].name, response.data[i].value);
+          }
+        }
+        this.brandSalesStatisticsData = Array.from(map.keys()).map(key => {
+          return {
+            name: key,
+            value: map.get(key)
+          }
+        });
+      })
     },
     //能源类型
     getEnergyTypeSalesStatisticsData() {
@@ -254,7 +290,14 @@ export default {
       if (type === 'energyType') {
         this.processEnergyTypeQuery(item, type)
       }
+      if (type === 'brandName') {
+        this.processBrandQuery(item, type)
+      }
       this.getMapDataByClick();
+    },
+    processBrandQuery(item, type) {
+      this.query.brandName = item.name;
+      this.resetLabelQuery(type, item.name)
     },
     processEnergyTypeQuery(item, type) {
       this.query.energyType = item.name;

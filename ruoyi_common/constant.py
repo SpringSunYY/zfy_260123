@@ -216,3 +216,9 @@ class StatisticsConstants:
     ENERGY_TYPE_SALES_STATISTICS_COMMON_TYPE = "3"
     # 能源类型销售统计name
     ENERGY_TYPE_SALES_STATISTICS_COMMON_NAME = "能源类型销量统计"
+    # 品牌销售统计公共key
+    BRAND_SALES_STATISTICS_COMMON_KEY = "car:statistics:brand:sales"
+    # 品牌销售统计公共类型
+    BRAND_SALES_STATISTICS_COMMON_TYPE = "4"
+    # 品牌销售统计name
+    BRAND_SALES_STATISTICS_COMMON_NAME = "品牌销量统计"

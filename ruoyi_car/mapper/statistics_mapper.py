@@ -128,6 +128,39 @@ class StatisticsMapper:
             ]
         except Exception as e:
             print(f"能源销售信息查询出错: {e}")
+            return [] @ classmethod
+    @classmethod
+    def brand_sales_statistics(cls, request: CarStatisticsRequest) -> List[StatisticsPo]:
+        """
+        select sum(sales) as value, brand_name as name,month, city_full_name as city
+        from tb_sales
+        where month >= 202510
+          and month <= 202601
+        group by name, city,month;
+        """
+        try:
+            stmt = select(
+                func.sum(SalesPo.sales).label("value"),
+                SalesPo.brand_name.label("name"),
+                SalesPo.month.label("month"),
+                SalesPo.city_full_name.label("address")
+            )
+            stmt = cls.init_query(request, stmt)
+            stmt = stmt.group_by("name", "address", "month")
+            result = db.session.execute(stmt).mappings().all()
+            if not result:
+                return []
+            return [
+                StatisticsPo(
+                    value=int(item['value']) if item['value'] else 0,
+                    name=str(item['name']) if item['name'] else '',
+                    month=int(item['month']) if item['month'] else 0,
+                    address=str(item['address']) if item['address'] else ''
+                )
+                for item in result
+            ]
+        except Exception as e:
+            print(f"品牌销售信息查询出错: {e}")
             return []
 
     @classmethod

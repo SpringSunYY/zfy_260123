@@ -60,7 +60,7 @@ export default {
       type: Number,
       default: 4
     },
-    // 1. 新增：是否显示 Total 和 Avg
+    // 是否显示 Total 和 Avg
     showExtraInfo: {
       type: Boolean,
       default: true
@@ -70,14 +70,13 @@ export default {
   data() {
     return {
       chart: null,
+      isFirstRender: true // 记录是否是第一次渲染
     };
   },
 
   mounted() {
-    this.$nextTick(() => {
-      this.initChart(this.chartData);
-      window.addEventListener('resize', this.handleResize);
-    });
+    this.initChart();
+    window.addEventListener('resize', this.handleResize);
   },
 
   beforeDestroy() {
@@ -90,14 +89,9 @@ export default {
 
   watch: {
     chartData: {
-      handler(newData) {
-        this.initChart(newData);
-      },
-      deep: true
-    },
-    fontSizeRange: {
       handler() {
-        this.initChart(this.chartData);
+        // 数据变化时更新，但不销毁
+        this.initChart();
       },
       deep: true
     }
@@ -117,8 +111,7 @@ export default {
     getFontSize(value, minDataValue, maxDataValue, minFontSize, maxFontSize) {
       if (maxDataValue === minDataValue) return minFontSize;
       const valueRatio = (value - minDataValue) / (maxDataValue - minDataValue);
-      const calculatedFontSize = minFontSize + valueRatio * (maxFontSize - minFontSize);
-      return Math.max(minFontSize, Math.min(maxFontSize, calculatedFontSize));
+      return minFontSize + valueRatio * (maxFontSize - minFontSize);
     },
 
     truncateName(name, maxLength) {
@@ -126,7 +119,7 @@ export default {
       let width = 0;
       let result = '';
       for (const char of name) {
-        const isFullWidth = /[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF]/.test(char) || char.charCodeAt(0) > 255;
+        const isFullWidth = /[\u4E00-\u9FFF]/.test(char) || char.charCodeAt(0) > 255;
         width += isFullWidth ? 1 : 0.5;
         if (width > maxLength) break;
         result += char;
@@ -134,19 +127,14 @@ export default {
       return result;
     },
 
-    initChart(data) {
-      if (!data || data.length === 0) {
-        if (this.chart) {
-          this.chart.dispose();
-          this.chart = null;
-        }
-        return;
-      }
+    initChart() {
+      const data = this.chartData;
+      if (!data || data.length === 0) return;
 
-      if (this.chart) {
-        this.chart.dispose();
+      // 如果实例不存在才初始化，存在则复用
+      if (!this.chart) {
+        this.chart = echarts.init(this.$refs.chartRef);
       }
-      this.chart = echarts.init(this.$refs.chartRef);
 
       const {min: minChartValue, max: maxChartValue} = this.getMinMaxValue(data);
       const total = this.calculateTotal(data);
@@ -170,38 +158,32 @@ export default {
             color: generateRandomColor(this.defaultColor),
             fontSize: calculatedFontSize
           },
-          itemStyle: {color: 'rgba(0,0,0,0)', borderWidth: 0},
-          symbolSize: calculatedFontSize * 1.5,
+          itemStyle: { color: 'rgba(0,0,0,0)', borderWidth: 0 },
+          symbolSize: calculatedFontSize * 1.4, // 球体大小
         };
       });
-
-      // 保存 this 引用
-      const _this = this;
 
       const option = {
         title: {
           show: true,
           text: this.chartName,
-          textStyle: {fontSize: 16, color: '#ffffff'},
-          top: '5%',
-          left: '5%',
+          textStyle: { fontSize: 16, color: '#ffffff' },
+          top: '5%', left: '5%',
         },
         tooltip: {
           show: true,
           trigger: 'item',
-          formatter: function (params) {
+          formatter: (params) => {
             const percentage = total > 0 ? ((params.data.value / total) * 100).toFixed(1) : '0.0';
             let res = `${params.data.name}: ${params.data.value} (${percentage}%)`;
-
-            // 2. 逻辑修改：根据 showExtraInfo 显示总数和平均值
-            if (_this.showExtraInfo) {
+            if (this.showExtraInfo) {
               res += `<br/><hr style="margin: 5px 0; border: 0; border-top: 1px solid rgba(255,255,255,0.2)"/>`;
               res += `Total: ${total}<br/>Avg: ${avg}`;
             }
             return res;
           },
           backgroundColor: 'rgba(0,0,0,0.7)',
-          textStyle: {color: '#fff'}
+          textStyle: { color: '#fff' }
         },
         series: [{
           // 添加缩放控制配置
@@ -228,9 +210,13 @@ export default {
         }]
       };
 
-      this.chart.setOption(option);
+      // 核心：设置 notMerge 为 false，不强制刷新整个图表
+      this.chart.setOption(option, { notMerge: false });
 
-      // 3. 增加点击事件
+      this.isFirstRender = false;
+
+      // 事件绑定
+      this.chart.off('click');
       this.chart.on('click', (params) => {
         if (params.dataType === 'node') {
           this.$emit('item-click', params.data);

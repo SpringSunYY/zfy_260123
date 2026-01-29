@@ -29,3 +29,13 @@ export function salesEnergyTypeStatistics(params){
     timeout: 30000
   })
 }
+
+//品牌销售信息数据分析
+export function salesBrandStatistics(params){
+  return request({
+    url: '/car/statistics/brand',
+    method: 'get',
+    params,
+    timeout: 30000
+  })
+}
