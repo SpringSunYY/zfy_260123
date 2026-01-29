@@ -5,7 +5,7 @@ from pydantic import Field, BeforeValidator
 from ruoyi_common.base.model import BaseEntity
 from ruoyi_common.base.schema_excel import ExcelField
 from ruoyi_common.base.schema_vo import VoField
-from ruoyi_common.base.transformer import str_to_int
+from ruoyi_common.base.transformer import str_to_int, str_to_float
 
 
 class CarStatisticsRequest(BaseEntity):
@@ -62,12 +62,14 @@ class CarStatisticsRequest(BaseEntity):
     # 最大价格
     max_price: Annotated[
         Optional[float],
+        BeforeValidator(str_to_float),
         Field(default=None, description="最大价格"),
         ExcelField(name="最大价格", action="export")
     ]
     # 最低价格
     min_price: Annotated[
         Optional[float],
+        BeforeValidator(str_to_float),
         Field(default=None, description="最低价格"),
         ExcelField(name="最低价格", action="export")
     ]

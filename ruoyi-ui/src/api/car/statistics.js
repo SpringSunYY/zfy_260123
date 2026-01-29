@@ -5,7 +5,8 @@ export function salesMapStatistics(params){
   return request({
     url: '/car/statistics/map',
     method: 'get',
-    params
+    params,
+    timeout: 30000
   })
 }
 
@@ -14,6 +15,7 @@ export function salesPriceStatistics(params){
   return request({
     url: '/car/statistics/price',
     method: 'get',
-    params
+    params,
+    timeout: 30000
   })
 }

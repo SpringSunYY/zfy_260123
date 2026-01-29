@@ -89,6 +89,7 @@
           icon="el-icon-plus"
           size="mini"
           @click="handleAdd"
+          :disabled="true"
           v-hasPermi="['car:statisticsInfo:add']"
         >新增</el-button>
       </el-col>
@@ -292,7 +293,7 @@ export default {
         { key: 3, label: '公共KEY', visible: true },
         { key: 4, label: 'KEY', visible: true },
         { key: 5, label: '统计内容', visible: true },
-        { key: 6, label: '额外内容', visible: true },
+        { key: 6, label: '额外内容', visible: false },
         { key: 7, label: '描述', visible: true },
         { key: 8, label: '创建时间', visible: true }
       ],

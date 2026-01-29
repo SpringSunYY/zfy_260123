@@ -6,6 +6,7 @@
           <PieGradientCharts
             :chart-data="priceSalesStatisticsData"
             :chart-title="priceSalesStatisticsName"
+            @item-click="(item) => handleToQuery(item, 'price')"
           />
         </div>
         <div class="chart-wrapper">
@@ -18,7 +19,8 @@
         </div>
         <div class="chart-wrapper">
           <div class="chart-wrapper">
-            <TableRanking/>
+            <TableRanking
+            />
           </div>
         </div>
       </el-col>
@@ -34,15 +36,16 @@
         <div class="expert-chart-wrapper">
           <BarLineZoomCharts/>
         </div>
-        <div class="query-chart-wrapper">
-          <LabelValueGrid/>
-        </div>
-      </el-col>
-      <el-col :xs="24" :sm="24" :lg="6">
         <div class="chart-wrapper">
           <ScatterRandomTooltipCharts
             :symbol-size="400"
             @item-click="(item) => handleToQuery(item, 'modelType')"/>
+        </div>
+      </el-col>
+      <el-col :xs="24" :sm="24" :lg="6">
+        <div class="query-chart-wrapper">
+          <LabelValueGrid
+            :data-list="tableQueryList"/>
         </div>
         <div class="chart-wrapper">
           <PiePetalPoseCharts
@@ -99,6 +102,23 @@ export default {
         startTime: dayjs().subtract(2, "month").format('YYYYMM'),
         endTime: dayjs().format('YYYYMM')
       },
+      tableQueryList: [
+        {
+          label: '地区',
+          value: '全国',
+          key: 'address',
+        },
+        {
+          label: '品牌',
+          value: '全部',
+          key: 'brandName',
+        },
+        {
+          label: '价格',
+          value: '全部',
+          key: 'price',
+        }
+      ],
       //销量地图
       salesMapStatisticsData: [],
       salesMapStatisticsName: "销量地图",
@@ -112,14 +132,25 @@ export default {
   methods: {
     getMapData(data) {
       this.query.address = data.name
+      let addressName = data.name
+      if (addressName === '中华人民共和国') {
+        addressName = '中国'
+      }
+      this.resetLabelQuery('address', addressName)
       this.getSalesMapStatisticsData()
       this.getPriceSalesStatisticsData()
     },
+    getMapDataByClick() {
+      this.getSalesMapStatisticsData()
+    },
     //获取价格销量数据
     getPriceSalesStatisticsData() {
-      this.query.minPrice = null
-      this.query.maxPrice = null
-      salesPriceStatistics(this.query).then(response => {
+
+      salesPriceStatistics({
+        ...this.query,
+        maxPrice: null,
+        minPrice: null
+      }).then(response => {
         if (!response.data) return
         console.log(response.data)
         //创建一个map获取到键值对name-key，value-value
@@ -173,13 +204,64 @@ export default {
       this.getSalesMapStatisticsData();
     },
     handleToQuery(item, type) {
-      if (item && item.name) {
-        const routeData = this.$router.resolve({
-          name: 'Query',
-          query: {key: item.name, type: type}
-        });
-        window.open(routeData.href, '_blank');
+      if (!item && !item.name) return
+      if (type === 'price') {
+        this.processPriceQuery(item, type)
       }
+      this.getMapDataByClick();
+    },
+    processPriceQuery(item, type) {
+      // 价格传过来的是'8k以下'、'10w-20w'等格式，解析成最小值和最大值
+      const priceRange = this.parsePriceRange(item.name);
+      this.query.minPrice = priceRange.min;
+      this.query.maxPrice = priceRange.max;
+      this.resetLabelQuery(type, item.name)
+    },
+
+    parsePriceRange(priceStr) {
+      // 处理各种价格范围格式
+      let minPrice = null;
+      let maxPrice = null;
+      console.log(priceStr)
+      if (priceStr.includes('以下')) {
+        // 如 '8k以下', '10w以下'
+        const valueStr = priceStr.replace('以下', '');
+        maxPrice = this.convertPrice(valueStr);
+      } else if (priceStr.includes('以上')) {
+        // 如 '200w以上', '10k以上'
+        const valueStr = priceStr.replace('以上', '');
+        minPrice = this.convertPrice(valueStr);
+      } else if (priceStr.includes('-')) {
+        // 如 '10w-20w', '8k-10k'
+        const range = priceStr.split('-');
+        minPrice = this.convertPrice(range[0]);
+        maxPrice = this.convertPrice(range[1]);
+      }
+
+      return {min: minPrice, max: maxPrice};
+    },
+
+    convertPrice(priceStr) {
+      // 将带单位的价格转换为数值，如 '8k' -> 8000, '10w' -> 100000
+      priceStr = priceStr.toLowerCase();
+
+      if (priceStr.includes('k')) {
+        return parseFloat(priceStr.replace('k', '')) * 1000;
+      } else if (priceStr.includes('w')) {
+        return parseFloat(priceStr.replace('w', '')) * 10000;
+      } else {
+        return parseFloat(priceStr) || 0;
+      }
+    },
+    // 重置标签查询
+    resetLabelQuery(key, value) {
+      this.tableQueryList.forEach(
+        (table) => {
+          if (table.key === key) {
+            table.value = value;
+          }
+        }
+      )
     }
   }
 }

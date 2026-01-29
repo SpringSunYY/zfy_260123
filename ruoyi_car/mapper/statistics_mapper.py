@@ -124,10 +124,10 @@ class StatisticsMapper:
         # 能源类型
         if request.energy_type:
             stmt = stmt.where(SalesPo.energy_type == request.energy_type)
-        # 最高价格
+        # 最高价格（车辆最低价 <= 请求最高价）
         if request.max_price is not None:
-            stmt = stmt.where(SalesPo.max_price <= request.max_price)
-        # 最低价格
+            stmt = stmt.where(SalesPo.min_price <= request.max_price)
+        # 最低价格（车辆最高价 >= 请求最低价）
         if request.min_price is not None:
             stmt = stmt.where(SalesPo.min_price >= request.min_price)
         # 城市
