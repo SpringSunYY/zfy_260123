@@ -119,7 +119,7 @@ class SalesMapper:
         try:
             stmt = select(SalesPo).where(
                 SalesPo.series_id == series_id,
-                SalesPo.city_name == city_name,
+                SalesPo.city_full_name == city_name,
                 SalesPo.month == month
             )
             result = db.session.execute(stmt).scalars().first();
