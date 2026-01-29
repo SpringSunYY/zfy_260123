@@ -27,12 +27,10 @@ class StatisticsInfoMapper:
         Returns:
             List[statistics_info]: 统计信息列表
         """
-        import time
         try:
             # 构建查询条件
             stmt = select(StatisticsInfoPo)
-            
-            t_query_start = time.time()
+
 
             if statistics_indo.id is not None:
                 stmt = stmt.where(StatisticsInfoPo.id == statistics_indo.id)
@@ -69,16 +67,10 @@ class StatisticsInfoMapper:
                 stmt = stmt.where(StatisticsInfoPo.create_time <= end_val)
             if "criterian_meta" in g and g.criterian_meta.page:
                 g.criterian_meta.page.stmt = stmt
-            
-            t_db_start = time.time()
+
             result = db.session.execute(stmt).scalars().all()
-            t_db_end = time.time()
-            
-            # 性能日志
-            print(f"[性能日志] statistics_info_mapper - SQL构建耗时: {(t_db_start - t_query_start)*1000:.2f}ms, "
-                  f"数据库查询耗时: {(t_db_end - t_db_start)*1000:.2f}ms, "
-                  f"结果数: {len(result) if result else 0}")
-            
+
+
             return [StatisticsInfo.model_validate(item) for item in result] if result else []
         except Exception as e:
             print(f"查询统计信息列表出错: {e}")

@@ -38,7 +38,7 @@ export default {
     return {
       // 默认显示最近三个月
       innerValue: [
-        dayjs().subtract(3, "month").format('YYYYMM'),
+        dayjs().subtract(2, "month").format('YYYYMM'),
         dayjs().format('YYYYMM')
       ],
       pickerOptions: {
@@ -48,7 +48,7 @@ export default {
             onClick(picker) {
               const end = new Date();
               const start = new Date();
-              start.setMonth(start.getMonth() - 3);
+              start.setMonth(start.getMonth() - 2);
               picker.$emit("pick", [start, end]);
             }
           },
@@ -57,7 +57,7 @@ export default {
             onClick(picker) {
               const end = new Date();
               const start = new Date();
-              start.setMonth(start.getMonth() - 6);
+              start.setMonth(start.getMonth() - 5);
               picker.$emit("pick", [start, end]);
             }
           },

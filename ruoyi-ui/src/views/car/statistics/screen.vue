@@ -94,7 +94,7 @@ export default {
   data() {
     return {
       query: {
-        startTime: dayjs().subtract(3, "month").format('YYYYMM'),
+        startTime: dayjs().subtract(2, "month").format('YYYYMM'),
         endTime: dayjs().format('YYYYMM')
       },
       salesMapStatisticsData: [],
