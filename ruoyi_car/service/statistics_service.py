@@ -591,7 +591,19 @@ class StatisticsService:
             StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_KEY,
             StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_NAME
         )
-
+    @classmethod
+    def series_sales_statistics(cls, request)-> List[StatisticsVo]:
+        """
+        车系销售信息数据分析
+        """
+        return cls._dimension_statistics(
+            request,
+            lambda req: StatisticsMapper.series_sales_statistics(req),
+            StatisticsConstants.SERIES_SALES_STATISTICS_COMMON_KEY,
+            StatisticsConstants.SERIES_SALES_STATISTICS_COMMON_TYPE,
+            StatisticsConstants.SERIES_SALES_STATISTICS_COMMON_KEY,
+            StatisticsConstants.SERIES_SALES_STATISTICS_COMMON_NAME
+        )
     @classmethod
     def _aggregate_by_dimension(cls, pos: List[StatisticsPo], address: str = None) -> List[StatisticsVo]:
         """

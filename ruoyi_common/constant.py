@@ -234,3 +234,9 @@ class StatisticsConstants:
     MODEL_TYPE_SALES_STATISTICS_COMMON_TYPE = "6"
     # 车型销售数据统计name
     MODEL_TYPE_SALES_STATISTICS_COMMON_NAME = "车型销量统计"
+    # 车系销售数据统计公共key
+    SERIES_SALES_STATISTICS_COMMON_KEY = "car:statistics:series:sales"
+    # 车系销售数据统计公共类型
+    SERIES_SALES_STATISTICS_COMMON_TYPE = "7"
+    # 车系销售数据统计name
+    SERIES_SALES_STATISTICS_COMMON_NAME = "车系销量统计"

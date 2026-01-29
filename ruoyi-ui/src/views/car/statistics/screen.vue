@@ -69,11 +69,13 @@
             :label-show-value="false"
             :chart-data="monthSalesStatisticsData"
             :chart-name="monthSalesStatisticsName"
-           />
+          />
         </div>
         <div class="chart-wrapper">
           <BarRankingZoomCharts
-            @item-click="(item) => handleToQuery(item, 'brandName')"/>
+            :chart-data="seriesSalesStatisticsData"
+            :chart-name="seriesSalesStatisticsName"
+            @item-click="(item) => handleToQuery(item, 'seriesName')"/>
         </div>
       </el-col>
     </el-row>
@@ -101,7 +103,7 @@ import {
   salesBrandStatistics, salesCountryStatistics,
   salesEnergyTypeStatistics,
   salesMapStatistics, salesModelTypeStatistics,
-  salesPriceStatistics
+  salesPriceStatistics, salesSeriesStatistics
 } from "@/api/car/statistics";
 import dayjs from "dayjs";
 
@@ -154,6 +156,11 @@ export default {
           value: '全部',
           key: 'country',
         },
+        {
+          label: '车系',
+          value: '全部',
+          key: 'seriesName',
+        },
       ],
       //销量地图
       salesMapStatisticsData: [],
@@ -176,6 +183,9 @@ export default {
       //月份
       monthSalesStatisticsData: [],
       monthSalesStatisticsName: "月份销量",
+      //车系
+      seriesSalesStatisticsData: [],
+      seriesSalesStatisticsName: "车系排行",
     }
   },
   created() {
@@ -194,9 +204,35 @@ export default {
       this.getBrandSalesStatisticsData()
       this.getCountrySalesStatisticsData()
       this.getModelTypeSalesStatisticsData()
+      this.getSeriesSalesStatisticsData()
     },
     getMapDataByClick() {
       this.getSalesMapStatisticsData()
+    },
+    //车系
+    getSeriesSalesStatisticsData() {
+      salesSeriesStatistics({
+        startTime: this.query.startTime,
+        endTime: this.query.endTime,
+        address: this.query.address
+      }).then(response => {
+        if (!response.data) return
+        //创建一个map获取到键值对name-key，value-value
+        let map = new Map();
+        for (let i = 0; i < response.data.length; i++) {
+          if (map.has(response.data[i].name)) {
+            map.set(response.data[i].name, map.get(response.data[i].name) + response.data[i].value);
+          } else {
+            map.set(response.data[i].name, response.data[i].value);
+          }
+        }
+        this.seriesSalesStatisticsData = Array.from(map.keys()).map(key => {
+          return {
+            name: key,
+            value: map.get(key)
+          }
+        });
+      })
     },
     //车型
     getModelTypeSalesStatisticsData() {
@@ -372,6 +408,7 @@ export default {
       this.getBrandSalesStatisticsData()
       this.getCountrySalesStatisticsData()
       this.getModelTypeSalesStatisticsData()
+      this.getCountrySalesStatisticsData()
     },
     handleToQuery(item, type) {
       if (!item && !item.name) return
@@ -387,10 +424,17 @@ export default {
       if (type === 'country') {
         this.processCountryQuery(item, type)
       }
-      if (type === 'modelType'){
+      if (type === 'modelType') {
         this.processModelTypeQuery(item, type)
       }
+      if (type === 'seriesName') {
+        this.processSeriesQuery(item, type)
+      }
       this.getMapDataByClick();
+    },
+    processSeriesQuery(item, type) {
+      this.query.seriesName = item.name;
+      this.resetLabelQuery(type, item.name)
     },
     processModelTypeQuery(item, type) {
       this.query.modelType = item.name;
@@ -485,7 +529,7 @@ export default {
 
 .query-chart-wrapper {
   margin-top: 2vh;
-  height: 15vh;
+  height: 25vh;
   margin-bottom: 2vh;
 }
 

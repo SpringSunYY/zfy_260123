@@ -60,3 +60,14 @@ export function salesModelTypeStatistics(params){
     timeout: 30000
   })
 }
+
+
+//车系
+export function salesSeriesStatistics(params){
+  return request({
+    url: '/car/statistics/series',
+    method: 'get',
+    params,
+    timeout: 30000
+  })
+}
