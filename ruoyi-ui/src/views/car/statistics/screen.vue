@@ -48,7 +48,7 @@
           <ScatterRandomTooltipCharts
             :chart-data="modelTypeSalesStatisticsData"
             :chart-name="modelTypeSalesStatisticsName"
-            :symbol-size="400"
+            :symbol-size="600"
             @item-click="(item) => handleToQuery(item, 'modelType')"/>
         </div>
       </el-col>
@@ -67,7 +67,9 @@
         <div class="chart-wrapper">
           <PiePetalTransparentPoseCharts
             :label-show-value="false"
-            @item-click="(item) => handleToQuery(item, 'country')"/>
+            :chart-data="monthSalesStatisticsData"
+            :chart-name="monthSalesStatisticsName"
+           />
         </div>
         <div class="chart-wrapper">
           <BarRankingZoomCharts
@@ -171,6 +173,9 @@ export default {
       //车型
       modelTypeSalesStatisticsData: [],
       modelTypeSalesStatisticsName: "车型",
+      //月份
+      monthSalesStatisticsData: [],
+      monthSalesStatisticsName: "月份销量",
     }
   },
   created() {
@@ -303,17 +308,30 @@ export default {
         if (!response.data) return
         //创建一个map获取到键值对name-key，value-value
         let map = new Map();
+        //创建一个月份map 获取到键值对month-key，value-value
+        let monthMap = new Map();
         for (let i = 0; i < response.data.length; i++) {
           if (map.has(response.data[i].name)) {
             map.set(response.data[i].name, map.get(response.data[i].name) + response.data[i].value);
           } else {
             map.set(response.data[i].name, response.data[i].value);
           }
+          if (monthMap.has(response.data[i].month)) {
+            monthMap.set(response.data[i].month, monthMap.get(response.data[i].month) + response.data[i].value);
+          } else {
+            monthMap.set(response.data[i].month, response.data[i].value);
+          }
         }
         this.priceSalesStatisticsData = Array.from(map.keys()).map(key => {
           return {
             name: key,
             value: map.get(key)
+          }
+        });
+        this.monthSalesStatisticsData = Array.from(monthMap.keys()).map(key => {
+          return {
+            name: key,
+            value: monthMap.get(key)
           }
         });
       })
@@ -348,7 +366,12 @@ export default {
     onDateChange(date) {
       this.query.startTime = dayjs(date[0]).format('YYYYMM');
       this.query.endTime = dayjs(date[1]).format('YYYYMM');
-      this.getSalesMapStatisticsData();
+      this.getSalesMapStatisticsData()
+      this.getPriceSalesStatisticsData()
+      this.getEnergyTypeSalesStatisticsData()
+      this.getBrandSalesStatisticsData()
+      this.getCountrySalesStatisticsData()
+      this.getModelTypeSalesStatisticsData()
     },
     handleToQuery(item, type) {
       if (!item && !item.name) return
