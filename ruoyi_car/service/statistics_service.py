@@ -582,53 +582,15 @@ class StatisticsService:
     def energy_type_sales_statistics(cls, request: CarStatisticsRequest) -> List[StatisticsVo]:
         """
         能源销售信息数据分析
-        按月份和能源类型统计销量，支持缓存
         """
-        # 生成月份列表
-        months = DateUtil.generate_months_list(request.start_time, request.end_time)
-
-        # 收集缓存命中的数据和未缓存的月份
-        cached_results = []
-        uncached_months = []
-
-        for month in months:
-            temp_request = CarStatisticsRequest(
-                start_time=month, end_time=month,
-                address=request.address, country=request.country,
-                brand_name=request.brand_name, series_name=request.series_name,
-                model_type=request.model_type, energy_type=request.energy_type,
-                min_price=request.min_price, max_price=request.max_price
-            )
-            stats_key = cls._build_stats_key(temp_request, month,
-                                             StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_KEY)
-            cached_list, cached_data = cls._get_cached_data(stats_key, vo_class=StatisticsVo)
-
-            if cached_list:
-                cached_results.extend(cached_data)
-            else:
-                uncached_months.append(month)
-
-        if not uncached_months:
-            return cached_results
-
-        # 全国查询
-        if not request.address:
-            cls._build_nationwide_dimension_cache(request, months, uncached_months, cached_results,
-                                                   lambda req: StatisticsMapper.energy_type_sales_statistics(req),
-                                                   StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_KEY,
-                                                   StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_TYPE,
-                                                   StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_KEY,
-                                                   StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_NAME)
-        # 省份查询
-        else:
-            cls._build_province_dimension_cache(request, uncached_months, cached_results,
-                                                 lambda req: StatisticsMapper.energy_type_sales_statistics(req),
-                                                 StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_KEY,
-                                                 StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_TYPE,
-                                                 StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_KEY,
-                                                 StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_NAME)
-
-        return cached_results
+        return cls._dimension_statistics(
+            request,
+            lambda req: StatisticsMapper.energy_type_sales_statistics(req),
+            StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_KEY,
+            StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_TYPE,
+            StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_KEY,
+            StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_NAME
+        )
 
     @classmethod
     def _aggregate_by_dimension(cls, pos: List[StatisticsPo], address: str = None) -> List[StatisticsVo]:
@@ -750,58 +712,55 @@ class StatisticsService:
         """
         品牌销售信息数据分析
         """
-        # 生成月份列表
-        months = DateUtil.generate_months_list(request.start_time, request.end_time)
-
-        # 收集缓存命中的数据和未缓存的月份
-        cached_results = []
-        uncached_months = []
-
-        for month in months:
-            temp_request = CarStatisticsRequest(
-                start_time=month, end_time=month,
-                address=request.address, country=request.country,
-                brand_name=request.brand_name, series_name=request.series_name,
-                model_type=request.model_type, energy_type=request.energy_type,
-                min_price=request.min_price, max_price=request.max_price
-            )
-            stats_key = cls._build_stats_key(temp_request, month, StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_KEY)
-            cached_list, cached_data = cls._get_cached_data(stats_key, vo_class=StatisticsVo)
-
-            if cached_list:
-                cached_results.extend(cached_data)
-            else:
-                uncached_months.append(month)
-
-        if not uncached_months:
-            return cached_results
-
-        # 全国查询
-        if not request.address:
-            cls._build_nationwide_dimension_cache(request, months, uncached_months, cached_results,
-                                                   lambda req: StatisticsMapper.brand_sales_statistics(req),
-                                                   StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_KEY,
-                                                   StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_TYPE,
-                                                   StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_KEY,
-                                                   StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_NAME)
-        # 省份查询
-        else:
-            cls._build_province_dimension_cache(request, uncached_months, cached_results,
-                                                 lambda req: StatisticsMapper.brand_sales_statistics(req),
-                                                 StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_KEY,
-                                                 StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_TYPE,
-                                                 StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_KEY,
-                                                 StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_NAME)
-
-        return cached_results
+        return cls._dimension_statistics(
+            request,
+            StatisticsMapper.brand_sales_statistics,
+            StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_KEY,
+            StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_TYPE,
+            StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_KEY,
+            StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_NAME
+        )
 
     @classmethod
-    def country_sales_statistics(cls, request)->List[StatisticsVo]:
+    def country_sales_statistics(cls, request: CarStatisticsRequest) -> List[StatisticsVo]:
         """
         国家销售信息数据分析
         """
+        return cls._dimension_statistics(
+            request,
+            StatisticsMapper.country_sales_statistics,
+            StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_KEY,
+            StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_TYPE,
+            StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_KEY,
+            StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_NAME
+        )
+
+    @classmethod
+    def model_type_sales_statistics(cls, request: CarStatisticsRequest)-> List[StatisticsVo]:
+        """
+        车型类型销售信息数据分析
+        """
+        return cls._dimension_statistics(
+            request,
+            StatisticsMapper.model_type_sales_statistics,
+            StatisticsConstants.MODEL_TYPE_SALES_STATISTICS_COMMON_KEY,
+            StatisticsConstants.MODEL_TYPE_SALES_STATISTICS_COMMON_TYPE,
+            StatisticsConstants.MODEL_TYPE_SALES_STATISTICS_COMMON_KEY,
+            StatisticsConstants.MODEL_TYPE_SALES_STATISTICS_COMMON_NAME
+        )
+        pass
+
+    @classmethod
+    def _dimension_statistics(cls, request: CarStatisticsRequest,
+                               mapper_method,
+                               common_key: str, stat_type: str,
+                               cache_key: str, statistics_name: str) -> List[StatisticsVo]:
+        """
+        维度统计通用方法（品牌、国家等）
+        """
         # 生成月份列表
         months = DateUtil.generate_months_list(request.start_time, request.end_time)
+
         # 收集缓存命中的数据和未缓存的月份
         cached_results = []
         uncached_months = []
@@ -814,7 +773,7 @@ class StatisticsService:
                 model_type=request.model_type, energy_type=request.energy_type,
                 min_price=request.min_price, max_price=request.max_price
             )
-            stats_key = cls._build_stats_key(temp_request, month, StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_KEY)
+            stats_key = cls._build_stats_key(temp_request, month, cache_key)
             cached_list, cached_data = cls._get_cached_data(stats_key, vo_class=StatisticsVo)
 
             if cached_list:
@@ -828,18 +787,14 @@ class StatisticsService:
         # 全国查询
         if not request.address:
             cls._build_nationwide_dimension_cache(request, months, uncached_months, cached_results,
-                                                  lambda req: StatisticsMapper.country_sales_statistics(req),
-                                                  StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_KEY,
-                                                  StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_TYPE,
-                                                  StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_KEY,
-                                                  StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_NAME)
+                                                   mapper_method,
+                                                   cache_key, stat_type, common_key,
+                                                   statistics_name)
         # 省份查询
         else:
             cls._build_province_dimension_cache(request, uncached_months, cached_results,
-                                                lambda req: StatisticsMapper.country_sales_statistics(req),
-                                                StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_KEY,
-                                                StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_TYPE,
-                                                StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_KEY,
-                                                StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_NAME)
+                                                 mapper_method,
+                                                 cache_key, stat_type, common_key,
+                                                 statistics_name)
 
         return cached_results

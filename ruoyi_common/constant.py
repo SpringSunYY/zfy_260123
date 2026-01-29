@@ -228,3 +228,9 @@ class StatisticsConstants:
     COUNTRY_SALES_STATISTICS_COMMON_TYPE = "5"
     # 国家销售统计name
     COUNTRY_SALES_STATISTICS_COMMON_NAME = "国家销量统计"
+    # 车型销售数据统计公共key
+    MODEL_TYPE_SALES_STATISTICS_COMMON_KEY = "car:statistics:model:sales"
+    # 车型销售数据统计公共类型
+    MODEL_TYPE_SALES_STATISTICS_COMMON_TYPE = "6"
+    # 车型销售数据统计name
+    MODEL_TYPE_SALES_STATISTICS_COMMON_NAME = "车型销量统计"

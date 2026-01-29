@@ -46,6 +46,8 @@
         </div>
         <div class="chart-wrapper">
           <ScatterRandomTooltipCharts
+            :chart-data="modelTypeSalesStatisticsData"
+            :chart-name="modelTypeSalesStatisticsName"
             :symbol-size="400"
             @item-click="(item) => handleToQuery(item, 'modelType')"/>
         </div>
@@ -96,7 +98,7 @@ import DateRangePicker from "@/components/Echarts/DateRangePicker.vue";
 import {
   salesBrandStatistics, salesCountryStatistics,
   salesEnergyTypeStatistics,
-  salesMapStatistics,
+  salesMapStatistics, salesModelTypeStatistics,
   salesPriceStatistics
 } from "@/api/car/statistics";
 import dayjs from "dayjs";
@@ -166,6 +168,9 @@ export default {
       //国家
       countrySalesStatisticsData: [],
       countrySalesStatisticsName: "国家",
+      //车型
+      modelTypeSalesStatisticsData: [],
+      modelTypeSalesStatisticsName: "车型",
     }
   },
   created() {
@@ -183,9 +188,35 @@ export default {
       this.getEnergyTypeSalesStatisticsData()
       this.getBrandSalesStatisticsData()
       this.getCountrySalesStatisticsData()
+      this.getModelTypeSalesStatisticsData()
     },
     getMapDataByClick() {
       this.getSalesMapStatisticsData()
+    },
+    //车型
+    getModelTypeSalesStatisticsData() {
+      salesModelTypeStatistics({
+        startTime: this.query.startTime,
+        endTime: this.query.endTime,
+        address: this.query.address
+      }).then(response => {
+        if (!response.data) return
+        //创建一个map获取到键值对name-key，value-value
+        let map = new Map();
+        for (let i = 0; i < response.data.length; i++) {
+          if (map.has(response.data[i].name)) {
+            map.set(response.data[i].name, map.get(response.data[i].name) + response.data[i].value);
+          } else {
+            map.set(response.data[i].name, response.data[i].value);
+          }
+        }
+        this.modelTypeSalesStatisticsData = Array.from(map.keys()).map(key => {
+          return {
+            name: key,
+            value: map.get(key)
+          }
+        });
+      })
     },
     //国家
     getCountrySalesStatisticsData() {
@@ -333,7 +364,14 @@ export default {
       if (type === 'country') {
         this.processCountryQuery(item, type)
       }
+      if (type === 'modelType'){
+        this.processModelTypeQuery(item, type)
+      }
       this.getMapDataByClick();
+    },
+    processModelTypeQuery(item, type) {
+      this.query.modelType = item.name;
+      this.resetLabelQuery(type, item.name)
     },
     processCountryQuery(item, type) {
       this.query.country = item.name;

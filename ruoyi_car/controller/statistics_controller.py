@@ -104,3 +104,22 @@ def country_sales_statistics(dto: CarStatisticsRequest):
     if request.address and request.address == "中华人民共和国":
         request.address = None
     return AjaxResponse.from_success(data=statistics_service.country_sales_statistics(request))
+
+
+#车型
+@gen.route('/model_type', methods=['GET'])
+@QueryValidator(is_page=True)
+@PreAuthorize(HasPerm("car:sales:statistics"))
+@JsonSerializer()
+def model_type_sales_statistics(dto: CarStatisticsRequest):
+    """
+        车型销售信息数据分析
+    """
+    request = CarStatisticsRequest()
+    # 转换PO到Entity对象
+    for attr in dto.model_fields.keys():
+        if hasattr(request, attr):
+            setattr(request, attr, getattr(dto, attr))
+    if request.address and request.address == "中华人民共和国":
+        request.address = None
+    return AjaxResponse.from_success(data=statistics_service.model_type_sales_statistics(request))
