@@ -71,11 +71,29 @@ export default {
             }
           },
           {
+            text: "最近两年",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setFullYear(start.getFullYear() - 2);
+              picker.$emit("pick", [start, end]);
+            }
+          },
+          {
             text: "最近三年",
             onClick(picker) {
               const end = new Date();
               const start = new Date();
               start.setFullYear(start.getFullYear() - 3);
+              picker.$emit("pick", [start, end]);
+            }
+          },
+          {
+            text: "最近五年",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setFullYear(start.getFullYear() - 5);
               picker.$emit("pick", [start, end]);
             }
           }

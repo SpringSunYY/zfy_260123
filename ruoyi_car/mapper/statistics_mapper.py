@@ -6,7 +6,8 @@ from sqlalchemy.sql import select
 from ruoyi_admin.ext import db
 from ruoyi_car.domain.po.sales_po import SalesPo
 from ruoyi_car.domain.statistics.dto import CarStatisticsRequest
-from ruoyi_car.domain.statistics.po.statistics_po import MapStatisticsPo, StatisticsPo, PriceStatisticsPo
+from ruoyi_car.domain.statistics.po.statistics_po import MapStatisticsPo, StatisticsPo, PriceStatisticsPo, \
+    SalesPredictPo
 
 
 class StatisticsMapper:
@@ -19,7 +20,7 @@ class StatisticsMapper:
         """
         try:
             sql_str = str(stmt)
-            
+
             # 获取 dialect
             dialect = None
             try:
@@ -29,7 +30,7 @@ class StatisticsMapper:
                         dialect = conn.dialect
             except Exception:
                 pass
-            
+
             # 编译获取参数
             params = {}
             if dialect:
@@ -38,7 +39,7 @@ class StatisticsMapper:
                     params = compiled.params or {}
                 except Exception:
                     pass
-            
+
             # 替换参数
             for key, value in params.items():
                 placeholder = f":{key}"
@@ -49,7 +50,7 @@ class StatisticsMapper:
                 else:
                     replacement = str(value)
                 sql_str = sql_str.replace(placeholder, replacement)
-            
+
             print(f"[SQL日志] {method_name}: {sql_str}")
 
         except Exception as e:
@@ -336,16 +337,54 @@ class StatisticsMapper:
         return []
 
     @classmethod
-    def init_query(cls, request: CarStatisticsRequest, stmt):
+    def sales_predict_statistics(cls, request: CarStatisticsRequest) -> List[SalesPredictPo]:
+        """
+        查询到每个月的销量，每个城市，这个查询不会因为查询时间范围
+        SELECT avg(tb_sales.sales)     AS avg_sales,
+               max(tb_sales.sales)     AS max_sales,
+               min(tb_sales.sales)     AS min_sales,
+               tb_sales.city_full_name AS address,
+               tb_sales.month          AS month
+        FROM tb_sales
+        WHERE tb_sales.brand_name = '比亚迪'
+        GROUP BY address, month
+        """
+        try:
+            stmt = select(
+                func.sum(SalesPo.sales).label("value"),
+                SalesPo.city_full_name.label("address"),
+                SalesPo.month.label("month")
+            )
+            stmt = cls.init_query(request, stmt, query_month=False)
+            stmt = stmt.group_by("address", "month")
+            result = db.session.execute(stmt).mappings().all()
+            if not result:
+                return []
+            # 打印 SQL 日志
+            cls._print_sql_log(stmt, "sales_predict_statistics")
+            return [
+                SalesPredictPo(
+                    value=float(item['value']) if item['value'] else 0,
+                    address=str(item['address']) if item['address'] else '',
+                    month=int(item['month']) if item['month'] else 0
+                )
+                for item in result
+            ]
+        except Exception as e:
+            print(f"销售预测信息查询出错: {e}")
+            return []
+
+    @classmethod
+    def init_query(cls, request: CarStatisticsRequest, stmt, query_month=True):
         """
         初始化查询条件
         支持所有查询参数：时间、国家、品牌、系列、车型、能源类型、价格、城市
         """
         # 开始时间
-        if request.start_time:
+        if query_month and request.start_time:
             stmt = stmt.where(SalesPo.month >= request.start_time)
         # 结束时间
-        if request.end_time:
+        if query_month and request.end_time:
             stmt = stmt.where(SalesPo.month <= request.end_time)
         # 国家
         if request.country:

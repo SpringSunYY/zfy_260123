@@ -1,12 +1,13 @@
 # stdlib imports
 import json
-from typing import List, Optional
+from typing import List, Optional, Dict
+from collections import defaultdict
 
 # project imports
 from ruoyi_car.domain.entity import StatisticsInfo
 from ruoyi_car.domain.statistics.dto import CarStatisticsRequest
-from ruoyi_car.domain.statistics.po.statistics_po import MapStatisticsPo, PriceStatisticsPo, StatisticsPo
-from ruoyi_car.domain.statistics.vo.statistics_vo import MapStatisticsVo, StatisticsVo
+from ruoyi_car.domain.statistics.po.statistics_po import MapStatisticsPo, PriceStatisticsPo, StatisticsPo, SalesPredictPo
+from ruoyi_car.domain.statistics.vo.statistics_vo import MapStatisticsVo, StatisticsVo, SalesPredictVo
 from ruoyi_car.mapper.statistics_mapper import StatisticsMapper
 from ruoyi_car.service.statistics_info_service import StatisticsInfoService
 from ruoyi_common.constant import StatisticsConstants, ConfigConstants
@@ -180,25 +181,39 @@ class StatisticsService:
         return f"{common_key}:{province}:{month}:{country}:{brand}:{series}:{model}:{energy}:{min_price}:{max_price}"
 
     @classmethod
-    def _get_cached_data(cls, stats_key: str, vo_class=None) -> tuple:
+    def _get_cached_data_batch(cls, stats_keys: List[str], vo_class=None) -> dict:
         """
-        从缓存获取单个Key的数据
-        返回: (缓存记录列表, 解析后的数据列表)
-        vo_class: 可选，指定返回的Vo类型（MapStatisticsVo 或 StatisticsVo）
+        批量从缓存获取数据
+        说明：使用 IN 查询一次获取所有 Key 的缓存数据
+        返回: {stats_key: (cached_list, parsed_data)}
         """
+        if not stats_keys:
+            return {}
+
         try:
-            statistics_info = StatisticsInfo(statistics_key=stats_key)
-            cached_list = StatisticsInfoService.select_statistics_info_list(statistics_info)
+            # 批量查询缓存
+            cached_list = StatisticsInfoService.select_statistics_info_list_by_keys(stats_keys)
 
-            if not cached_list:
-                return ([], [])
+            # 构建 Key -> 缓存记录的映射
+            key_to_record = {item.statistics_key: item for item in cached_list}
 
-            cached_item = cached_list[0]
-            return cls._parse_cached_data(cached_item, vo_class)
+            # 解析每个缓存记录
+            result = {}
+            for key in stats_keys:
+                if key in key_to_record:
+                    cached_item = key_to_record[key]
+                    parsed_data = cls._parse_cached_data(cached_item, vo_class)
+                    result[key] = parsed_data
+                else:
+                    # 缓存未命中
+                    result[key] = ([], [])
+
+            return result
 
         except Exception as e:
-            print(f"获取缓存数据出错: {e}")
-            return ([], [])
+            print(f"批量获取缓存数据出错: {e}")
+            # 返回空结果
+            return {key: ([], []) for key in stats_keys}
 
     @classmethod
     def _get_cached_data_batch(cls, stats_keys: List[str], vo_class=None) -> dict:
@@ -250,28 +265,25 @@ class StatisticsService:
             content_data = json.loads(cached_item.content) if cached_item.content else []
         except json.JSONDecodeError as e:
             print(f"[缓存错误] JSON解析失败: key={cached_item.statistics_key}, 错误={e}")
-            print(f"[缓存错误] content长度={content_len}")
-            print(f"[缓存错误] content前200字符: {str(cached_item.content)[:200] if cached_item.content else 'None'}")
-            print(f"[缓存错误] content后200字符: {str(cached_item.content)[-200:] if cached_item.content else 'None'}")
             return ([], [])
 
-        # 如果指定了vo_class，使用vo_class，否则使用通用的StatisticsVo
+        results = []
+        # 如果指定了vo_class，使用vo_class，否则使用通用的 StatisticsVo
         VoClass = vo_class if vo_class else StatisticsVo
 
-        results = []
         for item in content_data:
-            # 尝试获取month字段，如果没有则忽略
-            month = item.get('month', 0)
-
-            vo = VoClass(
-                name=item.get('name', ''),
-                value=item.get('value', 0),
+            try:
+                vo = VoClass(**item)
+            except Exception as e:
+                # 字段不匹配时，忽略错误，手动构建基础对象
+                print(f"[缓存解析] 字段不匹配: {e}，尝试使用默认字段")
+                vo = SalesPredictVo(
                 tooltipText=item.get('tooltipText', ''),
-                moreInfo=item.get('moreInfo', '')
+                    value=item.get('value', 0),
+                    month=item.get('month', 0),
+                    is_predict=item.get('is_predict', False)
             )
-            # 如果有month字段且Vo支持，尝试设置
-            if hasattr(vo, 'month') and month:
-                vo.month = month
+            
             results.append(vo)
 
         return ([cached_item], results)
@@ -285,8 +297,15 @@ class StatisticsService:
         如果缓存已存在则更新，不存在则新增
         """
         try:
-            # 序列化数据
-            data_dicts = [vo.dict() for vo in data]
+            # 序列化数据 (支持 Vo 和 Po 对象)
+            data_dicts = []
+            for item in data:
+                if hasattr(item, 'dict'):
+                    data_dicts.append(item.dict())
+                elif hasattr(item, '__dict__'):
+                    data_dicts.append(item.__dict__)
+                else:
+                    data_dicts.append(item)
             content_str = json.dumps(data_dicts, ensure_ascii=False)
 
             existing_info = StatisticsInfo(statistics_key=stats_key)
@@ -643,8 +662,9 @@ class StatisticsService:
             StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_TYPE,
             StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_NAME
         )
+
     @classmethod
-    def series_sales_statistics(cls, request)-> List[StatisticsVo]:
+    def series_sales_statistics(cls, request) -> List[StatisticsVo]:
         """
         车系销售信息数据分析
         """
@@ -683,7 +703,7 @@ class StatisticsService:
         )
 
     @classmethod
-    def model_type_sales_statistics(cls, request: CarStatisticsRequest)-> List[StatisticsVo]:
+    def model_type_sales_statistics(cls, request: CarStatisticsRequest) -> List[StatisticsVo]:
         """
         车型类型销售信息数据分析
         """
@@ -697,8 +717,8 @@ class StatisticsService:
 
     @classmethod
     def _dimension_statistics(cls, request: CarStatisticsRequest,
-                               mapper_method, common_key: str, stat_type: str,
-                               statistics_name: str) -> List[StatisticsVo]:
+                              mapper_method, common_key: str, stat_type: str,
+                              statistics_name: str) -> List[StatisticsVo]:
         """
         维度统计通用方法（品牌、国家等）
         """
@@ -739,13 +759,13 @@ class StatisticsService:
         # 全国查询
         if not request.address:
             cls._build_nationwide_dimension_cache(request, months, uncached_months, cached_results,
-                                                   mapper_method, stat_type, common_key,
-                                                   statistics_name)
+                                                  mapper_method, stat_type, common_key,
+                                                  statistics_name)
         # 省份查询
         else:
             cls._build_province_dimension_cache(request, uncached_months, cached_results,
-                                                 mapper_method, stat_type, common_key,
-                                                 statistics_name)
+                                                mapper_method, stat_type, common_key,
+                                                statistics_name)
 
         return cached_results
 
@@ -882,3 +902,325 @@ class StatisticsService:
                                stat_type=stat_type, common_key=common_key,
                                statistics_name=statistics_name)
             cached_results.extend(month_results)
+
+    @classmethod
+    def sales_predict_statistics(cls, request) -> List[SalesPredictVo]:
+        """
+        销售预测统计
+        """
+        # 1. 读取配置
+        prodict_num_str = SysConfigService.select_config_by_key(ConfigConstants.PREDICT_MONTH_NUM)
+        prodict_num = int(prodict_num_str) if prodict_num_str else 6
+
+        # 读取数据库时间范围
+        prodict_start_month_str = SysConfigService.select_config_by_key(ConfigConstants.CURRENT_PREDICT_START_MONTH)
+        prodict_start_month = int(prodict_start_month_str) if prodict_start_month_str else 202212
+        prodict_end_month_str = SysConfigService.select_config_by_key(ConfigConstants.CURRENT_PREDICT_END_MONTH)
+        prodict_end_month = int(prodict_end_month_str) if prodict_end_month_str else 202512
+
+        # 2. 构建缓存 Key
+        stats_key = cls._build_stats_key(request, f"{prodict_start_month}-{prodict_end_month}", StatisticsConstants.SALES_PREDICT_COMMON_KEY)
+
+        # 3. 查询缓存
+        cached_item = StatisticsInfoService.select_statistics_info_by_key(stats_key)
+        if cached_item:
+            cached_list, cached_data = cls._parse_cached_data(cached_item, vo_class=SalesPredictVo)
+            if cached_data:
+                return cached_data
+
+        # 4. 走数据库
+        raw_data: List[SalesPredictPo] = StatisticsMapper.sales_predict_statistics(request)
+        if not raw_data:
+            return []
+
+        # 5. 聚合数据
+        from collections import defaultdict
+        nationwide_data = defaultdict(list)
+        province_data = defaultdict(lambda: defaultdict(list))
+
+        for item in raw_data:
+            address = item.address or ""
+            parts = address.split(" ")
+            province = parts[0] if len(parts) > 0 else address
+
+            if item.value is not None and item.value > 0:
+                nationwide_data[item.month].append(item.value)
+                province_data[province][item.month].append(item.value)
+
+        # 6. 检查数据并生成预测月份
+        sorted_nationwide_months = sorted(nationwide_data.keys())
+        if not sorted_nationwide_months:
+            return []
+
+        last_history_month = sorted_nationwide_months[-1]
+        future_months = cls._generate_future_months(last_history_month, prodict_num)
+
+        # 7. 计算全国预测参数
+        monthly_data_dict = cls._aggregate_monthly_data(raw_data)
+        params = cls._calculate_predict_params(monthly_data_dict)
+
+        # 8. 构建全国结果
+        all_results_nationwide = cls._build_predict_results(
+            sorted_nationwide_months, nationwide_data, future_months, params
+        )
+
+        # 9. 省份预测
+        all_results_provinces = defaultdict(list)
+        stats_name = StatisticsConstants.SALES_PREDICT_COMMON_NAME
+
+        for province, monthly_data in province_data.items():
+            if not monthly_data:
+                continue
+
+            sorted_months_p = sorted(monthly_data.keys())
+            last_history_month_p = sorted_months_p[-1]
+
+            # 省份缓存 Key
+            province_request = CarStatisticsRequest(address=province)
+            province_request = cls._copy_request_params(request, province_request)
+            province_stats_key = cls._build_stats_key(
+                province_request, f"{sorted_months_p[0]}-{last_history_month_p}",
+                StatisticsConstants.SALES_PREDICT_COMMON_KEY
+            )
+
+            # 计算省份预测
+            province_monthly = {m: sum(values) for m, values in monthly_data.items()}
+            params_p = cls._calculate_predict_params(province_monthly)
+            future_months_p = cls._generate_future_months(last_history_month_p, prodict_num)
+
+            # 构建省份结果
+            province_results = cls._build_predict_results(
+                sorted_months_p, monthly_data, future_months_p, params_p
+            )
+            all_results_provinces[province] = province_results
+
+            # 保存省份缓存
+            print(f"SAVE CACHE [Province]: {province} -> {province_stats_key}")
+            cls._save_to_cache(province_stats_key, province_results, province,
+                               stat_type=StatisticsConstants.SALES_PREDICT_COMMON_TYPE,
+                               common_key=StatisticsConstants.SALES_PREDICT_COMMON_KEY,
+                               statistics_name=stats_name)
+
+        # 10. 保存全国缓存
+        cls._save_to_cache(stats_key, all_results_nationwide, request.address,
+                           stat_type=StatisticsConstants.SALES_PREDICT_COMMON_TYPE,
+                           common_key=StatisticsConstants.SALES_PREDICT_COMMON_KEY,
+                           statistics_name=stats_name)
+
+        # 11. 返回结果
+        if not request.address:
+            return all_results_nationwide
+        else:
+            province_name = cls._extract_province_from_address(request.address)
+            return all_results_provinces.get(province_name, [])
+
+    @classmethod
+    def _generate_future_months(cls, last_month: int, num: int) -> List[int]:
+        """生成预测月份列表"""
+        future_months = []
+        current_year = last_month // 100
+        current_month = last_month % 100
+        for i in range(1, num + 1):
+            next_month = current_month + i
+            next_year = current_year + (next_month - 1) // 12
+            valid_month = (next_month - 1) % 12 + 1
+            future_months.append(next_year * 100 + valid_month)
+        return future_months
+
+    @classmethod
+    def _aggregate_monthly_data(cls, raw_data: List[SalesPredictPo]) -> Dict[int, float]:
+        """按月份汇总数据"""
+        monthly_data_dict = {}
+        for item in raw_data:
+            if item.month and item.value and item.value > 0:
+                monthly_data_dict[item.month] = monthly_data_dict.get(item.month, 0) + item.value
+        return monthly_data_dict
+
+    @classmethod
+    def _calculate_predict_params(cls, monthly_data: Dict[int, float]) -> Dict:
+        """计算预测参数（EWMA、趋势、季节性因子）"""
+        sorted_months = sorted(monthly_data.keys())
+        recent_12_months = sorted_months[-12:]
+        recent_values = [monthly_data[m] for m in recent_12_months]
+
+        # 季节性因子
+        month_sums = {}
+        for month_key, value in monthly_data.items():
+            month_of_year = month_key % 100
+            if month_of_year not in month_sums:
+                month_sums[month_of_year] = []
+            month_sums[month_of_year].append(value)
+
+        month_avgs = {}
+        month_counts = {}
+        for m in range(1, 13):
+            if m in month_sums and month_sums[m]:
+                month_avgs[m] = sum(month_sums[m]) / len(month_sums[m])
+                month_counts[m] = len(month_sums[m])
+            else:
+                month_avgs[m] = 0
+                month_counts[m] = 0
+
+        valid_avgs = [v for v in month_avgs.values() if v > 0]
+        overall_avg = sum(valid_avgs) / len(valid_avgs) if valid_avgs else 0
+
+        seasonal_factors = {}
+        for m in range(1, 13):
+            if month_avgs.get(m, 0) > 0 and overall_avg > 0:
+                factor = month_avgs[m] / overall_avg
+                factor = max(0.6, min(1.4, factor))
+                if month_counts[m] == 1:
+                    factor = factor * 0.3 + 1.0 * 0.7
+                seasonal_factors[m] = factor
+            else:
+                seasonal_factors[m] = 1.0
+
+        # EWMA
+        ewma = 0
+        weight_sum = 0
+        for i, value in enumerate(reversed(recent_values)):
+            weight = 0.7 ** i
+            ewma += value * weight
+            weight_sum += weight
+        ewma = ewma / weight_sum if weight_sum > 0 else sum(recent_values) / len(recent_values)
+
+        # 趋势
+        last_3_avg = sum(recent_values[-3:]) / 3
+        prev_3_avg = sum(recent_values[-6:-3]) / 3 if len(recent_values) >= 6 else last_3_avg
+        trend_rate = last_3_avg / prev_3_avg if prev_3_avg > 0 else 1.0
+        trend_rate = max(0.8, min(1.2, trend_rate))
+
+        return {
+            'ewma': ewma,
+            'trend_rate': trend_rate,
+            'seasonal_factors': seasonal_factors,
+            'recent_values': recent_values
+        }
+
+    @classmethod
+    def _build_predict_results(cls, history_months: List[int], history_data: Dict,
+                                future_months: List[int], params: Dict) -> List[SalesPredictVo]:
+        """构建预测结果"""
+        results = []
+
+        # 历史数据
+        for month in history_months:
+            values = history_data.get(month, [])
+            if values:
+                total_value = sum(values) if isinstance(values, list) else values
+                results.append(SalesPredictVo(
+                    tooltipText=f"实际销量为：{int(total_value)}",
+                    value=int(total_value),
+                    month=month,
+                    is_predict=False
+                ))
+
+        # 预测数据
+        ewma = params['ewma']
+        trend_rate = params['trend_rate']
+        seasonal_factors = params['seasonal_factors']
+        recent_values = params['recent_values']
+
+        for idx, future_month in enumerate(future_months):
+            month_factor = seasonal_factors.get(future_month % 100, 1.0)
+            steps = idx + 1
+            step_trend = pow(trend_rate, 1.0 / 3) ** steps
+            predicted_value = ewma * step_trend * month_factor
+
+            # 限制范围
+            min_recent = min(recent_values) * 0.6
+            max_recent = max(recent_values) * 1.3
+            predicted_value = max(min_recent, min(predicted_value, max_recent))
+
+            results.append(SalesPredictVo(
+                tooltipText=f"预测销量为：{int(predicted_value)}",
+                value=int(predicted_value),
+                month=future_month,
+                is_predict=True
+            ))
+
+        return results
+
+    @classmethod
+    def _build_nationwide_predict_cache(cls, request: CarStatisticsRequest, history_months: List[int],
+                                        uncached_months: List[int],
+                                        cached_results: List[SalesPredictPo]) -> None:
+        """
+        构建全国预测的原始数据缓存
+        """
+        # 收集所有出现过的省份
+        all_provinces = set()
+        for month in uncached_months:
+            temp_request = CarStatisticsRequest(start_time=month, end_time=month)
+            temp_request = cls._copy_request_params(request, temp_request)
+            raw_data = StatisticsMapper.sales_predict_statistics(temp_request)
+            for item in raw_data:
+                province = item.address.split(' ')[0] if ' ' in item.address else item.address
+                all_provinces.add(province)
+
+        # 为每个未缓存的月份构建缓存
+        for month in uncached_months:
+            temp_request = CarStatisticsRequest(start_time=month, end_time=month)
+            temp_request = cls._copy_request_params(request, temp_request)
+            raw_data = StatisticsMapper.sales_predict_statistics(temp_request)
+            
+            # 转换为 Po 对象并按省份分组
+            provinces_data = {}
+            for item in raw_data:
+                province = item.address.split(' ')[0] if ' ' in item.address else item.address
+                if province not in provinces_data:
+                    provinces_data[province] = []
+                provinces_data[province].append(item)
+
+            # 为每个已知省份保存缓存
+            for province in all_provinces:
+                province_data = provinces_data.get(province, [])
+                province_request = cls._build_request_with_province(request, province, month)
+                stats_key = cls._build_stats_key(province_request, month,
+                                                 StatisticsConstants.SALES_PREDICT_COMMON_KEY)
+                cls._save_to_cache(stats_key, province_data, province,
+                                   stat_type=StatisticsConstants.SALES_PREDICT_COMMON_TYPE,
+                                   common_key=StatisticsConstants.SALES_PREDICT_COMMON_KEY,
+                                   statistics_name=StatisticsConstants.SALES_PREDICT_COMMON_NAME)
+            
+            # 保存月份汇总缓存（全国数据）
+            month_key = cls._build_stats_key(request, month, StatisticsConstants.SALES_PREDICT_COMMON_KEY)
+            # 计算全国该月的汇总数据 
+            total_sales = sum(item.avg_sales for item in raw_data)
+            count = len(raw_data)
+            avg_sales = total_sales / count if count > 0 else 0
+            
+            # 构建全国汇总的 Po
+            nationwide_po = SalesPredictPo(
+                address="全国",
+                avg_sales=avg_sales,
+                max_sales=max((item.max_sales for item in raw_data), default=0),
+                min_sales=min((item.min_sales for item in raw_data), default=0),
+                month=month
+            )
+            cls._save_to_cache(month_key, [nationwide_po], None,
+                               stat_type=StatisticsConstants.SALES_PREDICT_COMMON_TYPE,
+                               common_key=StatisticsConstants.SALES_PREDICT_COMMON_KEY,
+                               statistics_name=StatisticsConstants.SALES_PREDICT_COMMON_NAME)
+            
+            # 同时更新内存中的缓存结果列表，方便后续计算
+            cached_results.extend(raw_data)
+
+    @classmethod
+    def _build_province_predict_cache(cls, request: CarStatisticsRequest, uncached_months: List[int],
+                                      cached_results: List[SalesPredictPo]) -> None:
+        """构建省份预测的原始数据缓存"""
+        for month in uncached_months:
+            temp_request = CarStatisticsRequest(
+                start_time=month, end_time=month, address=request.address
+            )
+            temp_request = cls._copy_request_params(request, temp_request)
+
+            db_results = StatisticsMapper.sales_predict_statistics(temp_request)
+
+            stats_key = cls._build_stats_key(temp_request, month, StatisticsConstants.SALES_PREDICT_COMMON_KEY)
+            cls._save_to_cache(stats_key, db_results, request.address,
+                               stat_type=StatisticsConstants.SALES_PREDICT_COMMON_TYPE,
+                               common_key=StatisticsConstants.SALES_PREDICT_COMMON_KEY,
+                               statistics_name=StatisticsConstants.SALES_PREDICT_COMMON_NAME)
+            cached_results.extend(db_results)

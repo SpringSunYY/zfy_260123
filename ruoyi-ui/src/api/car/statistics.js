@@ -71,3 +71,14 @@ export function salesSeriesStatistics(params){
     timeout: 30000
   })
 }
+
+
+//销量预测
+export function salesPredictStatistics(params){
+  return request({
+    url: '/car/statistics/sales_predict',
+    method: 'get',
+    params,
+    timeout: 30000
+  })
+}

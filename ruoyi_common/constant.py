@@ -195,6 +195,12 @@ class ConfigConstants:
     STATISTICS_PRICE_RANGE = "statistics:price:range"
     # 综合评分
     CAR_OVERALL_SCORE_WEIGHT = "car:overall:score:weight"
+    # 预测月份数
+    PREDICT_MONTH_NUM = "car:predict:month:num"
+    # 预测开始月份
+    CURRENT_PREDICT_START_MONTH = "car:predict:start:month"
+    # 预测的结束月份
+    CURRENT_PREDICT_END_MONTH = "car:predict:end:month"
 
 
 class StatisticsConstants:
@@ -240,3 +246,9 @@ class StatisticsConstants:
     SERIES_SALES_STATISTICS_COMMON_TYPE = "7"
     # 车系销售数据统计name
     SERIES_SALES_STATISTICS_COMMON_NAME = "车系销量统计"
+    # 销量预测公共key
+    SALES_PREDICT_COMMON_KEY = "car:statistics:sales:predict"
+    # 销量预测公共类型
+    SALES_PREDICT_COMMON_TYPE = "8"
+    # 销量预测name
+    SALES_PREDICT_COMMON_NAME = "销量预测"

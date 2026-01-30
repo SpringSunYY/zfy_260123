@@ -4,7 +4,9 @@ from ruoyi_car.service.statistics_service import StatisticsService
 from ruoyi_common.base.model import AjaxResponse
 from ruoyi_common.descriptor.serializer import JsonSerializer
 from ruoyi_common.descriptor.validator import QueryValidator
+from ruoyi_common.constant import ConfigConstants
 from ruoyi_framework.descriptor.permission import HasPerm, PreAuthorize
+from ruoyi_system.service import SysConfigService
 
 # 使用 controller/__init__.py 中定义的蓝图
 gen = statistics_bp
@@ -142,3 +144,23 @@ def series_sales_statistics(dto: CarStatisticsRequest):
     if request.address and request.address == "中华人民共和国":
         request.address = None
     return AjaxResponse.from_success(data=statistics_service.series_sales_statistics(request))
+
+
+#销量预测
+@gen.route('/sales_predict', methods=['GET'])
+@QueryValidator(is_page=True)
+@PreAuthorize(HasPerm("car:sales:statistics"))
+@JsonSerializer()
+def sales_predict(dto: CarStatisticsRequest):
+    """
+        销量预测
+    """
+    request = CarStatisticsRequest()
+    # 转换PO到Entity对象
+    for attr in dto.model_fields.keys():
+        if hasattr(request, attr):
+            setattr(request, attr, getattr(dto, attr))
+    if request.address and request.address == "中华人民共和国":
+        request.address = None
+
+    return AjaxResponse.from_success(data=statistics_service.sales_predict_statistics(request))

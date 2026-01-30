@@ -26,6 +26,19 @@ class StatisticsInfoService:
         return StatisticsInfoMapper.select_statistics_info_list(statistics_info)
 
     @classmethod
+    def select_statistics_info_by_key(cls, statistics_key: str) -> Optional[StatisticsInfo]:
+        """
+        根据 Key 精确查询单条统计信息
+
+        Args:
+            statistics_key (str): 统计 Key
+
+        Returns:
+            StatisticsInfo: 统计信息对象
+        """
+        return StatisticsInfoMapper.select_statistics_info_by_key(statistics_key)
+
+    @classmethod
     def select_statistics_info_list_by_keys(cls, statistics_keys: List[str]) -> List[StatisticsInfo]:
         """
         根据多个key批量查询统计信息列表

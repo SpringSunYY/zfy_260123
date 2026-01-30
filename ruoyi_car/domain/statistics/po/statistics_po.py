@@ -33,3 +33,11 @@ class MapStatisticsPo(BaseModel):
     name: str
     value: int
     month: int
+
+class SalesPredictPo(BaseModel):
+    """
+    销售预测对象
+    """
+    address: str
+    value: float # 销量
+    month: int

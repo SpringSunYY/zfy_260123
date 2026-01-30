@@ -119,6 +119,27 @@ class StatisticsInfoMapper:
             return None
 
     @classmethod
+    def select_statistics_info_by_key(cls, statistics_key: str) -> Optional[StatisticsInfo]:
+        """
+        根据 Key 精确查询单条统计信息
+
+        Args:
+            statistics_key (str): 统计 Key
+
+        Returns:
+            StatisticsInfo: 统计信息对象
+        """
+        try:
+            stmt = select(StatisticsInfoPo).where(StatisticsInfoPo.statistics_key == statistics_key).limit(1)
+            result = db.session.execute(stmt).scalar_one_or_none()
+            return StatisticsInfo.model_validate(result) if result else None
+        except Exception as e:
+            print(f"根据 Key 查询统计信息出错: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
+
+    @classmethod
     def insert_statistics_info(cls, statistics_info: StatisticsInfo) -> int:
         """
         新增统计信息
@@ -174,7 +195,7 @@ class StatisticsInfoMapper:
             existing.content = statistics_info.content
             existing.extend_content = statistics_info.extend_content
             existing.remark = statistics_info.remark
-            existing.create_time = statistics_info.create_time
+            existing.create_time = statistics_info.create_time or now
             db.session.commit()
             return 1
 

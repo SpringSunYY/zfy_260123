@@ -85,7 +85,7 @@ export default {
     chartData: {
       deep: true,
       handler() {
-        this.initChart();
+        this.setOption();
       }
     }
   },
@@ -170,6 +170,7 @@ export default {
 
     setOption() {
       const data = this.chartData;
+      console.log(data)
       const xLabels = data.map(item => item.name);
       const rawValues = data.map(item => item.value);
       const {total, avg} = this.stats;

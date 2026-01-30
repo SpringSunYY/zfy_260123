@@ -42,7 +42,10 @@
           />
         </div>
         <div class="expert-chart-wrapper">
-          <BarLineZoomCharts/>
+          <BarLineZoomCharts
+          :chart-title="salesPredictStatisticsName"
+          :chart-data="salesPredictStatisticsData"
+          />
         </div>
         <div class="chart-wrapper">
           <ScatterRandomTooltipCharts
@@ -104,7 +107,7 @@ import DateRangePicker from "@/components/Echarts/DateRangePicker.vue";
 import {
   salesBrandStatistics, salesCountryStatistics,
   salesEnergyTypeStatistics,
-  salesMapStatistics, salesModelTypeStatistics,
+  salesMapStatistics, salesModelTypeStatistics, salesPredictStatistics,
   salesPriceStatistics, salesSeriesStatistics
 } from "@/api/car/statistics";
 import dayjs from "dayjs";
@@ -188,6 +191,9 @@ export default {
       //车系
       seriesSalesStatisticsData: [],
       seriesSalesStatisticsName: "车系排行",
+      //销量预测
+      salesPredictStatisticsData: [],
+      salesPredictStatisticsName: "销量预测",
     }
   },
   created() {
@@ -207,9 +213,30 @@ export default {
       this.getCountrySalesStatisticsData()
       this.getModelTypeSalesStatisticsData()
       this.getSeriesSalesStatisticsData()
+      this.getSalesPredictStatisticsData()
     },
-    getMapDataByClick() {
+    getDataByStatisticsClick() {
       this.getSalesMapStatisticsData()
+      this.getSalesPredictStatisticsData()
+    },
+    //销量预测
+    getSalesPredictStatisticsData() {
+      salesPredictStatistics(
+        {
+          ...this.query,
+          startTime: null,
+          endTime: null
+        }
+      ).then(res => {
+        if (!res.data) return
+        this.salesPredictStatisticsData=res.data.map(item => {
+          return {
+            name: item.month,
+            value: item.value,
+            tooltipText: item.tooltipText
+          }
+        })
+      })
     },
     //车系
     getSeriesSalesStatisticsData() {
@@ -433,7 +460,7 @@ export default {
       if (type === 'seriesName') {
         this.processSeriesQuery(item, type)
       }
-      this.getMapDataByClick();
+      this.getDataByStatisticsClick();
     },
     processSeriesQuery(item, type) {
       this.query.seriesName = item.name;
