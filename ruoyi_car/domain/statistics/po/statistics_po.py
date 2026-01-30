@@ -12,6 +12,18 @@ class StatisticsPo(BaseModel, Generic[T]):
     name: str
     address: str
     month: int
+
+
+class SeriesStatisticsPo(BaseModel):
+    """
+    系列统计对象
+    """
+    series_id: int  # 系列id
+    address: str  # 城市名称
+    name: str  # 车系名称
+    month: int  # 月份
+
+
 class PriceStatisticsPo(BaseModel):
     """
     价格统计对象（按月，包含城市）
@@ -34,10 +46,11 @@ class MapStatisticsPo(BaseModel):
     value: int
     month: int
 
+
 class SalesPredictPo(BaseModel):
     """
     销售预测对象
     """
     address: str
-    value: float # 销量
+    value: float  # 销量
     month: int

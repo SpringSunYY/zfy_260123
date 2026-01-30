@@ -76,6 +76,7 @@ class SeriesService:
         #添加浏览记录
         ViewService.add_view(series_info)
         return series_info
+
     @classmethod
     def select_series_by_series_ids(cls, series_id)->List[Series]:
         """

@@ -38,8 +38,8 @@ class CarStatisticsRequest(BaseEntity):
         ExcelField(name="品牌名", action="export")
     ]
 
-    # 系列名称
-    series_name: Annotated[
+    # 系列编号
+    series_id: Annotated[
         Optional[str],
         Field(default=None, description="系列名称"),
         VoField(query=True),

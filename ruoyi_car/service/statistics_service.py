@@ -7,8 +7,10 @@ from collections import defaultdict
 from ruoyi_car.domain.entity import StatisticsInfo
 from ruoyi_car.domain.statistics.dto import CarStatisticsRequest
 from ruoyi_car.domain.statistics.po.statistics_po import MapStatisticsPo, PriceStatisticsPo, StatisticsPo, SalesPredictPo
-from ruoyi_car.domain.statistics.vo.statistics_vo import MapStatisticsVo, StatisticsVo, SalesPredictVo
+from ruoyi_car.domain.statistics.vo.statistics_vo import MapStatisticsVo, StatisticsVo, SalesPredictVo, \
+    SeriesStatisticsVo
 from ruoyi_car.mapper.statistics_mapper import StatisticsMapper
+from ruoyi_car.service.series_service import SeriesService
 from ruoyi_car.service.statistics_info_service import StatisticsInfoService
 from ruoyi_common.constant import StatisticsConstants, ConfigConstants
 from ruoyi_common.utils import DateUtil
@@ -152,7 +154,7 @@ class StatisticsService:
         """
         target.country = source.country
         target.brand_name = source.brand_name
-        target.series_name = source.series_name
+        target.series_id = source.series_id
         target.model_type = source.model_type
         target.energy_type = source.energy_type
         target.max_price = source.max_price
@@ -171,7 +173,7 @@ class StatisticsService:
 
         # 拼接查询条件
         brand = request.brand_name or 'all'
-        series = request.series_name or 'all'
+        series = request.series_id or 'all'
         model = request.model_type or 'all'
         energy = request.energy_type or 'all'
         country = request.country or 'all'
@@ -283,7 +285,7 @@ class StatisticsService:
                     month=item.get('month', 0),
                     is_predict=item.get('is_predict', False)
             )
-            
+
             results.append(vo)
 
         return ([cached_item], results)
@@ -461,7 +463,7 @@ class StatisticsService:
             temp_request = CarStatisticsRequest(
                 start_time=month, end_time=month,
                 address=request.address, country=request.country,
-                brand_name=request.brand_name, series_name=request.series_name,
+                brand_name=request.brand_name, series_id=request.series_id,
                 model_type=request.model_type, energy_type=request.energy_type,
                 min_price=request.min_price, max_price=request.max_price
             )
@@ -664,17 +666,229 @@ class StatisticsService:
         )
 
     @classmethod
-    def series_sales_statistics(cls, request) -> List[StatisticsVo]:
+    def series_sales_statistics(cls, request) -> List[SeriesStatisticsVo]:
         """
         车系销售信息数据分析
         """
-        return cls._dimension_statistics(
-            request,
-            lambda req: StatisticsMapper.series_sales_statistics(req),
-            StatisticsConstants.SERIES_SALES_STATISTICS_COMMON_KEY,
-            StatisticsConstants.SERIES_SALES_STATISTICS_COMMON_TYPE,
-            StatisticsConstants.SERIES_SALES_STATISTICS_COMMON_NAME
-        )
+        # 生成月份列表
+        months = DateUtil.generate_months_list(request.start_time, request.end_time)
+
+        # 步骤1：构建所有月份的缓存 Key
+        stats_keys = []
+        for month in months:
+            temp_request = CarStatisticsRequest(
+                start_time=month, end_time=month,
+                address=request.address, country=request.country,
+                brand_name=request.brand_name, series_id=request.series_id,
+                model_type=request.model_type, energy_type=request.energy_type,
+                min_price=request.min_price, max_price=request.max_price
+            )
+            stats_key = cls._build_stats_key(temp_request, month, StatisticsConstants.SERIES_SALES_STATISTICS_COMMON_KEY)
+            stats_keys.append(stats_key)
+
+        # 步骤2：批量查询缓存
+        cached_map = cls._get_cached_data_batch(stats_keys, vo_class=SeriesStatisticsVo)
+
+        # 步骤3：收集缓存命中的数据和未缓存的月份
+        cached_results = []
+        uncached_months = []
+
+        for month, stats_key in zip(months, stats_keys):
+            cached_list, cached_data = cached_map.get(stats_key, ([], []))
+
+            if cached_list:
+                cached_results.extend(cached_data)
+            else:
+                uncached_months.append(month)
+
+        if not uncached_months:
+            return cached_results
+
+        # 步骤4：未缓存数据需要从数据库查询并处理
+        # 全国查询
+        if not request.address:
+            cls._build_nationwide_series_cache(request, uncached_months, cached_results,
+                                               StatisticsConstants.SERIES_SALES_STATISTICS_COMMON_KEY,
+                                               StatisticsConstants.SERIES_SALES_STATISTICS_COMMON_TYPE,
+                                               StatisticsConstants.SERIES_SALES_STATISTICS_COMMON_NAME)
+        # 省份查询
+        else:
+            cls._build_province_series_cache(request, uncached_months, cached_results,
+                                             StatisticsConstants.SERIES_SALES_STATISTICS_COMMON_KEY,
+                                             StatisticsConstants.SERIES_SALES_STATISTICS_COMMON_TYPE,
+                                             StatisticsConstants.SERIES_SALES_STATISTICS_COMMON_NAME)
+
+        return cached_results
+
+    @classmethod
+    def _build_nationwide_series_cache(cls, request: CarStatisticsRequest,
+                                        uncached_months: List[str], cached_results: List[SeriesStatisticsVo],
+                                        common_key: str, stat_type: str, statistics_name: str):
+        """构建全国车系销售统计缓存"""
+        # 全国查询：按省份+车系列表聚合
+        all_pos = []
+        for month in uncached_months:
+            temp_request = CarStatisticsRequest(
+                start_time=month, end_time=month,
+                address=None, country=request.country,
+                brand_name=request.brand_name, series_id=request.series_id,
+                model_type=request.model_type, energy_type=request.energy_type,
+                min_price=request.min_price, max_price=request.max_price
+            )
+            pos = StatisticsMapper.series_sales_statistics(temp_request)
+            all_pos.extend(pos)
+
+        if not all_pos:
+            return
+
+        # 按省份+车系聚合
+        province_series_map = {}
+        for po in all_pos:
+            city = po.address  # "广东省 东莞市"
+            province = city.split(' ')[0] if ' ' in city else city  # "广东省"
+            series_id = po.name  # series_id 存储在 name 字段中
+            value = po.value
+            month = po.month
+
+            if province not in province_series_map:
+                province_series_map[province] = {}
+            if series_id not in province_series_map[province]:
+                province_series_map[province][series_id] = {
+                    'value': 0, 'month': month, 'series_id': series_id
+                }
+            province_series_map[province][series_id]['value'] += value
+
+        # 批量查询车系信息获取名称
+        cls._fill_series_names(province_series_map)
+
+        # 构建缓存数据
+        cache_data_map = {}
+        for month in uncached_months:
+            cache_data_map[month] = []
+
+        for province, series_map in province_series_map.items():
+            for series_id, data in series_map.items():
+                series_name = data['series_name']
+                vo = SeriesStatisticsVo(
+                    value=data['value'],
+                    name=series_name,
+                    month=data['month'],
+                    address=province,
+                    seriesId=int(series_id) if series_id else 0,
+                    tooltipText=f"{series_name} | {province} | {data['value']}辆",
+                    moreInfo=statistics_name
+                )
+                cache_data_map[data['month']].append(vo)
+                cached_results.append(vo)
+
+        # 批量写入缓存
+        for month in uncached_months:
+            stats_key = cls._build_stats_key(request, month, common_key)
+            cls._save_to_cache(stats_key, cache_data_map.get(month, []), request.address,
+                               stat_type=stat_type, common_key=common_key,
+                               statistics_name=statistics_name)
+
+    @classmethod
+    def _build_province_series_cache(cls, request: CarStatisticsRequest,
+                                      uncached_months: List[str], cached_results: List[SeriesStatisticsVo],
+                                      common_key: str, stat_type: str, statistics_name: str):
+        """构建省份车系销售统计缓存"""
+        filter_province = request.address.split(' ')[0] if ' ' in request.address else request.address
+
+        # 省份查询：按城市+车系列表聚合
+        all_pos = []
+        for month in uncached_months:
+            temp_request = CarStatisticsRequest(
+                start_time=month, end_time=month,
+                address=request.address, country=request.country,
+                brand_name=request.brand_name, series_id=request.series_id,
+                model_type=request.model_type, energy_type=request.energy_type,
+                min_price=request.min_price, max_price=request.max_price
+            )
+            pos = StatisticsMapper.series_sales_statistics(temp_request)
+            all_pos.extend(pos)
+
+        if not all_pos:
+            return
+
+        # 按城市+车系聚合
+        city_series_map = {}
+        for po in all_pos:
+            city = po.address  # "广东省 东莞市"
+            province = city.split(' ')[0] if ' ' in city else city  # "广东省"
+            if province != filter_province:
+                continue
+            series_id = po.name  # series_id 存储在 name 字段中
+            value = po.value
+            month = po.month
+
+            if city not in city_series_map:
+                city_series_map[city] = {}
+            if series_id not in city_series_map[city]:
+                city_series_map[city][series_id] = {
+                    'value': 0, 'month': month, 'series_id': series_id
+                }
+            city_series_map[city][series_id]['value'] += value
+
+        # 批量查询车系信息获取名称
+        cls._fill_series_names(city_series_map)
+
+        # 构建缓存数据
+        cache_data_map = {}
+        for month in uncached_months:
+            cache_data_map[month] = []
+
+        for city, series_map in city_series_map.items():
+            for series_id, data in series_map.items():
+                series_name = data['series_name']
+                vo = SeriesStatisticsVo(
+                    value=data['value'],
+                    name=series_name,
+                    month=data['month'],
+                    address=city,
+                    seriesId=int(series_id) if series_id else 0,
+                    tooltipText=f"{series_name} | {city} | {data['value']}辆",
+                    moreInfo=statistics_name
+                )
+                cache_data_map[data['month']].append(vo)
+                cached_results.append(vo)
+
+        # 批量写入缓存
+        for month in uncached_months:
+            stats_key = cls._build_stats_key(request, month, common_key)
+            cls._save_to_cache(stats_key, cache_data_map.get(month, []), request.address,
+                               stat_type=stat_type, common_key=common_key,
+                               statistics_name=statistics_name)
+
+    @classmethod
+    def _fill_series_names(cls, dimension_series_map: Dict):
+        """
+        批量查询车系名称并填充到聚合数据中
+        统一处理方法，避免循环导入
+
+        Args:
+            dimension_series_map: 维度-车系列表字典，如 {省份: {series_id: {'value':, 'month':, 'series_id':}}}
+        """
+        # 收集所有 series_id
+        all_series_ids = set()
+        for series_map in dimension_series_map.values():
+            for series_id in series_map.keys():
+                if series_id:
+                    all_series_ids.add(int(series_id))
+
+        # 批量查询车系信息
+        series_id_to_name = {}
+        if all_series_ids:
+            series_list = SeriesService.select_series_by_series_ids(list(all_series_ids))
+            series_id_to_name = {s.series_id: s.series_name for s in series_list}
+
+        # 填充车系名称
+        for series_map in dimension_series_map.values():
+            for series_id in series_map.keys():
+                if series_id:
+                    series_map[series_id]['series_name'] = series_id_to_name.get(int(series_id), series_id)
+                else:
+                    series_map[series_id]['series_name'] = series_id
 
     @classmethod
     def brand_sales_statistics(cls, request: CarStatisticsRequest) -> List[StatisticsVo]:
@@ -731,7 +945,7 @@ class StatisticsService:
             temp_request = CarStatisticsRequest(
                 start_time=month, end_time=month,
                 address=request.address, country=request.country,
-                brand_name=request.brand_name, series_name=request.series_name,
+                brand_name=request.brand_name, series_id=request.series_id,
                 model_type=request.model_type, energy_type=request.energy_type,
                 min_price=request.min_price, max_price=request.max_price
             )
@@ -1163,7 +1377,7 @@ class StatisticsService:
             temp_request = CarStatisticsRequest(start_time=month, end_time=month)
             temp_request = cls._copy_request_params(request, temp_request)
             raw_data = StatisticsMapper.sales_predict_statistics(temp_request)
-            
+
             # 转换为 Po 对象并按省份分组
             provinces_data = {}
             for item in raw_data:
@@ -1182,14 +1396,14 @@ class StatisticsService:
                                    stat_type=StatisticsConstants.SALES_PREDICT_COMMON_TYPE,
                                    common_key=StatisticsConstants.SALES_PREDICT_COMMON_KEY,
                                    statistics_name=StatisticsConstants.SALES_PREDICT_COMMON_NAME)
-            
+
             # 保存月份汇总缓存（全国数据）
             month_key = cls._build_stats_key(request, month, StatisticsConstants.SALES_PREDICT_COMMON_KEY)
-            # 计算全国该月的汇总数据 
+            # 计算全国该月的汇总数据
             total_sales = sum(item.avg_sales for item in raw_data)
             count = len(raw_data)
             avg_sales = total_sales / count if count > 0 else 0
-            
+
             # 构建全国汇总的 Po
             nationwide_po = SalesPredictPo(
                 address="全国",
@@ -1202,7 +1416,7 @@ class StatisticsService:
                                stat_type=StatisticsConstants.SALES_PREDICT_COMMON_TYPE,
                                common_key=StatisticsConstants.SALES_PREDICT_COMMON_KEY,
                                statistics_name=StatisticsConstants.SALES_PREDICT_COMMON_NAME)
-            
+
             # 同时更新内存中的缓存结果列表，方便后续计算
             cached_results.extend(raw_data)
 

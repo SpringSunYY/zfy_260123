@@ -43,8 +43,8 @@
         </div>
         <div class="expert-chart-wrapper">
           <BarLineZoomCharts
-          :chart-title="salesPredictStatisticsName"
-          :chart-data="salesPredictStatisticsData"
+            :chart-title="salesPredictStatisticsName"
+            :chart-data="salesPredictStatisticsData"
           />
         </div>
         <div class="chart-wrapper">
@@ -229,7 +229,7 @@ export default {
         }
       ).then(res => {
         if (!res.data) return
-        this.salesPredictStatisticsData=res.data.map(item => {
+        this.salesPredictStatisticsData = res.data.map(item => {
           return {
             name: item.month,
             value: item.value,
@@ -246,19 +246,27 @@ export default {
         address: this.query.address
       }).then(response => {
         if (!response.data) return
-        //创建一个map获取到键值对name-key，value-value
+        //创建一个map获取到键值对name-key，value-对象，并返回
         let map = new Map();
         for (let i = 0; i < response.data.length; i++) {
           if (map.has(response.data[i].name)) {
-            map.set(response.data[i].name, map.get(response.data[i].name) + response.data[i].value);
+            let existingItem = map.get(response.data[i].name);
+            map.set(response.data[i].name, {
+              value: existingItem.value + response.data[i].value,  // 累加value
+              seriesId: existingItem.seriesId  // 保留seriesId（假设同一name的seriesId相同）
+            });
           } else {
-            map.set(response.data[i].name, response.data[i].value);
+            map.set(response.data[i].name, {
+              value: response.data[i].value,
+              seriesId: response.data[i].seriesId
+            });
           }
         }
         this.seriesSalesStatisticsData = Array.from(map.keys()).map(key => {
           return {
             name: key,
-            value: map.get(key)
+            value: map.get(key).value,
+            seriesId: map.get(key).seriesId
           }
         });
       })
@@ -463,7 +471,7 @@ export default {
       this.getDataByStatisticsClick();
     },
     processSeriesQuery(item, type) {
-      this.query.seriesName = item.name;
+      this.query.seriesId = item.seriesId;
       this.resetLabelQuery(type, item.name)
     },
     processModelTypeQuery(item, type) {

@@ -7,7 +7,7 @@ from ruoyi_admin.ext import db
 from ruoyi_car.domain.po.sales_po import SalesPo
 from ruoyi_car.domain.statistics.dto import CarStatisticsRequest
 from ruoyi_car.domain.statistics.po.statistics_po import MapStatisticsPo, StatisticsPo, PriceStatisticsPo, \
-    SalesPredictPo
+    SalesPredictPo, SeriesStatisticsPo
 
 
 class StatisticsMapper:
@@ -299,9 +299,9 @@ class StatisticsMapper:
             return []
 
     @classmethod
-    def series_sales_statistics(cls, request: CarStatisticsRequest) -> List[StatisticsPo]:
+    def series_sales_statistics(cls, request: CarStatisticsRequest) -> List[SeriesStatisticsPo]:
         """
-        select sum(sales) as value, series_name as name,month, city_full_name as city
+        select sum(sales) as value, series_id as series_id,month, city_full_name as city
         from tb_sales
         where month >= 202510
           and month <= 202601
@@ -310,12 +310,12 @@ class StatisticsMapper:
         try:
             stmt = select(
                 func.sum(SalesPo.sales).label("value"),
-                SalesPo.series_name.label("name"),
+                SalesPo.series_id.label("series_id"),
                 SalesPo.month.label("month"),
                 SalesPo.city_full_name.label("address")
             )
             stmt = cls.init_query(request, stmt)
-            stmt = stmt.group_by("name", "address", "month")
+            stmt = stmt.group_by("series_id", "address", "month")
 
             # 打印 SQL 日志
             cls._print_sql_log(stmt, "energy_type_sales_statistics")
@@ -326,7 +326,7 @@ class StatisticsMapper:
             return [
                 StatisticsPo(
                     value=int(item['value']) if item['value'] else 0,
-                    name=str(item['name']) if item['name'] else '',
+                    name=str(item['series_id']) if item['series_id'] else 0,
                     month=int(item['month']) if item['month'] else 0,
                     address=str(item['address']) if item['address'] else ''
                 )
@@ -393,8 +393,8 @@ class StatisticsMapper:
         if request.brand_name:
             stmt = stmt.where(SalesPo.brand_name == request.brand_name)
         # 系列名称
-        if request.series_name:
-            stmt = stmt.where(SalesPo.series_name == request.series_name)
+        if request.series_id:
+            stmt = stmt.where(SalesPo.series_id == request.series_id)
         # 车型
         if request.model_type:
             stmt = stmt.where(SalesPo.model_type == request.model_type)

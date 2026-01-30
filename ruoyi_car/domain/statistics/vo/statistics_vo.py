@@ -16,6 +16,17 @@ class StatisticsVo(BaseModel, Generic[T]):
     month: Optional[int] = 0
     address: Optional[str] = ''
 
+class SeriesStatisticsVo(BaseModel, Generic[T]):
+    """
+    统计总数对象
+    """
+    value: Optional[T] = None
+    name: Optional[str] = ''
+    tooltipText: Optional[str] = ''
+    moreInfo: Optional[str] = ''
+    month: Optional[int] = 0
+    address: Optional[str] = ''
+    seriesId: Optional[int] = 0
 
 class PieBarStatisticsVo(BaseModel):
     """
