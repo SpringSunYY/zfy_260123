@@ -8,3 +8,4 @@ from .sales_service import SalesService
 from .series_service import SeriesService
 from .statistics_info_service import StatisticsInfoService
 from .view_service import ViewService
+from .statistics_service import StatisticsService

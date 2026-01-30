@@ -1479,3 +1479,396 @@ class StatisticsService:
             results.append(vo)
 
         return results
+
+    @classmethod
+    def auto_statistics(cls):
+        """
+        自动统计所有维度数据
+        按顺序统计：地图+价格预测 -> 价格(带价格范围查询) -> 能源类型 -> 品牌 -> 国家 -> 车型 -> 车系
+        每次查询都打性能日志
+        """
+        import time
+        import logging
+
+        # 配置日志
+        logger = logging.getLogger(__name__)
+        logger.setLevel(logging.INFO)
+
+        def log_info(msg):
+            """打印日志到控制台"""
+            print(f"[自动统计] {msg}")
+            logger.info(msg)
+
+        def log_error(msg):
+            """打印错误日志"""
+            print(f"[自动统计 ERROR] {msg}")
+            logger.error(msg)
+
+        # 记录总开始时间
+        total_start_time = time.time()
+
+        # 获取开始和结束月份
+        start_month_str = SysConfigService.select_config_by_key(ConfigConstants.CURRENT_PREDICT_START_MONTH)
+        end_month_str = SysConfigService.select_config_by_key(ConfigConstants.CURRENT_PREDICT_END_MONTH)
+
+        if not start_month_str or not end_month_str:
+            error_msg = "未配置开始月份或结束月份"
+            log_error(error_msg)
+            return {"status": "error", "message": error_msg}
+
+        start_month = int(start_month_str)
+        end_month = int(end_month_str)
+
+        log_info(f"========== 开始自动统计 ==========")
+        log_info(f"时间范围: {start_month} - {end_month}")
+
+        try:
+            # ========== 1. 初始统计：地图 + 价格预测 ==========
+            log_info(f"【1】初始统计：地图 + 价格预测")
+
+            # 1.1 地图统计
+            map_request = CarStatisticsRequest(start_time=start_month, end_time=end_month)
+            step_start_time = time.time()
+            map_result = cls.sales_map_statistics(map_request)
+            elapsed = time.time() - step_start_time
+            log_info(f"    地图统计完成: {len(map_result)} 条记录, 耗时: {elapsed:.2f}秒")
+
+            # 1.2 价格预测统计
+            predict_request = CarStatisticsRequest(start_time=start_month, end_time=end_month)
+            step_start_time = time.time()
+            predict_result = cls.sales_predict_statistics(predict_request)
+            elapsed = time.time() - step_start_time
+            log_info(f"    价格预测统计完成: {len(predict_result)} 条记录, 耗时: {elapsed:.2f}秒")
+
+            # ========== 2. 价格统计 ==========
+            log_info(f"【2】价格统计")
+            price_request = CarStatisticsRequest(start_time=start_month, end_time=end_month)
+            step_start_time = time.time()
+            price_result = cls.price_sales_statistics(price_request)
+            elapsed = time.time() - step_start_time
+            log_info(f"    价格统计完成: {len(price_result)} 条记录, 耗时: {elapsed:.2f}秒")
+
+            # 2.1 对价格结果去重并解析价格范围
+            unique_prices = {}
+            for item in price_result:
+                if item.name and item.name not in unique_prices:
+                    unique_prices[item.name] = {
+                        'min': None,
+                        'max': None,
+                        'original': item.name
+                    }
+
+            # 解析价格范围
+            valid_prices = {}
+            invalid_prices = []
+            for name, price_info in unique_prices.items():
+                price_range = cls._parse_price_range(name)
+                price_info['min'] = price_range['min']
+                price_info['max'] = price_range['max']
+                # 过滤掉无法解析的价格（min和max都为None）
+                if price_range['min'] is None and price_range['max'] is None:
+                    invalid_prices.append(name)
+                else:
+                    valid_prices[name] = price_info
+
+            if invalid_prices:
+                log_info(f"    跳过无法解析的价格区间: {invalid_prices}")
+
+            log_info(f"    有效价格区间: {len(valid_prices)} 个: {list(valid_prices.keys())}")
+
+            # 2.2 对每个有效价格范围统计地图和价格预测
+            for price_name, price_info in valid_prices.items():
+                log_info(f"    价格区间: {price_name} (min={price_info['min']}, max={price_info['max']})")
+
+                # 地图统计
+                map_request = CarStatisticsRequest(
+                    start_time=start_month,
+                    end_time=end_month,
+                    min_price=price_info['min'],
+                    max_price=price_info['max']
+                )
+                step_start_time = time.time()
+                map_result = cls.sales_map_statistics(map_request)
+                elapsed = time.time() - step_start_time
+                log_info(f"        地图统计完成: {len(map_result)} 条记录, 耗时: {elapsed:.2f}秒")
+
+                # 价格预测统计
+                predict_request = CarStatisticsRequest(
+                    start_time=start_month,
+                    end_time=end_month,
+                    min_price=price_info['min'],
+                    max_price=price_info['max']
+                )
+                step_start_time = time.time()
+                predict_result = cls.sales_predict_statistics(predict_request)
+                elapsed = time.time() - step_start_time
+                log_info(f"        价格预测统计完成: {len(predict_result)} 条记录, 耗时: {elapsed:.2f}秒")
+
+            # 2.3 重置价格范围
+            log_info(f"    重置价格范围")
+
+            # ========== 3. 能源类型统计 ==========
+            log_info(f"【3】能源类型统计")
+            energy_request = CarStatisticsRequest(start_time=start_month, end_time=end_month)
+            step_start_time = time.time()
+            energy_result = cls.energy_type_sales_statistics(energy_request)
+            elapsed = time.time() - step_start_time
+            log_info(f"    能源类型统计完成: {len(energy_result)} 条记录, 耗时: {elapsed:.2f}秒")
+
+            # 3.1 对每个能源类型统计地图和价格预测
+            unique_energies = [item.name for item in energy_result if item.name]
+
+            for energy_name in unique_energies:
+                log_info(f"    能源类型: {energy_name}")
+
+                # 地图统计
+                map_request = CarStatisticsRequest(
+                    start_time=start_month,
+                    end_time=end_month,
+                    energy_type=energy_name
+                )
+                step_start_time = time.time()
+                map_result = cls.sales_map_statistics(map_request)
+                elapsed = time.time() - step_start_time
+                log_info(f"        地图统计完成: {len(map_result)} 条记录, 耗时: {elapsed:.2f}秒")
+
+                # 价格预测统计
+                predict_request = CarStatisticsRequest(
+                    start_time=start_month,
+                    end_time=end_month,
+                    energy_type=energy_name
+                )
+                step_start_time = time.time()
+                predict_result = cls.sales_predict_statistics(predict_request)
+                elapsed = time.time() - step_start_time
+                log_info(f"        价格预测统计完成: {len(predict_result)} 条记录, 耗时: {elapsed:.2f}秒")
+
+            # 3.2 重置能源类型
+            log_info(f"    重置能源类型")
+
+            # ========== 4. 品牌统计 ==========
+            log_info(f"【4】品牌统计")
+            brand_request = CarStatisticsRequest(start_time=start_month, end_time=end_month)
+            step_start_time = time.time()
+            brand_result = cls.brand_sales_statistics(brand_request)
+            elapsed = time.time() - step_start_time
+            log_info(f"    品牌统计完成: {len(brand_result)} 条记录, 耗时: {elapsed:.2f}秒")
+
+            unique_brands = [item.name for item in brand_result if item.name]
+            for brand_name in unique_brands:
+                log_info(f"    品牌: {brand_name}")
+
+                # 地图统计
+                map_request = CarStatisticsRequest(
+                    start_time=start_month,
+                    end_time=end_month,
+                    brand_name=brand_name
+                )
+                step_start_time = time.time()
+                map_result = cls.sales_map_statistics(map_request)
+                elapsed = time.time() - step_start_time
+                log_info(f"        地图统计完成: {len(map_result)} 条记录, 耗时: {elapsed:.2f}秒")
+
+                # 价格预测统计
+                predict_request = CarStatisticsRequest(
+                    start_time=start_month,
+                    end_time=end_month,
+                    brand_name=brand_name
+                )
+                step_start_time = time.time()
+                predict_result = cls.sales_predict_statistics(predict_request)
+                elapsed = time.time() - step_start_time
+                log_info(f"        价格预测统计完成: {len(predict_result)} 条记录, 耗时: {elapsed:.2f}秒")
+
+            log_info(f"    重置品牌")
+
+            # ========== 5. 国家统计 ==========
+            log_info(f"【5】国家统计")
+            country_request = CarStatisticsRequest(start_time=start_month, end_time=end_month)
+            step_start_time = time.time()
+            country_result = cls.country_sales_statistics(country_request)
+            elapsed = time.time() - step_start_time
+            log_info(f"    国家统计完成: {len(country_result)} 条记录, 耗时: {elapsed:.2f}秒")
+
+            unique_countries = [item.name for item in country_result if item.name]
+            for country_name in unique_countries:
+                log_info(f"    国家: {country_name}")
+
+                # 地图统计
+                map_request = CarStatisticsRequest(
+                    start_time=start_month,
+                    end_time=end_month,
+                    country=country_name
+                )
+                step_start_time = time.time()
+                map_result = cls.sales_map_statistics(map_request)
+                elapsed = time.time() - step_start_time
+                log_info(f"        地图统计完成: {len(map_result)} 条记录, 耗时: {elapsed:.2f}秒")
+
+                # 价格预测统计
+                predict_request = CarStatisticsRequest(
+                    start_time=start_month,
+                    end_time=end_month,
+                    country=country_name
+                )
+                step_start_time = time.time()
+                predict_result = cls.sales_predict_statistics(predict_request)
+                elapsed = time.time() - step_start_time
+                log_info(f"        价格预测统计完成: {len(predict_result)} 条记录, 耗时: {elapsed:.2f}秒")
+
+            log_info(f"    重置国家")
+
+            # ========== 6. 车型统计 ==========
+            log_info(f"【6】车型统计")
+            model_request = CarStatisticsRequest(start_time=start_month, end_time=end_month)
+            step_start_time = time.time()
+            model_result = cls.model_type_sales_statistics(model_request)
+            elapsed = time.time() - step_start_time
+            log_info(f"    车型统计完成: {len(model_result)} 条记录, 耗时: {elapsed:.2f}秒")
+
+            unique_models = [item.name for item in model_result if item.name]
+            for model_name in unique_models:
+                log_info(f"    车型: {model_name}")
+
+                # 地图统计
+                map_request = CarStatisticsRequest(
+                    start_time=start_month,
+                    end_time=end_month,
+                    model_type=model_name
+                )
+                step_start_time = time.time()
+                map_result = cls.sales_map_statistics(map_request)
+                elapsed = time.time() - step_start_time
+                log_info(f"        地图统计完成: {len(map_result)} 条记录, 耗时: {elapsed:.2f}秒")
+
+                # 价格预测统计
+                predict_request = CarStatisticsRequest(
+                    start_time=start_month,
+                    end_time=end_month,
+                    model_type=model_name
+                )
+                step_start_time = time.time()
+                predict_result = cls.sales_predict_statistics(predict_request)
+                elapsed = time.time() - step_start_time
+                log_info(f"        价格预测统计完成: {len(predict_result)} 条记录, 耗时: {elapsed:.2f}秒")
+
+            log_info(f"    重置车型")
+
+            # ========== 7. 车系统计 ==========
+            log_info(f"【7】车系统计")
+            series_request = CarStatisticsRequest(start_time=start_month, end_time=end_month)
+            step_start_time = time.time()
+            series_result = cls.series_sales_statistics(series_request)
+            elapsed = time.time() - step_start_time
+            log_info(f"    车系统计完成: {len(series_result)} 条记录, 耗时: {elapsed:.2f}秒")
+
+            unique_series = [(item.name, item.seriesId) for item in series_result if item.name]
+            for series_name, series_id in unique_series:
+                log_info(f"    车系: {series_name} (id={series_id})")
+
+                # 地图统计
+                map_request = CarStatisticsRequest(
+                    start_time=start_month,
+                    end_time=end_month,
+                    series_id=series_id
+                )
+                step_start_time = time.time()
+                map_result = cls.sales_map_statistics(map_request)
+                elapsed = time.time() - step_start_time
+                log_info(f"        地图统计完成: {len(map_result)} 条记录, 耗时: {elapsed:.2f}秒")
+
+                # 价格预测统计
+                predict_request = CarStatisticsRequest(
+                    start_time=start_month,
+                    end_time=end_month,
+                    series_id=series_id
+                )
+                step_start_time = time.time()
+                predict_result = cls.sales_predict_statistics(predict_request)
+                elapsed = time.time() - step_start_time
+                log_info(f"        价格预测统计完成: {len(predict_result)} 条记录, 耗时: {elapsed:.2f}秒")
+
+            log_info(f"    重置车系")
+
+            # 计算总耗时
+            total_elapsed = time.time() - total_start_time
+            log_info(f"========== 自动统计完成，总耗时: {total_elapsed:.2f}秒 ==========")
+
+            return {
+                "status": "success",
+                "message": "自动统计完成",
+                "time_range": {"start": start_month, "end": end_month},
+                "total_time": f"{total_elapsed:.2f}秒",
+                "summary": {
+                    "initial": {"map": len(map_result), "predict": len(predict_result)},
+                    "prices": len(valid_prices),
+                    "energies": len(unique_energies),
+                    "brands": len(unique_brands),
+                    "countries": len(unique_countries),
+                    "models": len(unique_models),
+                    "series": len(unique_series)
+                }
+            }
+
+        except Exception as e:
+            total_elapsed = time.time() - total_start_time
+            error_msg = f"自动统计失败: {str(e)}"
+            log_error(error_msg)
+            import traceback
+            log_error(traceback.format_exc())
+            return {"status": "error", "message": error_msg, "total_time": f"{total_elapsed:.2f}秒"}
+
+    @classmethod
+    def _parse_price_range(cls, price_str: str) -> dict:
+        """
+        解析价格范围字符串，返回最小值和最大值
+        格式示例: '10W以下', '10w-20w', '200w以上', '8k-10k'
+        """
+        if not price_str:
+            return {'min': None, 'max': None}
+
+        price_str = price_str.strip().lower()
+        min_price = None
+        max_price = None
+
+        try:
+            if '以下' in price_str:
+                # 如 '8k以下', '10w以下'
+                value_str = price_str.replace('以下', '').strip()
+                max_price = cls._convert_price(value_str)
+            elif '以上' in price_str:
+                # 如 '200w以上', '10k以上'
+                value_str = price_str.replace('以上', '').strip()
+                min_price = cls._convert_price(value_str)
+            elif '-' in price_str:
+                # 如 '10w-20w', '8k-10k'
+                range_parts = price_str.split('-')
+                if len(range_parts) == 2:
+                    min_price = cls._convert_price(range_parts[0].strip())
+                    max_price = cls._convert_price(range_parts[1].strip())
+        except Exception:
+            # 静默处理解析失败的情况
+            pass
+
+        return {'min': min_price, 'max': max_price}
+
+    @staticmethod
+    def _convert_price(price_str: str) -> float:
+        """
+        将带单位的价格转换为数值
+        如 '8k' -> 8000, '10w' -> 100000
+        """
+        if not price_str:
+            return 0
+
+        price_str = price_str.strip().lower()
+
+        if 'k' in price_str:
+            return float(price_str.replace('k', '')) * 1000
+        elif 'w' in price_str:
+            return float(price_str.replace('w', '')) * 10000
+        else:
+            try:
+                return float(price_str) or 0
+            except ValueError:
+                return 0
