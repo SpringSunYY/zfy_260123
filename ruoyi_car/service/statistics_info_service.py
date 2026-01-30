@@ -13,17 +13,17 @@ from ruoyi_car.mapper.statistics_info_mapper import StatisticsInfoMapper
 class StatisticsInfoService:
     """统计信息服务类"""
     @classmethod
-    def select_statistics_info_list(cls, statistics_indo: StatisticsInfo) -> List[StatisticsInfo]:
+    def select_statistics_info_list(cls, statistics_info: StatisticsInfo) -> List[StatisticsInfo]:
         """
         查询统计信息列表
 
         Args:
-            statistics_indo (statistics_info): 统计信息对象
+            statistics_info (statistics_info): 统计信息对象
 
         Returns:
             List[statistics_info]: 统计信息列表
         """
-        return StatisticsInfoMapper.select_statistics_info_list(statistics_indo)
+        return StatisticsInfoMapper.select_statistics_info_list(statistics_info)
 
     @classmethod
     def select_statistics_info_list_by_keys(cls, statistics_keys: List[str]) -> List[StatisticsInfo]:
@@ -53,31 +53,31 @@ class StatisticsInfoService:
         return StatisticsInfoMapper.select_statistics_info_by_id(id)
 
     @classmethod
-    def insert_statistics_info(cls, statistics_indo: StatisticsInfo) -> int:
+    def insert_statistics_info(cls, statistics_info: StatisticsInfo) -> int:
         """
         新增统计信息
 
         Args:
-            statistics_indo (statistics_info): 统计信息对象
+            statistics_info (statistics_info): 统计信息对象
 
         Returns:
             int: 插入的记录数
         """
-        return StatisticsInfoMapper.insert_statistics_info(statistics_indo)
+        return StatisticsInfoMapper.insert_statistics_info(statistics_info)
 
 
     @classmethod
-    def update_statistics_info(cls, statistics_indo: StatisticsInfo) -> int:
+    def update_statistics_info(cls, statistics_info: StatisticsInfo) -> int:
         """
         修改统计信息
 
         Args:
-            statistics_indo (statistics_info): 统计信息对象
+            statistics_info (statistics_info): 统计信息对象
 
         Returns:
             int: 更新的记录数
         """
-        return StatisticsInfoMapper.update_statistics_info(statistics_indo)
+        return StatisticsInfoMapper.update_statistics_info(statistics_info)
 
 
 
@@ -95,18 +95,18 @@ class StatisticsInfoService:
         return StatisticsInfoMapper.delete_statistics_info_by_ids(ids)
 
     @classmethod
-    def import_statistics_info(cls, statistics_indo_list: List[StatisticsInfo], is_update: bool = False) -> str:
+    def import_statistics_info(cls, statistics_info_list: List[StatisticsInfo], is_update: bool = False) -> str:
         """
         导入统计信息数据
 
         Args:
-            statistics_indo_list (List[statistics_info]): 统计信息列表
+            statistics_info_list (List[statistics_info]): 统计信息列表
             is_update (bool): 是否更新已存在的数据
 
         Returns:
             str: 导入结果消息
         """
-        if not statistics_indo_list:
+        if not statistics_info_list:
             raise ServiceException("导入统计信息数据不能为空")
 
         success_count = 0
@@ -114,23 +114,23 @@ class StatisticsInfoService:
         success_msg = ""
         fail_msg = ""
 
-        for statistics_indo in statistics_indo_list:
+        for statistics_info in statistics_info_list:
             try:
-                display_value = statistics_indo
+                display_value = statistics_info
 
-                display_value = getattr(statistics_indo, "id", display_value)
+                display_value = getattr(statistics_info, "id", display_value)
                 existing = None
-                if statistics_indo.id is not None:
-                    existing = StatisticsInfoMapper.select_statistics_info_by_id(statistics_indo.id)
+                if statistics_info.id is not None:
+                    existing = StatisticsInfoMapper.select_statistics_info_by_id(statistics_info.id)
                 if existing:
                     if is_update:
-                        result = StatisticsInfoMapper.update_statistics_info(statistics_indo)
+                        result = StatisticsInfoMapper.update_statistics_info(statistics_info)
                     else:
                         fail_count += 1
                         fail_msg += f"<br/> 第{fail_count}条数据，已存在：{display_value}"
                         continue
                 else:
-                    result = StatisticsInfoMapper.insert_statistics_info(statistics_indo)
+                    result = StatisticsInfoMapper.insert_statistics_info(statistics_info)
 
                 if result > 0:
                     success_count += 1
@@ -152,5 +152,6 @@ class StatisticsInfoService:
         success_msg = f"恭喜您，数据已全部导入成功！共 {success_count} 条，数据如下：" + success_msg
         return success_msg
 
-    def clear_statistics_info(self):
-        return StatisticsInfoMapper.clear_statistics_info()
+    @classmethod
+    def clear_statistics_info(cls,statistics_info: StatisticsInfo)->int:
+        return StatisticsInfoMapper.clear_statistics_info(statistics_info)

@@ -91,7 +91,8 @@
           @click="handleAdd"
           :disabled="true"
           v-hasPermi="['car:statisticsInfo:add']"
-        >新增</el-button>
+        >新增
+        </el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button
@@ -102,7 +103,8 @@
           :disabled="single"
           @click="handleUpdate"
           v-hasPermi="['car:statisticsInfo:edit']"
-        >修改</el-button>
+        >修改
+        </el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button
@@ -113,7 +115,8 @@
           :disabled="multiple"
           @click="handleDelete"
           v-hasPermi="['car:statisticsInfo:remove']"
-        >删除</el-button>
+        >删除
+        </el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button
@@ -134,7 +137,8 @@
           size="mini"
           @click="handleExport"
           v-hasPermi="['car:statisticsInfo:export']"
-        >导出</el-button>
+        >导出
+        </el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button
@@ -144,26 +148,34 @@
           size="mini"
           @click="handleImport"
           v-hasPermi="['car:statisticsInfo:import']"
-        >导入</el-button>
+        >导入
+        </el-button>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList" :columns="columns"></right-toolbar>
     </el-row>
 
     <el-table :loading="loading" :data="StatisticsInfoList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="编号" :show-overflow-tooltip="true" v-if="columns[0].visible" prop="id" />
+      <el-table-column type="selection" width="55" align="center"/>
+      <el-table-column label="编号" :show-overflow-tooltip="true" v-if="columns[0].visible" prop="id"/>
       <el-table-column label="统计类型" align="center" v-if="columns[1].visible" prop="type">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.statistics_type" :value="scope.row.type"/>
         </template>
       </el-table-column>
-      <el-table-column label="统计名称" align="center" :show-overflow-tooltip="true" v-if="columns[2].visible" prop="statisticsName" />
-      <el-table-column label="公共KEY" align="center" :show-overflow-tooltip="true" v-if="columns[3].visible" prop="commonKey" />
-      <el-table-column label="KEY" align="center" :show-overflow-tooltip="true" v-if="columns[4].visible" prop="statisticsKey" />
-      <el-table-column label="统计内容" align="center" :show-overflow-tooltip="true" v-if="columns[5].visible" prop="content" />
-      <el-table-column label="额外内容" align="center" :show-overflow-tooltip="true" v-if="columns[6].visible" prop="extendContent" />
-      <el-table-column label="描述" align="center" :show-overflow-tooltip="true" v-if="columns[7].visible" prop="remark" />
-      <el-table-column label="创建时间" align="center" :show-overflow-tooltip="true" v-if="columns[8].visible" prop="createTime" />
+      <el-table-column label="统计名称" align="center" :show-overflow-tooltip="true" v-if="columns[2].visible"
+                       prop="statisticsName"/>
+      <el-table-column label="公共KEY" align="center" :show-overflow-tooltip="true" v-if="columns[3].visible"
+                       prop="commonKey"/>
+      <el-table-column label="KEY" align="center" :show-overflow-tooltip="true" v-if="columns[4].visible"
+                       prop="statisticsKey"/>
+      <el-table-column label="统计内容" align="center" :show-overflow-tooltip="true" v-if="columns[5].visible"
+                       prop="content"/>
+      <el-table-column label="额外内容" align="center" :show-overflow-tooltip="true" v-if="columns[6].visible"
+                       prop="extendContent"/>
+      <el-table-column label="描述" align="center" :show-overflow-tooltip="true" v-if="columns[7].visible"
+                       prop="remark"/>
+      <el-table-column label="创建时间" align="center" :show-overflow-tooltip="true" v-if="columns[8].visible"
+                       prop="createTime"/>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button
@@ -172,14 +184,16 @@
             icon="el-icon-edit"
             @click="handleUpdate(scope.row)"
             v-hasPermi="['car:statisticsInfo:edit']"
-          >修改</el-button>
+          >修改
+          </el-button>
           <el-button
             size="mini"
             type="text"
             icon="el-icon-delete"
             @click="handleDelete(scope.row)"
             v-hasPermi="['car:statisticsInfo:remove']"
-          >删除</el-button>
+          >删除
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -206,13 +220,13 @@
           </el-select>
         </el-form-item>
         <el-form-item label="统计名称" prop="statisticsName">
-          <el-input v-model="form.statisticsName" placeholder="请输入统计名称" />
+          <el-input v-model="form.statisticsName" placeholder="请输入统计名称"/>
         </el-form-item>
         <el-form-item label="公共KEY" prop="commonKey">
-          <el-input v-model="form.commonKey" placeholder="请输入公共KEY" />
+          <el-input v-model="form.commonKey" placeholder="请输入公共KEY"/>
         </el-form-item>
         <el-form-item label="KEY" prop="statisticsKey">
-          <el-input v-model="form.statisticsKey" placeholder="请输入KEY" />
+          <el-input v-model="form.statisticsKey" placeholder="请输入KEY"/>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -239,10 +253,13 @@
         <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
         <div class="el-upload__tip text-center" slot="tip">
           <div class="el-upload__tip" slot="tip">
-            <el-checkbox v-model="upload.updateSupport" /> 是否更新已经存在的统计信息数据
+            <el-checkbox v-model="upload.updateSupport"/>
+            是否更新已经存在的统计信息数据
           </div>
           <span>仅允许导入xls、xlsx格式文件。</span>
-          <el-link type="primary" :underline="false" style="font-size:12px;vertical-align: baseline;" @click="importTemplate">下载模板</el-link>
+          <el-link type="primary" :underline="false" style="font-size:12px;vertical-align: baseline;"
+                   @click="importTemplate">下载模板
+          </el-link>
         </div>
       </el-upload>
       <div slot="footer" class="dialog-footer">
@@ -264,7 +281,7 @@ import {
   updateStatisticsInfo,
   clearStatisticsInfo
 } from "@/api/car/statisticsInfo";
-import { getToken } from "@/utils/auth";
+import {getToken} from "@/utils/auth";
 
 export default {
   name: "StatisticsInfo",
@@ -287,15 +304,15 @@ export default {
       StatisticsInfoList: [],
       // 表格列信息
       columns: [
-        { key: 0, label: '编号', visible: true },
-        { key: 1, label: '统计类型', visible: true },
-        { key: 2, label: '统计名称', visible: true },
-        { key: 3, label: '公共KEY', visible: true },
-        { key: 4, label: 'KEY', visible: true },
-        { key: 5, label: '统计内容', visible: true },
-        { key: 6, label: '额外内容', visible: false },
-        { key: 7, label: '描述', visible: true },
-        { key: 8, label: '创建时间', visible: true }
+        {key: 0, label: '编号', visible: true},
+        {key: 1, label: '统计类型', visible: true},
+        {key: 2, label: '统计名称', visible: true},
+        {key: 3, label: '公共KEY', visible: true},
+        {key: 4, label: 'KEY', visible: true},
+        {key: 5, label: '统计内容', visible: true},
+        {key: 6, label: '额外内容', visible: false},
+        {key: 7, label: '描述', visible: true},
+        {key: 8, label: '创建时间', visible: true}
       ],
       // 弹出层标题
       title: "",
@@ -328,29 +345,29 @@ export default {
         // 是否更新已经存在的统计信息数据
         updateSupport: 0,
         // 设置上传的请求头部
-        headers: { Authorization: "Bearer " + getToken() },
+        headers: {Authorization: "Bearer " + getToken()},
         // 上传的地址
         url: process.env.VUE_APP_BASE_API + "/car/StatisticsInfo/importData"
       },
       // 表单校验
       rules: {
         id: [
-          { required: true, message: "编号不能为空", trigger: "blur" }
+          {required: true, message: "编号不能为空", trigger: "blur"}
         ],
         type: [
-          { required: true, message: "统计类型不能为空", trigger: "change" }
+          {required: true, message: "统计类型不能为空", trigger: "change"}
         ],
         statisticsName: [
-          { required: true, message: "统计名称不能为空", trigger: "blur" }
+          {required: true, message: "统计名称不能为空", trigger: "blur"}
         ],
         commonKey: [
-          { required: true, message: "公共KEY不能为空", trigger: "blur" }
+          {required: true, message: "公共KEY不能为空", trigger: "blur"}
         ],
         statisticsKey: [
-          { required: true, message: "KEY不能为空", trigger: "blur" }
+          {required: true, message: "KEY不能为空", trigger: "blur"}
         ],
         createTime: [
-          { required: true, message: "创建时间不能为空", trigger: "blur" }
+          {required: true, message: "创建时间不能为空", trigger: "blur"}
         ]
       }
     };
@@ -401,7 +418,7 @@ export default {
     // 多选框选中数据
     handleSelectionChange(selection) {
       this.ids = selection.map(item => item.id)
-      this.single = selection.length!==1
+      this.single = selection.length !== 1
       this.multiple = !selection.length
     },
     /** 新增按钮操作 */
@@ -444,16 +461,29 @@ export default {
     /** 删除按钮操作 */
     handleDelete(row) {
       const StatisticsInfoIds = row.id || this.ids;
-      this.$modal.confirm('是否确认删除统计信息编号为"' + StatisticsInfoIds + '"的数据项？').then(function() {
+      this.$modal.confirm('是否确认删除统计信息编号为"' + StatisticsInfoIds + '"的数据项？').then(function () {
         return delStatisticsInfo(StatisticsInfoIds);
       }).then(() => {
         this.getList();
         this.$modal.msgSuccess("删除成功");
-      }).catch(() => {});
+      }).catch(() => {
+      });
     },
-    handleClear(){
-      this.$modal.confirm('是否确认清空所有统计信息数据项？').then(function() {
-        return clearStatisticsInfo();
+    handleClear() {
+      const that = this
+      this.$modal.confirm('是否确认清空当前查询统计信息数据项？').then(function () {
+        const clearParams = {
+          id: that.queryParams.id,
+          type: that.queryParams.type,
+          statisticsName: that.queryParams.statisticsName,
+          commonKey: that.queryParams.commonKey,
+          statisticsKey: that.queryParams.statisticsKey,
+          content: that.queryParams.content,
+          extendContent: that.queryParams.extendContent,
+          remark: that.queryParams.remark,
+          createTime: that.queryParams.createTime
+        };
+        return clearStatisticsInfo(clearParams);
       }).then(() => {
         this.getList();
         this.$modal.msgSuccess("清空成功");
@@ -487,12 +517,12 @@ export default {
       this.upload.open = false;
       this.upload.isUploading = false;
       this.$refs.upload.clearFiles();
-      this.$alert("<div style='overflow: auto;overflow-x: hidden;max-height: 70vh;padding: 10px 20px 0;'>" + response.msg + "</div>", "导入结果", { dangerouslyUseHTMLString: true });
+      this.$alert("<div style='overflow: auto;overflow-x: hidden;max-height: 70vh;padding: 10px 20px 0;'>" + response.msg + "</div>", "导入结果", {dangerouslyUseHTMLString: true});
       this.$modal.closeLoading()
       this.getList();
     },
     buildSubmitData() {
-      const data = { ...this.form };
+      const data = {...this.form};
       return data;
     },
     // 提交上传文件
