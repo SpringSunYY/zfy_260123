@@ -4,6 +4,7 @@ from sqlalchemy import func
 from sqlalchemy.sql import select
 
 from ruoyi_admin.ext import db
+from ruoyi_car.domain.po import ModelPo
 from ruoyi_car.domain.po.sales_po import SalesPo
 from ruoyi_car.domain.statistics.dto import CarStatisticsRequest
 from ruoyi_car.domain.statistics.po.statistics_po import MapStatisticsPo, StatisticsPo, PriceStatisticsPo, \
@@ -373,6 +374,61 @@ class StatisticsMapper:
         except Exception as e:
             print(f"销售预测信息查询出错: {e}")
             return []
+
+    @classmethod
+    def acceleration_statistics(cls, request: CarStatisticsRequest) -> List[StatisticsPo]:
+        """
+        百公里加速
+        select max(acceleration) as value, series_id as series_id
+        from tb_model
+        where acceleration is not null
+        group by series_id
+        order by value asc;
+        """
+        try:
+            stmt = select(
+                func.min(ModelPo.acceleration).label("value"),
+                ModelPo.series_id.label("series_id")
+            )
+            stmt = stmt.where(ModelPo.acceleration.isnot(None))
+            stmt = stmt.order_by(func.min(ModelPo.acceleration).asc())
+            # 国家
+            if request.country:
+                stmt = stmt.where(ModelPo.country == request.country)
+            # 品牌名
+            if request.brand_name:
+                stmt = stmt.where(ModelPo.brand_name == request.brand_name)
+            # 系列名称
+            if request.series_id:
+                stmt = stmt.where(ModelPo.series_id == request.series_id)
+            # 车型
+            if request.model_type:
+                stmt = stmt.where(ModelPo.model_type == request.model_type)
+            # 能源类型
+            if request.energy_type:
+                stmt = stmt.where(ModelPo.energy_type == request.energy_type)
+            # 最高价格（车辆最低价 <= 请求最高价）
+            if request.max_price is not None:
+                stmt = stmt.where(ModelPo.owner_price <= request.max_price)
+            # 最低价格（车辆最高价 >= 请求最低价）
+            if request.min_price is not None:
+                stmt = stmt.where(ModelPo.owner_price >= request.min_price)
+
+            stmt = stmt.group_by("series_id")
+            result = db.session.execute(stmt).mappings().all()
+            # 打印 SQL 日志
+            cls._print_sql_log(stmt, "acceleration_statistics")
+            if not result:
+                return []
+            return [
+                StatisticsPo(
+                    value=float(item['value']) if item['value'] else 0,
+                    name=str(item['series_id']) if item['series_id'] else ''
+                )
+                for item in result
+            ]
+        except Exception as e:
+            print(f"百公里加速信息查询出错: {e}")
 
     @classmethod
     def init_query(cls, request: CarStatisticsRequest, stmt, query_month=True):

@@ -27,6 +27,7 @@ class SeriesStatisticsVo(BaseModel, Generic[T]):
     month: Optional[int] = 0
     address: Optional[str] = ''
     seriesId: Optional[int] = 0
+    coverImage: Optional[str] = ''
 
 class PieBarStatisticsVo(BaseModel):
     """

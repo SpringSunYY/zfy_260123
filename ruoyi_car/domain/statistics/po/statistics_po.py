@@ -10,8 +10,8 @@ class StatisticsPo(BaseModel, Generic[T]):
     """
     value: T
     name: str
-    address: str
-    month: int
+    address: str = ''
+    month: int = 0
 
 
 class SeriesStatisticsPo(BaseModel):

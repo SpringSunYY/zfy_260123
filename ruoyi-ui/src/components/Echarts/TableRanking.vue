@@ -24,7 +24,13 @@
       >
         <td>{{ index + 1 }}</td>
         <td v-for="(column, colIndex) in columns" :key="colIndex">
-          {{ (item[column.prop] !== undefined && item[column.prop] !== null) ? item[column.prop] : '' }}
+          <!-- 检查是否有自定义插槽 -->
+          <template v-if="$scopedSlots[column.prop]">
+            <slot :name="column.prop" :row="item" :index="index"></slot>
+          </template>
+          <template v-else>
+            {{ (item[column.prop] !== undefined && item[column.prop] !== null) ? item[column.prop] : '' }}
+          </template>
         </td>
       </tr>
       </tbody>
@@ -32,8 +38,12 @@
 
     <div v-if="tooltipContent" class="tooltip" :style="tooltipStyle">
       <div v-for="col in columns" :key="col.prop">
-        <strong>{{ col.label }}:</strong>
-        {{ tooltipContent[col.prop] !== undefined ? tooltipContent[col.prop] : '' }}
+        <div v-if="col.show===false">
+        </div>
+        <div v-else>
+          <strong>{{ col.label }}</strong>
+          {{ tooltipContent[col.prop] !== undefined ? tooltipContent[col.prop] : '' }}
+        </div>
       </div>
     </div>
   </div>
@@ -47,36 +57,36 @@ export default {
     columns: {
       type: Array,
       default: () => [
-        { label: '图片编号', prop: 'pictureId' },
-        { label: '图片名称', prop: 'name' },
-        { label: '浏览量', prop: 'lookCount' },
-        { label: '收藏量', prop: 'collectCount' },
-        { label: '点赞', prop: 'likeCount' },
-        { label: '分享', prop: 'shareCount' }
+        {label: '图片编号', prop: 'pictureId'},
+        {label: '图片名称', prop: 'name'},
+        {label: '浏览量', prop: 'lookCount'},
+        {label: '收藏量', prop: 'collectCount'},
+        {label: '点赞', prop: 'likeCount'},
+        {label: '分享', prop: 'shareCount'}
       ]
     },
     // 列表数据
     data: {
       type: Array,
       default: () => [
-        { pictureId: '001', name: '图片A', lookCount: 100, collectCount: 50, likeCount: 80, shareCount: 10 },
-        { pictureId: '002', name: '图片B', lookCount: 200, collectCount: 70, likeCount: 120, shareCount: 20 },
-        { pictureId: '003', name: '图片C', lookCount: 150, collectCount: 60, likeCount: 90, shareCount: 15 },
-        { pictureId: '004', name: '图片D', lookCount: 300, collectCount: 90, likeCount: 200, shareCount: 30 },
-        { pictureId: '005', name: '图片E', lookCount: 80, collectCount: 40, likeCount: 50, shareCount: 5 },
-        { pictureId: '006', name: '图片F', lookCount: 90, collectCount: 45, likeCount: 60, shareCount: 8 },
-        { pictureId: '007', name: '图片G', lookCount: 110, collectCount: 55, likeCount: 70, shareCount: 12 },
-        { pictureId: '008', name: '图片E', lookCount: 80, collectCount: 40, likeCount: 50, shareCount: 5 },
-        { pictureId: '009', name: '图片F', lookCount: 90, collectCount: 45, likeCount: 60, shareCount: 8 },
-        { pictureId: '010', name: '图片G', lookCount: 110, collectCount: 55, likeCount: 70, shareCount: 12 }
+        {pictureId: '001', name: '图片A', lookCount: 100, collectCount: 50, likeCount: 80, shareCount: 10},
+        {pictureId: '002', name: '图片B', lookCount: 200, collectCount: 70, likeCount: 120, shareCount: 20},
+        {pictureId: '003', name: '图片C', lookCount: 150, collectCount: 60, likeCount: 90, shareCount: 15},
+        {pictureId: '004', name: '图片D', lookCount: 300, collectCount: 90, likeCount: 200, shareCount: 30},
+        {pictureId: '005', name: '图片E', lookCount: 80, collectCount: 40, likeCount: 50, shareCount: 5},
+        {pictureId: '006', name: '图片F', lookCount: 90, collectCount: 45, likeCount: 60, shareCount: 8},
+        {pictureId: '007', name: '图片G', lookCount: 110, collectCount: 55, likeCount: 70, shareCount: 12},
+        {pictureId: '008', name: '图片E', lookCount: 80, collectCount: 40, likeCount: 50, shareCount: 5},
+        {pictureId: '009', name: '图片F', lookCount: 90, collectCount: 45, likeCount: 60, shareCount: 8},
+        {pictureId: '010', name: '图片G', lookCount: 110, collectCount: 55, likeCount: 70, shareCount: 12}
       ]
     },
-    height: { type: String, default: '100%' },
-    width: { type: String, default: '100%' },
+    height: {type: String, default: '100%'},
+    width: {type: String, default: '100%'},
     // 自动滚动等待时间
-    scrollInterval: { type: Number, default: 2000 },
+    scrollInterval: {type: Number, default: 2000},
     // 滚动速度（像素/帧）
-    scrollSpeed: { type: Number, default: 0.4 }
+    scrollSpeed: {type: Number, default: 0.4}
   },
   data() {
     return {

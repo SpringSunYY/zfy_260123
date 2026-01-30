@@ -28,7 +28,21 @@
         <div class="chart-wrapper">
           <div class="chart-wrapper">
             <TableRanking
-            />
+              :columns="tableColumns"
+              :data="accelerationStatisticsData"
+            >
+              <!-- 封面图片插槽 -->
+              <template slot="coverImage" slot-scope="{ row }">
+                <img
+                  v-if="row.coverImage"
+                  v-lazy
+                  :data-src="row.coverImage"
+                  :alt="row.name || '封面'"
+                  class="cover-image"
+                />
+                <span v-else class="no-image">暂无图片</span>
+              </template>
+            </TableRanking>
           </div>
         </div>
       </el-col>
@@ -105,6 +119,7 @@ import TableRanking from "@/components/Echarts/TableRanking.vue";
 import LabelValueGrid from "@/components/Echarts/LabelValueList.vue";
 import DateRangePicker from "@/components/Echarts/DateRangePicker.vue";
 import {
+  accelerationStatistics,
   salesBrandStatistics, salesCountryStatistics,
   salesEnergyTypeStatistics,
   salesMapStatistics, salesModelTypeStatistics, salesPredictStatistics,
@@ -123,6 +138,30 @@ export default {
     PieGradientRoseCharts,
     PiePetalTransparentPoseCharts,
     PiePetalPoseCharts, ScatterRandomTooltipCharts, PieGradientCharts, MapCharts, KeywordGravityCharts
+  },
+  directives: {
+    lazy: {
+      inserted(el) {
+        // 使用 Intersection Observer 实现懒加载
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              const img = entry.target;
+              // 加载真实图片
+              if (img.dataset.src) {
+                img.src = img.dataset.src;
+              }
+              img.classList.add('lazy-loaded');
+              observer.unobserve(img);
+            }
+          });
+        }, {
+          rootMargin: '50px', // 提前 50px 开始加载
+          threshold: 0.1
+        });
+        observer.observe(el);
+      }
+    }
   },
   data() {
     return {
@@ -167,6 +206,11 @@ export default {
           key: 'seriesName',
         },
       ],
+      tableColumns: [
+        {label: '封面', prop: 'coverImage', show: false},
+        {label: '系列', prop: 'name'},
+        {label: '速度', prop: 'value'}
+      ],
       //销量地图
       salesMapStatisticsData: [],
       salesMapStatisticsName: "销量地图",
@@ -194,6 +238,9 @@ export default {
       //销量预测
       salesPredictStatisticsData: [],
       salesPredictStatisticsName: "销量预测",
+      //百公里加速
+      accelerationStatisticsData: [],
+      accelerationStatisticsName: "百公里加速",
     }
   },
   created() {
@@ -214,10 +261,30 @@ export default {
       this.getModelTypeSalesStatisticsData()
       this.getSeriesSalesStatisticsData()
       this.getSalesPredictStatisticsData()
+      this.getAccelerationStatisticsData()
     },
     getDataByStatisticsClick() {
       this.getSalesMapStatisticsData()
       this.getSalesPredictStatisticsData()
+      this.getAccelerationStatisticsData()
+    },
+    //百公里加速
+    getAccelerationStatisticsData() {
+      accelerationStatistics({
+        ...this.query,
+        startTime: null,
+        endTime: null
+      }).then(res => {
+        this.accelerationStatisticsData = res.data.map(item => {
+          return {
+            name: item.name,
+            value: item.value,
+            tooltipText: item.tooltipText,
+            seriesId: item.seriesId,
+            coverImage: item.coverImage
+          }
+        })
+      })
     },
     //销量预测
     getSalesPredictStatisticsData() {
@@ -577,5 +644,49 @@ export default {
 
 .rank-chart-wrapper {
   height: 42vh;
+}
+
+// 封面图片样式
+.cover-image {
+  width: 50px;
+  height: 35px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.05);
+  position: relative;
+  // 加载中状态
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-top-color: #00d2ff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  &.lazy-loaded {
+    background-color: transparent;
+
+    &::before {
+      display: none;
+    }
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.no-image {
+  color: #999;
+  font-size: 12px;
 }
 </style>

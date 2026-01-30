@@ -1438,3 +1438,44 @@ class StatisticsService:
                                common_key=StatisticsConstants.SALES_PREDICT_COMMON_KEY,
                                statistics_name=StatisticsConstants.SALES_PREDICT_COMMON_NAME)
             cached_results.extend(db_results)
+
+    def acceleration_statistics(self, request) -> List[SeriesStatisticsVo]:
+        """
+        百公里加速信息数据分析
+        返回：系列名称、封面图片、百公里加速时间
+        """
+        # 1. 查询加速统计数据（返回 series_id 和 acceleration 值）
+        raw_data: List[StatisticsPo] = StatisticsMapper.acceleration_statistics(request)
+        if not raw_data:
+            return []
+
+        # 2. 收集所有 series_id
+        series_ids = []
+        for item in raw_data:
+            if item.name:
+                series_ids.append(int(item.name))
+
+        if not series_ids:
+            return []
+
+        # 3. 批量查询车系信息获取名称和封面
+        series_list = SeriesService.select_series_by_series_ids(series_ids)
+        series_id_to_info = {s.series_id: {'name': s.series_name, 'coverImage': s.image} for s in series_list}
+
+        # 4. 组装返回数据
+        results = []
+        for item in raw_data:
+            series_id = int(item.name) if item.name else 0
+            series_info = series_id_to_info.get(series_id, {'name': '', 'coverImage': ''})
+
+            vo = SeriesStatisticsVo(
+                value=item.value,
+                name=series_info['name'],
+                seriesId=series_id,
+                coverImage=series_info['coverImage'],
+                tooltipText=f"{series_info['name']}: {item.value}秒",
+                moreInfo="百公里加速统计"
+            )
+            results.append(vo)
+
+        return results

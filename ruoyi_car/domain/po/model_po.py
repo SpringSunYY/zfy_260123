@@ -6,10 +6,12 @@
 from typing import Optional
 from datetime import datetime
 
-from sqlalchemy import BigInteger, Boolean, Date, DateTime, Float, Integer, JSON, LargeBinary, Numeric, String, Text, Time
+from sqlalchemy import BigInteger, Boolean, Date, DateTime, Float, Integer, JSON, LargeBinary, Numeric, String, Text, \
+    Time
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ruoyi_admin.ext import db
+
 
 class ModelPo(db.Model):
     """
@@ -102,6 +104,12 @@ class ModelPo(db.Model):
         String(255),
         nullable=True,
         comment='能源类型'
+    )
+    model_type: Mapped[Optional[str]] = mapped_column(
+        'model_type',
+        String(255),
+        nullable=True,
+        comment='车型'
     )
     acceleration_str: Mapped[Optional[str]] = mapped_column(
         'acceleration_str',

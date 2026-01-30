@@ -151,7 +151,7 @@ def series_sales_statistics(dto: CarStatisticsRequest):
 @QueryValidator(is_page=True)
 @PreAuthorize(HasPerm("car:sales:statistics"))
 @JsonSerializer()
-def sales_predict(dto: CarStatisticsRequest):
+def sales_predict_statistics(dto: CarStatisticsRequest):
     """
         销量预测
     """
@@ -164,3 +164,22 @@ def sales_predict(dto: CarStatisticsRequest):
         request.address = None
 
     return AjaxResponse.from_success(data=statistics_service.sales_predict_statistics(request))
+
+
+#百公里加速
+@gen.route('/acceleration', methods=['GET'])
+@QueryValidator(is_page=True)
+@PreAuthorize(HasPerm("car:sales:statistics"))
+@JsonSerializer()
+def acceleration_statistics(dto: CarStatisticsRequest):
+    """
+        百公里加速
+    """
+    request = CarStatisticsRequest()
+    # 转换PO到Entity对象
+    for attr in dto.model_fields.keys():
+        if hasattr(request, attr):
+            setattr(request, attr, getattr(dto, attr))
+    if request.address and request.address == "中华人民共和国":
+        request.address = None
+    return AjaxResponse.from_success(data=statistics_service.acceleration_statistics(request))

@@ -82,3 +82,14 @@ export function salesPredictStatistics(params){
     timeout: 30000
   })
 }
+
+
+//百公里加速
+export function accelerationStatistics(params){
+  return request({
+    url: '/car/statistics/acceleration',
+    method: 'get',
+    params,
+    timeout: 30000
+  })
+}

@@ -107,6 +107,13 @@ class Model(BaseEntity):
         VoField(query=True),
         ExcelField(name="发动机/电机")
     ]
+    # 车型
+    model_type: Annotated[
+        Optional[str],
+        Field(default=None, description="车型"),
+        VoField(query=True),
+        ExcelField(name="车型", dict_type="model_type")
+    ]
     # 能源类型
     energy_type: Annotated[
         Optional[str],
