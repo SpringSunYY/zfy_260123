@@ -93,50 +93,11 @@
         <!-- 右侧：评分卡片 -->
         <div class="right-section">
           <el-card v-if="hasScores" class="score-card" shadow="never">
-            <div slot="header" class="card-header">
-              <span>综合评分</span>
-            </div>
-            <div class="scores-grid">
-              <div v-if="series.overallScore" class="score-item">
-                <div class="score-label">综合</div>
-                <el-rate v-model="series.overallScore" disabled show-score text-color="#ff9900"
-                         score-template="{value}"></el-rate>
-              </div>
-              <div v-if="series.exteriorScore" class="score-item">
-                <div class="score-label">外观</div>
-                <el-rate v-model="series.exteriorScore" disabled show-score text-color="#ff9900"
-                         score-template="{value}"></el-rate>
-              </div>
-              <div v-if="series.interiorScore" class="score-item">
-                <div class="score-label">内饰</div>
-                <el-rate v-model="series.interiorScore" disabled show-score text-color="#ff9900"
-                         score-template="{value}"></el-rate>
-              </div>
-              <div v-if="series.spaceScore" class="score-item">
-                <div class="score-label">空间</div>
-                <el-rate v-model="series.spaceScore" disabled show-score text-color="#ff9900"
-                         score-template="{value}"></el-rate>
-              </div>
-              <div v-if="series.handlingScore" class="score-item">
-                <div class="score-label">操控</div>
-                <el-rate v-model="series.handlingScore" disabled show-score text-color="#ff9900"
-                         score-template="{value}"></el-rate>
-              </div>
-              <div v-if="series.comfortScore" class="score-item">
-                <div class="score-label">舒适性</div>
-                <el-rate v-model="series.comfortScore" disabled show-score text-color="#ff9900"
-                         score-template="{value}"></el-rate>
-              </div>
-              <div v-if="series.powerScore" class="score-item">
-                <div class="score-label">动力</div>
-                <el-rate v-model="series.powerScore" disabled show-score text-color="#ff9900"
-                         score-template="{value}"></el-rate>
-              </div>
-              <div v-if="series.configurationScore" class="score-item">
-                <div class="score-label">配置</div>
-                <el-rate v-model="series.configurationScore" disabled show-score text-color="#ff9900"
-                         score-template="{value}"></el-rate>
-              </div>
+            <div class="score-chart">
+              <RadarTooltipCharts
+                :chart-data="seriesScoreData"
+                :chart-name="seriesScoreName"
+              />
             </div>
           </el-card>
         </div>
@@ -202,16 +163,20 @@
 <script>
 import {getSeriesDetail} from "@/api/car/series";
 import {addLike, delLikeBySeriesId, listLike} from "@/api/car/like";
+import RadarTooltipCharts from "@/components/Echarts/RadarTooltipCharts.vue";
 
 export default {
   name: "SeriesDetail",
+  components: {RadarTooltipCharts},
   dicts: ['country', 'model_type', 'energy_type', 'drive_type'],
   data() {
     return {
       loading: false,
       imageError: false,
       seriesId: null,
-      series: {}
+      series: {},
+      seriesScoreData: [],
+      seriesScoreName: ''
     }
   },
   computed: {
@@ -236,6 +201,53 @@ export default {
       getSeriesDetail(this.seriesId).then(res => {
         this.series = res.data || {};
         this.loading = false;
+        this.seriesScoreData = []
+        const data = res.data
+        if (data.overallScore) {
+          this.seriesScoreName = '综合：' + res.data.overallScore
+        }
+        if (data.exteriorScore) {
+          this.seriesScoreData.push({
+            name: '外观',
+            value: data.exteriorScore
+          })
+        }
+        if (data.interiorScore) {
+          this.seriesScoreData.push({
+            name: '内饰',
+            value: data.interiorScore
+          })
+        }
+        if (data.spaceScore) {
+          this.seriesScoreData.push({
+            name: '空间',
+            value: data.spaceScore
+          })
+        }
+        if (data.handlingScore) {
+          this.seriesScoreData.push({
+            name: '操控',
+            value: data.handlingScore
+          })
+        }
+        if (data.comfortScore) {
+          this.seriesScoreData.push({
+            name: '舒适性',
+            value: data.comfortScore
+          })
+        }
+        if (data.powerScore) {
+          this.seriesScoreData.push({
+            name: '动力',
+            value: data.powerScore
+          })
+        }
+        if (data.configurationScore) {
+          this.seriesScoreData.push({
+            name: '配置',
+            value: data.configurationScore
+          })
+        }
       }).catch(() => {
         this.loading = false;
         this.$modal.msgError("获取车系详情失败");
@@ -255,42 +267,42 @@ export default {
         }).catch(() => {
           this.$modal.msgError("查询点赞记录失败");
         });
-    } else {
-      // 添加点赞
-      const likeData = {
-        seriesId: this.series.seriesId,
-        country: this.series.country,
-        brandName: this.series.brandName,
-        image: this.series.image,
-        seriesName: this.series.seriesName,
-        modelType: this.series.modelType,
-        energyType: this.series.energyType
-      };
-      addLike(likeData).then(() => {
-        this.series.isLiked = true;
-        this.$modal.msgSuccess("点赞成功");
-      }).catch(() => {
-        this.$modal.msgError("点赞失败");
-      });
-    }
-  },
-  /** 图片加载错误处理 */
-  handleImageError() {
-    this.imageError = true;
-  },
-  /** 查看详情 - 跳转到懂车帝 */
-  viewDetail() {
-    if (this.series.seriesId) {
-      window.open(`https://www.dongchedi.com/auto/series/${this.series.seriesId}`, '_blank');
-    }
-  },
-  /** 查看车型详情 - 跳转到懂车帝 */
-  viewModelDetail(row) {
-    if (this.series.seriesId && row.carId) {
-      window.open(`https://www.dongchedi.com/auto/series/${this.series.seriesId}/model-${row.carId}`, '_blank');
+      } else {
+        // 添加点赞
+        const likeData = {
+          seriesId: this.series.seriesId,
+          country: this.series.country,
+          brandName: this.series.brandName,
+          image: this.series.image,
+          seriesName: this.series.seriesName,
+          modelType: this.series.modelType,
+          energyType: this.series.energyType
+        };
+        addLike(likeData).then(() => {
+          this.series.isLiked = true;
+          this.$modal.msgSuccess("点赞成功");
+        }).catch(() => {
+          this.$modal.msgError("点赞失败");
+        });
+      }
+    },
+    /** 图片加载错误处理 */
+    handleImageError() {
+      this.imageError = true;
+    },
+    /** 查看详情 - 跳转到懂车帝 */
+    viewDetail() {
+      if (this.series.seriesId) {
+        window.open(`https://www.dongchedi.com/auto/series/${this.series.seriesId}`, '_blank');
+      }
+    },
+    /** 查看车型详情 - 跳转到懂车帝 */
+    viewModelDetail(row) {
+      if (this.series.seriesId && row.carId) {
+        window.open(`https://www.dongchedi.com/auto/series/${this.series.seriesId}/model-${row.carId}`, '_blank');
+      }
     }
   }
-}
 }
 </script>
 
@@ -583,39 +595,8 @@ export default {
   }
 }
 
-.scores-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-}
-
-.score-item {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  padding: 18px;
-  background: #fafafa;
-  border-radius: 8px;
-  transition: all 0.3s;
-
-  &:hover {
-    background: #f0f0f0;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-
-  .score-label {
-    min-width: 60px;
-    font-size: 15px;
-    color: #606266;
-    font-weight: 500;
-    flex-shrink: 0;
-  }
-
-  ::v-deep .el-rate {
-    flex: 1;
-    min-width: 0;
-  }
+.score-chart {
+  height: 25vh;
 }
 
 .error-tip {
@@ -684,14 +665,6 @@ export default {
     }
   }
 
-  .scores-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .score-item {
-    padding: 12px;
-  }
 
   .model-card {
     width: 95%;
