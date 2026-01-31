@@ -11,11 +11,11 @@
           />
         </div>
         <div class="chart-wrapper">
-          <KeywordGravityCharts
-            :font-size-range="[12,36]"
-            :chart-data="brandSalesStatisticsData"
-            :chart-name="brandSalesStatisticsName"
-            @item-click="(item) => handleToQuery(item, 'brandName')"/>
+          <ScatterRandomTooltipCharts
+            :chart-data="modelTypeSalesStatisticsData"
+            :chart-title="modelTypeSalesStatisticsName"
+            :symbol-size="600"
+            @item-click="(item) => handleToQuery(item, 'modelType')"/>
         </div>
         <div class="chart-wrapper">
           <PiePetalTransparentPoseCharts
@@ -30,6 +30,7 @@
             <TableRanking
               :columns="tableColumns"
               :data="accelerationStatisticsData"
+              @rowClicked="clickTable"
             >
               <!-- 封面图片插槽 -->
               <template slot="coverImage" slot-scope="{ row }">
@@ -61,17 +62,18 @@
             :chart-data="salesPredictStatisticsData"
           />
         </div>
-        <div class="chart-wrapper">
-          <ScatterRandomTooltipCharts
-            :chart-data="modelTypeSalesStatisticsData"
-            :chart-title="modelTypeSalesStatisticsName"
-            :symbol-size="600"
-            @item-click="(item) => handleToQuery(item, 'modelType')"/>
+        <div class="center-chart-wrapper">
+          <KeywordGravityCharts
+            :font-size-range="[12,36]"
+            :chart-data="brandSalesStatisticsData"
+            :chart-name="brandSalesStatisticsName"
+            @item-click="(item) => handleToQuery(item, 'brandName')"/>
         </div>
       </el-col>
       <el-col :xs="24" :sm="24" :lg="6">
         <div class="query-chart-wrapper">
           <LabelValueGrid
+            @reset="reset"
             :data-list="tableQueryList"/>
         </div>
         <div class="chart-wrapper">
@@ -84,7 +86,7 @@
         <div class="rank-chart-wrapper">
           <BarRankingZoomCharts
             :chart-data="seriesSalesStatisticsData"
-            :chart-name="seriesSalesStatisticsName"
+            :chart-title="seriesSalesStatisticsName"
             :displayCount="12"
             @item-click="(item) => handleToQuery(item, 'seriesName')"/>
         </div>
@@ -171,11 +173,6 @@ export default {
       },
       tableQueryList: [
         {
-          label: '地区',
-          value: '全国',
-          key: 'address',
-        },
-        {
           label: '品牌',
           value: '全部',
           key: 'brandName',
@@ -205,6 +202,11 @@ export default {
           value: '全部',
           key: 'seriesName',
         },
+        {
+          label: '地区',
+          value: '全国',
+          key: 'address',
+        },
       ],
       tableColumns: [
         {label: '封面', prop: 'coverImage', show: false},
@@ -216,34 +218,43 @@ export default {
       salesMapStatisticsName: "销量地图",
       //价格销量
       priceSalesStatisticsData: [],
-      priceSalesStatisticsName: "价格销量",
+      priceSalesStatisticsName: "价格销量分析",
+      priceSalesStatisticsNameOrigin: "价格销量分析",
       //能源类型
       energyTypeSalesStatisticsData: [],
-      energyTypeSalesStatisticsName: "能源类型",
+      energyTypeSalesStatisticsName: "能源类型分析",
+      energyTypeSalesStatisticsNameOrigin: "能源类型分析",
       //品牌
       brandSalesStatisticsData: [],
-      brandSalesStatisticsName: "品牌",
+      brandSalesStatisticsName: "品牌分析",
+      brandSalesStatisticsOrigin: "品牌",
       //国家
       countrySalesStatisticsData: [],
-      countrySalesStatisticsName: "国家",
+      countrySalesStatisticsName: "国家分析",
+      countrySalesStatisticsNameOrigin: "国家分析",
       //车型
       modelTypeSalesStatisticsData: [],
-      modelTypeSalesStatisticsName: "车型",
+      modelTypeSalesStatisticsName: "车型分析",
+      modelTypeSalesStatisticsNameOrigin: "车型分析",
       //月份
       monthSalesStatisticsData: [],
-      monthSalesStatisticsName: "月份销量",
+      monthSalesStatisticsName: "月份销量分析",
+      monthSalesStatisticsNameOrigin: "月份销量分析",
       //车系
       seriesSalesStatisticsData: [],
       seriesSalesStatisticsName: "车系排行",
+      seriesSalesStatisticsNameOrigin: "车系排行",
       //销量预测
       salesPredictStatisticsData: [],
       salesPredictStatisticsName: "销量预测",
+      salesPredictStatisticsNameOrigin: "销量预测",
       //百公里加速
       accelerationStatisticsData: [],
       accelerationStatisticsName: "百公里加速",
     }
   },
   created() {
+    this.getAccelerationStatisticsData()
   },
   methods: {
     getMapData(data) {
@@ -252,21 +263,45 @@ export default {
       if (addressName === '中华人民共和国') {
         addressName = '中国'
       }
+      //如果包含省、自治区，去除
+      if (addressName.includes('省')) {
+        addressName = addressName.replace('省', '')
+      }
+      if (addressName.includes('壮族自治区')) {
+        addressName = addressName.replace('壮族自治区', '')
+      }
+      if (addressName.includes('维吾尔自治区')) {
+        addressName = addressName.replace('维吾尔自治区', '')
+      }
+      if (addressName.includes('自治区')) {
+        addressName = addressName.replace('自治区', '')
+      }
+      if (addressName.includes('市')) {
+        addressName = addressName.replace('市', '')
+      }
       this.resetLabelQuery('address', addressName)
       this.getSalesMapStatisticsData()
       this.getPriceSalesStatisticsData()
+      this.priceSalesStatisticsName = addressName + ' ' + this.priceSalesStatisticsNameOrigin
+      this.monthSalesStatisticsName = addressName + ' ' + this.monthSalesStatisticsNameOrigin
       this.getEnergyTypeSalesStatisticsData()
+      this.energyTypeSalesStatisticsName = addressName + ' ' + this.energyTypeSalesStatisticsNameOrigin
       this.getBrandSalesStatisticsData()
+      this.brandSalesStatisticsName = addressName + ' ' + this.brandSalesStatisticsOrigin
       this.getCountrySalesStatisticsData()
+      this.countrySalesStatisticsName = addressName + ' ' + this.countrySalesStatisticsNameOrigin
       this.getModelTypeSalesStatisticsData()
+      this.modelTypeSalesStatisticsName = addressName + ' ' + this.modelTypeSalesStatisticsNameOrigin
       this.getSeriesSalesStatisticsData()
+      this.seriesSalesStatisticsName = addressName + ' ' + this.seriesSalesStatisticsNameOrigin
       this.getSalesPredictStatisticsData()
-      this.getAccelerationStatisticsData()
+      this.salesPredictStatisticsName = addressName + ' ' + this.salesPredictStatisticsNameOrigin
     },
     getDataByStatisticsClick() {
       this.getSalesMapStatisticsData()
       this.getSalesPredictStatisticsData()
       this.getAccelerationStatisticsData()
+      this.$modal.msgSuccess("查询中，请稍候。。。")
     },
     //百公里加速
     getAccelerationStatisticsData() {
@@ -609,6 +644,34 @@ export default {
           }
         }
       )
+    },
+    //点击速度排行榜
+    clickTable(item) {
+      if (item && item.seriesId) {
+        const routeData = this.$router.resolve({
+          name: 'SeriesDetail',
+          params: {seriesId: item.seriesId}
+        });
+        window.open(routeData.href, '_blank');
+      }
+    },
+    //重置查询
+    reset() {
+      this.query = {
+        startTime: this.query.startTime,
+        endTime: this.query.endTime,
+        minPrice: null,
+        maxPrice: null,
+        modelType: null,
+        brandName: null,
+        country: null,
+        energyType: null,
+        seriesId: null
+      }
+      this.getDataByStatisticsClick();
+      this.getMapData({
+        name: '中华人民共和国'
+      })
     }
   }
 }
@@ -636,6 +699,10 @@ export default {
   margin-top: 2vh;
   height: 25vh;
   margin-bottom: 2vh;
+}
+
+.center-chart-wrapper {
+  height: 45vh;
 }
 
 .chart-wrapper {

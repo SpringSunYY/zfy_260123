@@ -11,6 +11,15 @@
       <span class="item-label">{{ item.label }}</span>
       <span class="item-value">{{ item.value }}</span>
     </div>
+    <!-- 重置按钮 -->
+    <div
+      v-if="showReset"
+      class="grid-item"
+      @click="handleReset"
+    >
+      <span class="item-label">↺</span>
+      <span class="item-value">重置</span>
+    </div>
   </div>
 </template>
 
@@ -44,6 +53,17 @@ export default {
     gap: {
       type: String,
       default: '1.2vw' // 替换为 vw
+    },
+    // 是否显示重置按钮
+    showReset: {
+      type: Boolean,
+      default: true
+    }
+  },
+  emits: ['reset'],
+  methods: {
+    handleReset() {
+      this.$emit('reset');
     }
   },
   computed: {

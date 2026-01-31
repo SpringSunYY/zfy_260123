@@ -142,7 +142,7 @@ export default {
           left: 'center',
           top: '41%',
           textStyle: {fontSize: 36, fontWeight: 'bold', color: '#00A1A3'},
-          subtextStyle: {color: '#888', fontSize: 18}
+          subtextStyle: {color: '#ffffff', fontSize: 18,borderWidth: 'bold'}
         },
         tooltip: {
           show: true,

@@ -55,21 +55,11 @@ export default {
     displayCount: {
       type: Number,
       default: 5
-    },
-    playInterval: {
-      type: Number,
-      default: 3000
-    },
-    autoPlay: {
-      type: Boolean,
-      default: true
     }
   },
   data() {
     return {
-      chart: null,
-      timer: null,
-      startIndex: 0
+      chart: null
     };
   },
   computed: {
@@ -96,7 +86,6 @@ export default {
     });
   },
   beforeDestroy() {
-    this.stopRotation();
     if (this.chart) {
       this.chart.dispose();
       this.chart = null;
@@ -159,18 +148,10 @@ export default {
           });
         }
       });
-
-      // 自动轮播与鼠标交互
-      if (this.autoPlay) {
-        this.startRotation();
-        this.chart.getZr().on('mousemove', this.stopRotation);
-        this.chart.getZr().on('globalout', this.startRotation);
-      }
     },
 
     setOption() {
       const data = this.chartData;
-      console.log(data)
       const xLabels = data.map(item => item.name);
       const rawValues = data.map(item => item.value);
       const {total, avg} = this.stats;
@@ -320,28 +301,6 @@ export default {
       };
 
       this.chart.setOption(option);
-    },
-
-    startRotation() {
-      if (!this.autoPlay || this.chartData.length <= this.displayCount) return;
-      this.stopRotation();
-      this.timer = setInterval(() => {
-        if (this.startIndex >= this.chartData.length - this.displayCount) {
-          this.startIndex = 0;
-        } else {
-          this.startIndex++;
-        }
-        this.chart.setOption({
-          dataZoom: [{startValue: this.startIndex, endValue: this.startIndex + this.displayCount - 1}]
-        });
-      }, this.playInterval);
-    },
-
-    stopRotation() {
-      if (this.timer) {
-        clearInterval(this.timer);
-        this.timer = null;
-      }
     },
 
     handleResize() {
