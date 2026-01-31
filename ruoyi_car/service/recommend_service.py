@@ -274,7 +274,7 @@ class RecommendService:
         like_score = float(like_score_str) if like_score_str else 15
         view_score_str = SysConfigService.select_config_by_key(ConfigConstants.CAR_SCORE_VIEW)
         ##转换成数值
-        view_score = float(view_score_str) if view_score_str else 5
+        view_score = float(view_score_str) if view_score_str else 1
         # 价格范围
         price_range = [100000, 200000, 300000, 500000, 1000000, 2000000]
         price_range_str = SysConfigService.select_config_by_key(ConfigConstants.STATISTICS_PRICE_RANGE)

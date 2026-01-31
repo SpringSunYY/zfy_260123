@@ -7,9 +7,11 @@ from typing import List, Optional
 
 from ruoyi_car.domain.entity import View, Series
 from ruoyi_car.mapper.view_mapper import ViewMapper
+from ruoyi_common.constant import ConfigConstants
 from ruoyi_common.exception import ServiceException
 from ruoyi_common.utils.base import LogUtil
 from ruoyi_common.utils.security_util import get_user_id, get_username
+from ruoyi_system.service import SysConfigService
 
 
 class ViewService:
@@ -68,6 +70,9 @@ class ViewService:
         if existing:
             return 0
         ##赋值
+        view_score_str = SysConfigService.select_config_by_key(ConfigConstants.CAR_SCORE_VIEW)
+        ##转换成数值
+        view_score = float(view_score_str) if view_score_str else 1
         view_info.user_id = user_id
         view_info.user_name = user_name
         view_info.series_id = series.series_id
@@ -86,7 +91,7 @@ class ViewService:
         view_info.power_score = series.power_score or 3
         view_info.configuration_score = series.configuration_score or 3
         view_info.price = series.min_price or 0
-        view_info.score = 3
+        view_info.score = view_score
         return ViewMapper.insert_view(view_info)
 
     @classmethod

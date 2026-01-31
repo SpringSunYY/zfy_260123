@@ -60,6 +60,10 @@ class LikeService:
         like_info = LikeMapper.select_series_like_by_series_and_user(like.series_id, like.user_id)
         if like_info:
             raise ServiceException("用户已经点赞")
+
+        like_score_str = SysConfigService.select_config_by_key(ConfigConstants.CAR_SCORE_LIKE)
+        ##转换成数值
+        like_score = float(like_score_str) if like_score_str else 15
         ##赋值
         like.country = series_info.country or ""
         like.series_name = series_info.series_name or ""
@@ -76,7 +80,7 @@ class LikeService:
         like.power_score = series_info.power_score or 3
         like.configuration_score = series_info.configuration_score or 3
         like.price = series_info.min_price or 0
-        like.score = 15
+        like.score = like_score
         return LikeMapper.insert_like(like)
 
     @classmethod
