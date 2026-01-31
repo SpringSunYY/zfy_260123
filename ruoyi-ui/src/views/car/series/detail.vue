@@ -75,11 +75,15 @@
             <!-- 销量信息 -->
             <div class="sales-section">
               <div v-if="series.monthTotalSales !== null && series.monthTotalSales !== undefined" class="sales-item">
-                <span class="sales-label">月总销量：</span>
+                <el-tooltip content="参考数据，仅供参考，不参与任何数据分析" placement="top">
+                  <span class="sales-label">月总销量：</span>
+                </el-tooltip>
                 <span class="sales-value">{{ series.monthTotalSales }}</span>
               </div>
               <div v-if="series.cityTotalSales !== null && series.cityTotalSales !== undefined" class="sales-item">
-                <span class="sales-label">城市总销量：</span>
+                <el-tooltip content="实际参考销量，所有的分析均来自此销量" placement="top">
+                  <span class="sales-label">城市总销量：</span>
+                </el-tooltip>
                 <span class="sales-value">{{ series.cityTotalSales }}</span>
               </div>
               <div v-if="series.marketTime" class="sales-item">
@@ -97,6 +101,12 @@
               <RadarTooltipCharts
                 :chart-data="seriesScoreData"
                 :chart-name="seriesScoreName"
+              />
+            </div>
+            <div class="score-chart">
+              <BarLineZoomCharts
+                :chart-data="salesPredictStatisticsData"
+                :chart-name="salesPredictStatisticsName"
               />
             </div>
           </el-card>
@@ -164,10 +174,12 @@
 import {getSeriesDetail} from "@/api/car/series";
 import {addLike, delLikeBySeriesId, listLike} from "@/api/car/like";
 import RadarTooltipCharts from "@/components/Echarts/RadarTooltipCharts.vue";
+import BarLineZoomCharts from "@/components/Echarts/BarLineZoomCharts.vue";
+import {salesPredictStatistics} from "@/api/car/statistics";
 
 export default {
   name: "SeriesDetail",
-  components: {RadarTooltipCharts},
+  components: {BarLineZoomCharts, RadarTooltipCharts},
   dicts: ['country', 'model_type', 'energy_type', 'drive_type'],
   data() {
     return {
@@ -176,7 +188,10 @@ export default {
       seriesId: null,
       series: {},
       seriesScoreData: [],
-      seriesScoreName: ''
+      seriesScoreName: '',
+      //销量预测
+      salesPredictStatisticsData: [],
+      salesPredictStatisticsName: "销量预测",
     }
   },
   computed: {
@@ -189,8 +204,30 @@ export default {
   created() {
     this.seriesId = this.$route.params.seriesId;
     this.getSeries();
+    this.getSalesPredictStatisticsData()
   },
   methods: {
+    //获取销量预测
+    getSalesPredictStatisticsData() {
+      if (!this.seriesId) {
+        this.$modal.msgError("车系ID不能为空");
+        return;
+      }
+      salesPredictStatistics(
+        {
+          seriesId: this.seriesId
+        }
+      ).then(res => {
+        if (!res.data) return
+        this.salesPredictStatisticsData = res.data.map(item => {
+          return {
+            name: item.month,
+            value: item.value,
+            tooltipText: item.tooltipText
+          }
+        })
+      })
+    },
     /** 获取车系详情 */
     getSeries() {
       if (!this.seriesId) {
@@ -593,6 +630,11 @@ export default {
     font-weight: normal;
     color: #909399;
   }
+}
+
+.score-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
 }
 
 .score-chart {

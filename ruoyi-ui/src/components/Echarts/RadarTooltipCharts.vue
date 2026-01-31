@@ -26,7 +26,7 @@ export default {
     },
     max: {type: Number, default: 5},
     chartName: {type: String, default: 'radar'},
-    backgroundColor: {type: String, default: 'rgba(0,0,0,0.08)'},
+    backgroundColor: {type: String, default: 'transparent'},
     colorMain: {
       type: String,
       default:'rgb(212, 160, 23)'
