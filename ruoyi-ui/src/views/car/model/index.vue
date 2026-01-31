@@ -77,6 +77,16 @@
           />
         </el-select>
       </el-form-item>
+      <el-form-item label="车型" prop="modelType">
+        <el-select v-model="queryParams.modelType" placeholder="请选择车型" clearable>
+          <el-option
+            v-for="dict in dict.type.model_type"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item label="驱动方式" prop="driveType">
         <el-select v-model="queryParams.driveType" placeholder="请选择驱动方式" clearable>
           <el-option
@@ -210,29 +220,34 @@
           <dict-tag :options="dict.type.energy_type" :value="scope.row.energyType"/>
         </template>
       </el-table-column>
-      <el-table-column label="百公里加速" align="center" :show-overflow-tooltip="true" v-if="columns[14].visible"
-                       prop="accelerationStr"/>
+      <el-table-column label="车型" align="center" v-if="columns[14].visible" prop="modelType">
+        <template slot-scope="scope">
+          <dict-tag :options="dict.type.model_type" :value="scope.row.modelType"/>
+        </template>
+      </el-table-column>
       <el-table-column label="百公里加速" align="center" :show-overflow-tooltip="true" v-if="columns[15].visible"
+                       prop="accelerationStr"/>
+      <el-table-column label="百公里加速" align="center" :show-overflow-tooltip="true" v-if="columns[16].visible"
                        prop="acceleration"/>
-      <el-table-column label="驱动方式" align="center" v-if="columns[16].visible" prop="driveType">
+      <el-table-column label="驱动方式" align="center" v-if="columns[17].visible" prop="driveType">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.drive_type" :value="scope.row.driveType"/>
         </template>
       </el-table-column>
-      <el-table-column label="最高时速" align="center" :show-overflow-tooltip="true" v-if="columns[17].visible"
-                       prop="maxSpeedStr"/>
       <el-table-column label="最高时速" align="center" :show-overflow-tooltip="true" v-if="columns[18].visible"
+                       prop="maxSpeedStr"/>
+      <el-table-column label="最高时速" align="center" :show-overflow-tooltip="true" v-if="columns[19].visible"
                        prop="maxSpeed"/>
-      <el-table-column label="创建时间" align="center" v-if="columns[19].visible" prop="createTime" width="180">
+      <el-table-column label="创建时间" align="center" v-if="columns[20].visible" prop="createTime" width="180">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.createTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="创建人" align="center" :show-overflow-tooltip="true" v-if="columns[20].visible"
+      <el-table-column label="创建人" align="center" :show-overflow-tooltip="true" v-if="columns[21].visible"
                        prop="createBy"/>
-      <el-table-column label="更新时间" align="center" :show-overflow-tooltip="true" v-if="columns[21].visible"
+      <el-table-column label="更新时间" align="center" :show-overflow-tooltip="true" v-if="columns[22].visible"
                        prop="updateTime"/>
-      <el-table-column label="备注" align="center" :show-overflow-tooltip="true" v-if="columns[22].visible"
+      <el-table-column label="备注" align="center" :show-overflow-tooltip="true" v-if="columns[23].visible"
                        prop="remark"/>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
@@ -299,13 +314,15 @@
           <el-input v-model="form.ownerPriceStr" placeholder="请输入车主报价"/>
         </el-form-item>
         <el-form-item label="车主报价" prop="ownerPrice">
-          <el-input-number :min="0" :precision="2" style="width: 100%"  v-model="form.ownerPrice" placeholder="请输入车主报价"/>
+          <el-input-number :min="0" :precision="2" style="width: 100%" v-model="form.ownerPrice"
+                           placeholder="请输入车主报价"/>
         </el-form-item>
         <el-form-item label="经销商报价" prop="dealerPriceStr">
           <el-input v-model="form.dealerPriceStr" placeholder="请输入官方指导价"/>
         </el-form-item>
         <el-form-item label="经销商报价" prop="dealerPrice">
-          <el-input-number :min="0" :precision="2" style="width: 100%"  v-model="form.dealerPrice" placeholder="请输入官方指导价"/>
+          <el-input-number :min="0" :precision="2" style="width: 100%" v-model="form.dealerPrice"
+                           placeholder="请输入官方指导价"/>
         </el-form-item>
         <el-form-item label="发动机/电机" prop="engineMotor">
           <el-input v-model="form.engineMotor" placeholder="请输入发动机/电机"/>
@@ -320,11 +337,22 @@
             ></el-option>
           </el-select>
         </el-form-item>
+        <el-form-item label="车型" prop="modelType">
+          <el-select v-model="form.modelType" placeholder="请选择车型">
+            <el-option
+              v-for="dict in dict.type.model_type"
+              :key="dict.value"
+              :label="dict.label"
+              :value="dict.value"
+            ></el-option>
+          </el-select>
+        </el-form-item>
         <el-form-item label="百公里加速" prop="accelerationStr">
           <el-input v-model="form.accelerationStr" placeholder="请输入百公里加速"/>
         </el-form-item>
         <el-form-item label="百公里加速" prop="acceleration">
-          <el-input-number :min="0" :precision="2" style="width: 100%"  v-model="form.acceleration" placeholder="请输入百公里加速"/>
+          <el-input-number :min="0" :precision="2" style="width: 100%" v-model="form.acceleration"
+                           placeholder="请输入百公里加速"/>
         </el-form-item>
         <el-form-item label="驱动方式" prop="driveType">
           <el-select v-model="form.driveType" placeholder="请选择驱动方式">
@@ -340,7 +368,8 @@
           <el-input v-model="form.maxSpeedStr" placeholder="请输入最高时速"/>
         </el-form-item>
         <el-form-item label="最高时速" prop="maxSpeed">
-          <el-input-number :min="0" :precision="2" style="width: 100%"  v-model="form.maxSpeed" placeholder="请输入最高时速"/>
+          <el-input-number :min="0" :precision="2" style="width: 100%" v-model="form.maxSpeed"
+                           placeholder="请输入最高时速"/>
         </el-form-item>
         <el-form-item label="备注" prop="remark">
           <el-input v-model="form.remark" placeholder="请输入备注"/>
@@ -391,7 +420,7 @@ import {getToken} from "@/utils/auth";
 
 export default {
   name: "Model",
-  dicts: ['country', 'energy_type', 'drive_type'],
+  dicts: ['country', 'energy_type', 'drive_type', 'model_type'],
   data() {
     return {
       // 遮罩层
@@ -424,15 +453,16 @@ export default {
         {key: 11, label: '经销商报价', visible: true},
         {key: 12, label: '发动机/电机', visible: true},
         {key: 13, label: '能源类型', visible: true},
-        {key: 14, label: '百公里加速', visible: true},
+        {key: 14, label: '车型', visible: true},
         {key: 15, label: '百公里加速', visible: true},
-        {key: 16, label: '驱动方式', visible: true},
-        {key: 17, label: '最高时速', visible: true},
+        {key: 16, label: '百公里加速', visible: true},
+        {key: 17, label: '驱动方式', visible: true},
         {key: 18, label: '最高时速', visible: true},
-        {key: 19, label: '创建时间', visible: true},
-        {key: 20, label: '创建人', visible: true},
-        {key: 21, label: '更新时间', visible: true},
-        {key: 22, label: '备注', visible: true}
+        {key: 19, label: '最高时速', visible: true},
+        {key: 20, label: '创建时间', visible: true},
+        {key: 21, label: '创建人', visible: true},
+        {key: 22, label: '更新时间', visible: true},
+        {key: 23, label: '备注', visible: true}
       ],
       // 弹出层标题
       title: "",

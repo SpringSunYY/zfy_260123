@@ -112,7 +112,7 @@ class Model(BaseEntity):
         Optional[str],
         Field(default=None, description="车型"),
         VoField(query=True),
-        ExcelField(name="车型", dict_type="model_type")
+        ExcelField(name="车型", dict_type="model_type", action="export")
     ]
     # 能源类型
     energy_type: Annotated[

@@ -217,7 +217,7 @@ class ModelService:
                 model.country = series_info.country
                 model.brand_name = series_info.brand_name
                 model.series_name = series_info.series_name
-
+                model.model_type = series_info.model_type
                 # 如果 energy_type 为空，从 series 中获取
                 if not model.energy_type:
                     model.energy_type = series_info.energy_type
