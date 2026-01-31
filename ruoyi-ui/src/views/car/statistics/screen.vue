@@ -668,9 +668,53 @@ export default {
         energyType: null,
         seriesId: null
       }
+      let addressName = '全国'; // 默认值
+      for (const item of this.tableQueryList) {
+        if (item.key === 'address') {
+          addressName = item.value;
+          break;
+        }
+      }
+      this.tableQueryList = [
+        {
+          label: '品牌',
+          value: '全部',
+          key: 'brandName',
+        },
+        {
+          label: '价格',
+          value: '全部',
+          key: 'price',
+        },
+        {
+          label: '车型',
+          value: '全部',
+          key: 'modelType',
+        },
+        {
+          label: '能源',
+          value: '全部',
+          key: 'energyType',
+        },
+        {
+          label: '国家',
+          value: '全部',
+          key: 'country',
+        },
+        {
+          label: '车系',
+          value: '全部',
+          key: 'seriesName',
+        },
+        {
+          label: '地区',
+          value: addressName,
+          key: 'address',
+        },
+      ]
       this.getDataByStatisticsClick();
       this.getMapData({
-        name: '中华人民共和国'
+        name: addressName
       })
     }
   }

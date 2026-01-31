@@ -19,6 +19,7 @@ from ruoyi_car.service.view_service import ViewService
 from ruoyi_common.constant import ConfigConstants
 from ruoyi_common.exception import ServiceException
 from ruoyi_common.utils.base import LogUtil
+from ruoyi_framework.descriptor.datascope import DataScope
 from ruoyi_system.service import SysConfigService
 
 
@@ -28,6 +29,7 @@ class RecommendService:
     # --- 基础查询方法 ---
 
     @classmethod
+    @DataScope(dept=True, user=True)
     def select_recommend_list(cls, recommend: Recommend) -> List[Recommend]:
         """
         查询用户推荐列表

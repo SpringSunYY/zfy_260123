@@ -41,6 +41,7 @@ class StatisticsInfoMapper:
                 stmt = stmt.where(StatisticsInfoPo.create_time >= begin_val)
             if end_val is not None:
                 stmt = stmt.where(StatisticsInfoPo.create_time <= end_val)
+            stmt = stmt.order_by(StatisticsInfoPo.create_time.desc())
             if "criterian_meta" in g and g.criterian_meta.page:
                 g.criterian_meta.page.stmt = stmt
 

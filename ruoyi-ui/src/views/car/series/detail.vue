@@ -106,7 +106,7 @@
             <div class="score-chart">
               <BarLineZoomCharts
                 :chart-data="salesPredictStatisticsData"
-                :chart-name="salesPredictStatisticsName"
+                :chart-title="salesPredictStatisticsName"
               />
             </div>
           </el-card>

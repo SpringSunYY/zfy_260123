@@ -72,7 +72,7 @@ class SeriesMapper:
 
             if series.create_by:
                 stmt = stmt.where(SeriesPo.create_by.like("%" + str(series.create_by) + "%"))
-
+            stmt = stmt.order_by(SeriesPo.city_total_sales.desc())
             if "criterian_meta" in g and g.criterian_meta.page:
                 g.criterian_meta.page.stmt = stmt
             result = db.session.execute(stmt).scalars().all()

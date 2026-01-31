@@ -60,7 +60,7 @@ class ModelMapper:
 
             if model.drive_type is not None:
                 stmt = stmt.where(ModelPo.drive_type == model.drive_type)
-
+            stmt = stmt.order_by(ModelPo.update_time.desc())
             _params = getattr(model, "params", {}) or {}
             begin_val = _params.get("beginCreateTime")
             end_val = _params.get("endCreateTime")

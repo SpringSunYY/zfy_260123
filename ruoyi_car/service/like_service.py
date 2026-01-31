@@ -8,14 +8,18 @@ from typing import List, Optional
 from ruoyi_car.domain.entity import Like
 from ruoyi_car.mapper import SeriesMapper
 from ruoyi_car.mapper.like_mapper import LikeMapper
+from ruoyi_common.constant import ConfigConstants
 from ruoyi_common.exception import ServiceException
 from ruoyi_common.utils.base import LogUtil
+from ruoyi_framework.descriptor.datascope import DataScope
+from ruoyi_system.service import SysConfigService
 
 
 class LikeService:
     """用户点赞服务类"""
 
     @classmethod
+    @DataScope(dept=True, user=True)
     def select_like_list(cls, like: Like) -> List[Like]:
         """
         查询用户点赞列表

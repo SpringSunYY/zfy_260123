@@ -51,6 +51,7 @@ class RegisterService:
                 password=SecurityUtil.encrypt_password(body.password.get_secret_value())
             )
             reg_flag = SysUserService.register_user(sys_user)
+            SysUserService.insert_user_auth(sys_user.user_id,[2])
             if not reg_flag:
                 msg = "Registration failed, please contact system administrator"
             else:

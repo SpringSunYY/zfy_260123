@@ -88,6 +88,7 @@
         <el-col :xs="24" :sm="24" :lg="14">
           <div class="chart-wrapper">
             <ScatterRandomTooltipCharts
+              :symbol-size="600"
               :chart-data="modelTypeModelData"
               :chart-title="modelTypeModelName"
               @item-click="(item) => handleToQuery(item, 'modelType')"/>

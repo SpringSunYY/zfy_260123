@@ -11,6 +11,7 @@ from ruoyi_common.constant import ConfigConstants
 from ruoyi_common.exception import ServiceException
 from ruoyi_common.utils.base import LogUtil
 from ruoyi_common.utils.security_util import get_user_id, get_username
+from ruoyi_framework.descriptor.datascope import DataScope
 from ruoyi_system.service import SysConfigService
 
 
@@ -18,6 +19,7 @@ class ViewService:
     """用户浏览服务类"""
 
     @classmethod
+    @DataScope(dept=True, user=True)
     def select_view_list(cls, view: View) -> List[View]:
         """
         查询用户浏览列表

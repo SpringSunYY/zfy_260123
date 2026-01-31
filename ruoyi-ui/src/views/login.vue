@@ -93,7 +93,7 @@ export default {
       // 验证码开关
       captchaOnOff: false,
       // 注册开关
-      register: false,
+      register: true,
       redirect: undefined
     }
   },

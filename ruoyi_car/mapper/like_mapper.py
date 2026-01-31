@@ -62,10 +62,18 @@ class LikeMapper:
             _params = getattr(like, "params", {}) or {}
             begin_val = _params.get("beginCreateTime")
             end_val = _params.get("endCreateTime")
+            stmt=stmt.order_by(LikePo.create_time.desc())
             if begin_val is not None:
                 stmt = stmt.where(LikePo.create_time >= begin_val)
             if end_val is not None:
                 stmt = stmt.where(LikePo.create_time <= end_val)
+
+            # 应用数据范围过滤（如果 DataScope 设置了有效的过滤条件）
+            if ("criterian_meta" in g and
+                    g.criterian_meta.scope is not None and
+                    g.criterian_meta.scope != [] and
+                    g.criterian_meta.scope != ()):
+                stmt = stmt.where(g.criterian_meta.scope)
             if "criterian_meta" in g and g.criterian_meta.page:
                 g.criterian_meta.page.stmt = stmt
             result = db.session.execute(stmt).scalars().all()
