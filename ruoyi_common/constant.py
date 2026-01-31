@@ -252,3 +252,5 @@ class StatisticsConstants:
     SALES_PREDICT_COMMON_TYPE = "8"
     # 销量预测name
     SALES_PREDICT_COMMON_NAME = "销量预测"
+    # 百公里加速
+    ACCELERATION_COMMON_KEY="car:statistics:acceleration"

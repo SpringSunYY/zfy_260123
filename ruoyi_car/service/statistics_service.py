@@ -1,12 +1,12 @@
 # stdlib imports
 import json
 from typing import List, Optional, Dict
-from collections import defaultdict
 
 # project imports
 from ruoyi_car.domain.entity import StatisticsInfo
 from ruoyi_car.domain.statistics.dto import CarStatisticsRequest
-from ruoyi_car.domain.statistics.po.statistics_po import MapStatisticsPo, PriceStatisticsPo, StatisticsPo, SalesPredictPo
+from ruoyi_car.domain.statistics.po.statistics_po import MapStatisticsPo, PriceStatisticsPo, StatisticsPo, \
+    SalesPredictPo
 from ruoyi_car.domain.statistics.vo.statistics_vo import MapStatisticsVo, StatisticsVo, SalesPredictVo, \
     SeriesStatisticsVo
 from ruoyi_car.mapper.statistics_mapper import StatisticsMapper
@@ -14,12 +14,18 @@ from ruoyi_car.service.series_service import SeriesService
 from ruoyi_car.service.statistics_info_service import StatisticsInfoService
 from ruoyi_common.constant import StatisticsConstants, ConfigConstants
 from ruoyi_common.utils import DateUtil
+from ruoyi_framework.descriptor import custom_cacheable
 from ruoyi_system.service import SysConfigService
 
 
 class StatisticsService:
 
     @classmethod
+    @custom_cacheable(
+        key_prefix=StatisticsConstants.MAP_SALES_STATISTICS_COMMON_KEY,
+        expire_time=10*60,
+        use_query_params_as_key=True
+    )
     def sales_map_statistics(cls, request: CarStatisticsRequest) -> List[MapStatisticsVo]:
         """销售地图销量分析"""
         # 生成请求的时间范围内的所有月份
@@ -439,6 +445,11 @@ class StatisticsService:
         return address.split()[0] if address and ' ' in address else (address or '')
 
     @classmethod
+    @custom_cacheable(
+        key_prefix=StatisticsConstants.PRICE_SALES_STATISTICS_COMMON_KEY,
+        expire_time=10*60,
+        use_query_params_as_key=True
+    )
     def price_sales_statistics(cls, request) -> List[StatisticsVo]:
         """
         价格销量分析
@@ -653,6 +664,11 @@ class StatisticsService:
                 return f"{w_value:.1f}W"
 
     @classmethod
+    @custom_cacheable(
+        key_prefix=StatisticsConstants.ENERGY_TYPE_SALES_STATISTICS_COMMON_KEY,
+        expire_time=10*60,
+        use_query_params_as_key=True
+    )
     def energy_type_sales_statistics(cls, request: CarStatisticsRequest) -> List[StatisticsVo]:
         """
         能源销售信息数据分析
@@ -666,6 +682,11 @@ class StatisticsService:
         )
 
     @classmethod
+    @custom_cacheable(
+        key_prefix=StatisticsConstants.SERIES_SALES_STATISTICS_COMMON_KEY,
+        expire_time=10*60,
+        use_query_params_as_key=True
+    )
     def series_sales_statistics(cls, request) -> List[SeriesStatisticsVo]:
         """
         车系销售信息数据分析
@@ -891,6 +912,11 @@ class StatisticsService:
                     series_map[series_id]['series_name'] = series_id
 
     @classmethod
+    @custom_cacheable(
+        key_prefix=StatisticsConstants.BRAND_SALES_STATISTICS_COMMON_KEY,
+        expire_time=10 * 60,
+        use_query_params_as_key=True
+    )
     def brand_sales_statistics(cls, request: CarStatisticsRequest) -> List[StatisticsVo]:
         """
         品牌销售信息数据分析
@@ -904,6 +930,11 @@ class StatisticsService:
         )
 
     @classmethod
+    @custom_cacheable(
+        key_prefix=StatisticsConstants.COUNTRY_SALES_STATISTICS_COMMON_KEY,
+        expire_time=10*60,
+        use_query_params_as_key=True
+    )
     def country_sales_statistics(cls, request: CarStatisticsRequest) -> List[StatisticsVo]:
         """
         国家销售信息数据分析
@@ -917,6 +948,11 @@ class StatisticsService:
         )
 
     @classmethod
+    @custom_cacheable(
+        key_prefix=StatisticsConstants.MODEL_TYPE_SALES_STATISTICS_COMMON_KEY,
+        expire_time=10*60,
+        use_query_params_as_key=True
+    )
     def model_type_sales_statistics(cls, request: CarStatisticsRequest) -> List[StatisticsVo]:
         """
         车型类型销售信息数据分析
@@ -1118,6 +1154,11 @@ class StatisticsService:
             cached_results.extend(month_results)
 
     @classmethod
+    @custom_cacheable(
+        key_prefix=StatisticsConstants.SALES_PREDICT_COMMON_KEY,
+        expire_time=10*60,
+        use_query_params_as_key=True
+    )
     def sales_predict_statistics(cls, request) -> List[SalesPredictVo]:
         """
         销售预测统计
@@ -1439,7 +1480,13 @@ class StatisticsService:
                                statistics_name=StatisticsConstants.SALES_PREDICT_COMMON_NAME)
             cached_results.extend(db_results)
 
-    def acceleration_statistics(self, request) -> List[SeriesStatisticsVo]:
+    @classmethod
+    @custom_cacheable(
+        key_prefix=StatisticsConstants.ACCELERATION_COMMON_KEY,
+        expire_time=10*60,
+        use_query_params_as_key=True
+    )
+    def acceleration_statistics(cls, request) -> List[SeriesStatisticsVo]:
         """
         百公里加速信息数据分析
         返回：系列名称、封面图片、百公里加速时间

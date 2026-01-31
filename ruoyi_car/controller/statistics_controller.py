@@ -4,9 +4,7 @@ from ruoyi_car.service.statistics_service import StatisticsService
 from ruoyi_common.base.model import AjaxResponse
 from ruoyi_common.descriptor.serializer import JsonSerializer
 from ruoyi_common.descriptor.validator import QueryValidator
-from ruoyi_common.constant import ConfigConstants
 from ruoyi_framework.descriptor.permission import HasPerm, PreAuthorize
-from ruoyi_system.service import SysConfigService
 
 # 使用 controller/__init__.py 中定义的蓝图
 gen = statistics_bp
